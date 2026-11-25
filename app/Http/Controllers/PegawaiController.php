@@ -123,4 +123,80 @@ class PegawaiController extends Controller
             'Expires'             => '0',
         ]);
     }
+
+    public function importCsv(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:csv,txt|max:5120',
+        ]);
+
+        $path = $request->file('file')->getRealPath();
+        $raw  = file_get_contents($path);
+        // Bersihkan UTF-8 BOM jika ada
+        $raw  = preg_replace('/^\xEF\xBB\xBF/', '', $raw);
+        $lines = preg_split("/\r\n|\n|\r/", $raw);
+
+        if (count($lines) < 2) {
+            return redirect()->route('pegawai.index')->with('error', 'File CSV kosong atau tidak memiliki baris data.');
+        }
+
+        // Deteksi delimiter otomatis (, ; atau tab)
+        $headerLine = $lines[0];
+        $delimiter = ',';
+        if (substr_count($headerLine, ';') > substr_count($headerLine, ',')) {
+            $delimiter = ';';
+        } elseif (substr_count($headerLine, "\t") > substr_count($headerLine, ',')) {
+            $delimiter = "\t";
+        }
+
+        $headers = array_map(fn($h) => strtolower(trim($h)), str_getcsv($headerLine, $delimiter));
+        $created = 0;
+        $updated = 0;
+
+        for ($i = 1; $i < count($lines); $i++) {
+            $line = trim($lines[$i]);
+            if ($line === '') {
+                continue;
+            }
+            $cols = str_getcsv($line, $delimiter);
+            $row  = [];
+            foreach ($headers as $idx => $key) {
+                $row[$key] = isset($cols[$idx]) ? trim($cols[$idx]) : null;
+            }
+
+            $nama = $row['nama'] ?? $row['nama lengkap'] ?? $row['nama lengkap & gelar'] ?? null;
+            if (!$nama) {
+                continue;
+            }
+
+            $nip = $row['nip'] ?? null;
+            if ($nip) {
+                $nip = ltrim($nip, "'");
+                if ($nip === '-') {
+                    $nip = null;
+                }
+            }
+
+            $payload = [
+                'nama'    => $nama,
+                'nip'     => $nip,
+                'pangkat' => $row['pangkat'] ?? $row['pangkat / golongan'] ?? null,
+                'jabatan' => $row['jabatan'] ?? $row['jabatan definitif / struktural'] ?? null,
+                'rangkap' => $row['rangkap'] ?? $row['jabatan rangkap'] ?? null,
+                'unit'    => $row['unit'] ?? $row['unit kerja'] ?? null,
+            ];
+
+            if ($nip && ($existing = Pegawai::where('nip', $nip)->first())) {
+                $existing->update(array_filter($payload, fn($v) => $v !== null && $v !== ''));
+                $updated++;
+            } else {
+                Pegawai::create($payload);
+                $created++;
+            }
+        }
+
+        ActivityLog::record('import', 'Database Pegawai', "Impor CSV pegawai: {$created} baru, {$updated} diperbarui.");
+
+        return redirect()->route('pegawai.index')->with('success', "Impor selesai: {$created} pegawai ditambahkan, {$updated} pegawai diperbarui.");
+    }
 }

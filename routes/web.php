@@ -12,6 +12,7 @@ use App\Http\Controllers\SettingController;
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\VerificationController;
 use App\Http\Controllers\BackupController;
+use App\Http\Controllers\UserManagementController;
 
 // Verifikasi Publik Dokumen via Scan QR (Read-only, tanpa login, terproteksi token HMAC)
 Route::get('/verifikasi/{type}/{id}/{token}', [VerificationController::class, 'show'])
@@ -39,6 +40,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/search', [PegawaiController::class, 'search'])->name('search');
         Route::get('/ekspor-csv', [PegawaiController::class, 'exportCsv'])->name('export.csv');
         Route::get('/ekspor-excel', [PegawaiController::class, 'exportCsv'])->name('export.excel');
+        Route::post('/impor', [PegawaiController::class, 'importCsv'])->name('import');
         Route::post('/simpan', [PegawaiController::class, 'store'])->name('store');
         Route::put('/{id}/update', [PegawaiController::class, 'update'])->name('update');
         Route::delete('/{id}/hapus', [PegawaiController::class, 'destroy'])->name('destroy');
@@ -48,16 +50,19 @@ Route::middleware('auth')->group(function () {
     Route::prefix('surat')->name('surat.')->group(function () {
         // Surat Undangan
         Route::get('/undangan', [SuratUndanganController::class, 'index'])->name('undangan.index');
+        Route::get('/undangan/ekspor-excel', [SuratUndanganController::class, 'exportExcel'])->name('undangan.export.excel');
         Route::get('/undangan/buat', [SuratUndanganController::class, 'create'])->name('undangan.create');
         Route::post('/undangan/simpan', [SuratUndanganController::class, 'store'])->name('undangan.store');
         Route::get('/undangan/{id}', [SuratUndanganController::class, 'show'])->name('undangan.show');
         Route::get('/undangan/{id}/edit', [SuratUndanganController::class, 'edit'])->name('undangan.edit');
+        Route::get('/undangan/{id}/duplikat', [SuratUndanganController::class, 'duplicate'])->name('undangan.duplicate');
         Route::put('/undangan/{id}', [SuratUndanganController::class, 'update'])->name('undangan.update');
         Route::patch('/undangan/{id}/status', [SuratUndanganController::class, 'updateStatus'])->name('undangan.status');
         Route::delete('/undangan/{id}/hapus', [SuratUndanganController::class, 'destroy'])->name('undangan.destroy');
 
         // Suket Lupa Absen
         Route::get('/suket', [SuketAbsenController::class, 'index'])->name('suket.index');
+        Route::get('/suket/ekspor-excel', [SuketAbsenController::class, 'exportExcel'])->name('suket.export.excel');
         Route::get('/suket/buat', [SuketAbsenController::class, 'create'])->name('suket.create');
         Route::post('/suket/simpan', [SuketAbsenController::class, 'store'])->name('suket.store');
         Route::get('/suket/{id}', [SuketAbsenController::class, 'show'])->name('suket.show');
@@ -84,6 +89,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/profil', [AuthController::class, 'showProfile'])->name('profil.index');
     Route::put('/profil', [AuthController::class, 'updateProfile'])->name('profil.update');
     Route::put('/profil/sandi', [AuthController::class, 'changePassword'])->name('profil.password');
+
+    // Manajemen Pengguna
+    Route::prefix('pengguna')->name('users.')->group(function () {
+        Route::get('/', [UserManagementController::class, 'index'])->name('index');
+        Route::post('/', [UserManagementController::class, 'store'])->name('store');
+        Route::put('/{id}', [UserManagementController::class, 'update'])->name('update');
+        Route::delete('/{id}', [UserManagementController::class, 'destroy'])->name('destroy');
+    });
 
     // Log Aktivitas (Audit Trail)
     Route::get('/log-aktivitas', [ActivityLogController::class, 'index'])->name('logs.index');

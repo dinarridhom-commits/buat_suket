@@ -593,7 +593,7 @@
                 sk_tglAbsen: inTanggalAbsen.value,
                 sk_tglSurat: inTanggalAbsen.value,
                 sk_kota: 'Pontianak',
-                sk_jenis: pick === 'pulang' ? 'pulang' : 'masuk',
+                sk_jenis: pick,
                 sk_alasan: inAlasan.value,
                 sk_appJab: inAtasanJabatan.value,
                 sk_appNama: inAtasanNama.value,

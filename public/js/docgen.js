@@ -341,7 +341,8 @@ var DocGen = (function () {
     });
     x += P('');
     // kalimat pernyataan: opsi yang tidak dipilih dicoret
-    var pick = d.sk_jenis === 'pulang' ? 'pulang' : 'masuk';
+    var validOpsi = ['terlambat', 'pulangawal', 'masuk', 'pulang'];
+    var pick = validOpsi.indexOf(d.sk_jenis) >= 0 ? d.sk_jenis : 'masuk';
     var runs = r('Dengan ini menerangkan bahwa pada hari ' + fmtHariTgl(d.sk_tglAbsen).replace(', ', ' tanggal ') + ', ', { sz: S });
     SUKET_OPSI.forEach(function (o, i) {
       var on = o[0] === pick, last = i === SUKET_OPSI.length - 1;

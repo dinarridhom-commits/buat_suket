@@ -111,14 +111,14 @@
         </span>
     </div>
     <div class="toolbar-right">
-        <a href="{{ route('surat.suket.edit', $suket->id) }}" class="btn-toolbar btn-edit">✏️ Edit</a>
-        <button type="button" id="btnExportDocx" class="btn-toolbar btn-docx">📄 Unduh Word (.docx)</button>
-        <button type="button" onclick="window.print()" class="btn-toolbar btn-print">🖨️ Cetak / PDF</button>
+        <a href="{{ route('surat.suket.edit', $suket->id) }}" class="btn-toolbar btn-edit">Edit</a>
+        <button type="button" id="btnExportDocx" class="btn-toolbar btn-docx">Unduh Word (.docx)</button>
+        <button type="button" onclick="window.print()" class="btn-toolbar btn-print">Cetak / PDF</button>
         <form method="POST" action="{{ route('surat.suket.destroy', $suket->id) }}"
               onsubmit="return confirm('Hapus arsip suket ini secara permanen?')">
             @csrf
             @method('DELETE')
-            <button type="submit" class="btn-toolbar btn-delete">🗑️ Hapus Arsip</button>
+            <button type="submit" class="btn-toolbar btn-delete">Hapus</button>
         </form>
     </div>
 </div>
@@ -281,7 +281,7 @@
                 sk_tglAbsen: @json($suket->tanggal_kejadian->format('Y-m-d')),
                 sk_tglSurat: @json($suket->tanggal_kejadian->format('Y-m-d')),
                 sk_kota: 'Pontianak',
-                sk_jenis: @json($suket->jenis_absen === 'pulang' ? 'pulang' : 'masuk'),
+                sk_jenis: @json($suket->jenis_absen),
                 sk_alasan: @json($suket->alasan),
                 sk_appJab: @json($suket->atasan_jabatan),
                 sk_appNama: @json($suket->atasan_nama),

@@ -11,7 +11,64 @@ use Illuminate\Support\Facades\Validator;
 
 class SuratUndanganController extends Controller
 {
-    public function index(Request $request)
+    public static function kopPresets(): array
+    {
+        $kementerian = Setting::get('instansi_kementerian', 'KEMENTERIAN PEKERJAAN UMUM');
+        $ditjen      = Setting::get('instansi_ditjen', 'DIREKTORAT JENDERAL SUMBER DAYA AIR');
+        $alamat      = 'Jl. A. Sood Nomor 06 Pontianak 78121, Telepon (0561) 734866, Surel bwsk1pontianak@pu.go.id';
+
+        return [
+            'balai' => [
+                'label'       => 'Balai Wilayah Sungai Kalimantan I Pontianak',
+                'kementerian' => $kementerian,
+                'ditjen'      => $ditjen,
+                'lines3'      => ['BALAI WILAYAH SUNGAI KALIMANTAN I PONTIANAK'],
+                'alamat'      => $alamat,
+            ],
+            'satker_op' => [
+                'label'       => 'Satker Operasi dan Pemeliharaan SDA Kalimantan I',
+                'kementerian' => $kementerian,
+                'ditjen'      => $ditjen,
+                'lines3'      => [
+                    'BALAI WILAYAH SUNGAI KALIMANTAN I PONTIANAK',
+                    'SATUAN KERJA OPERASI DAN PEMELIHARAAN SUMBER DAYA AIR KALIMANTAN I',
+                ],
+                'alamat'      => $alamat,
+            ],
+            'satker_pjpa' => [
+                'label'       => 'Satker SNVT Pelaksanaan Jaringan Pemanfaatan Air Kalimantan I',
+                'kementerian' => $kementerian,
+                'ditjen'      => $ditjen,
+                'lines3'      => [
+                    'BALAI WILAYAH SUNGAI KALIMANTAN I PONTIANAK',
+                    'SATUAN KERJA SNVT PELAKSANAAN JARINGAN PEMANFAATAN AIR KALIMANTAN I',
+                ],
+                'alamat'      => $alamat,
+            ],
+            'satker_pjsa' => [
+                'label'       => 'Satker SNVT Pelaksanaan Jaringan Sumber Air Kalimantan I',
+                'kementerian' => $kementerian,
+                'ditjen'      => $ditjen,
+                'lines3'      => [
+                    'BALAI WILAYAH SUNGAI KALIMANTAN I PONTIANAK',
+                    'SATUAN KERJA SNVT PELAKSANAAN JARINGAN SUMBER AIR KALIMANTAN I',
+                ],
+                'alamat'      => $alamat,
+            ],
+            'satker_bws' => [
+                'label'       => 'Satker Balai Wilayah Sungai Kalimantan I Pontianak',
+                'kementerian' => $kementerian,
+                'ditjen'      => $ditjen,
+                'lines3'      => [
+                    'BALAI WILAYAH SUNGAI KALIMANTAN I PONTIANAK',
+                    'SATUAN KERJA BALAI WILAYAH SUNGAI KALIMANTAN I PONTIANAK',
+                ],
+                'alamat'      => $alamat,
+            ],
+        ];
+    }
+
+    private function buildFilteredQuery(Request $request)
     {
         $query = SuratUndangan::with('penerimas')->latest();
 
@@ -37,33 +94,91 @@ class SuratUndanganController extends Controller
             }
         }
 
-        $surats = $query->paginate(10)->withQueryString();
+        return $query;
+    }
+
+    private function generateAutoNomor(): string
+    {
+        $tahun  = date('Y');
+        $prefix = Setting::get('prefix_undangan', 'UM.01.02/Bws1');
+        $urutan = SuratUndangan::whereYear('created_at', $tahun)->count() + 1;
+        return $prefix . '/' . str_pad($urutan, 3, '0', STR_PAD_LEFT) . '/' . $tahun;
+    }
+
+    private function defaultKop(): array
+    {
+        return [
+            'kementerian' => Setting::get('instansi_kementerian', 'KEMENTERIAN PEKERJAAN UMUM'),
+            'ditjen'      => Setting::get('instansi_ditjen', 'DIREKTORAT JENDERAL SUMBER DAYA AIR'),
+            'balai'       => Setting::get('instansi_balai', 'BALAI WILAYAH SUNGAI KALIMANTAN I PONTIANAK'),
+            'alamat'      => Setting::get('instansi_alamat', 'Jl. A. Sood Nomor 06 Pontianak 78121, Telepon (0561) 734866'),
+            'kontak'      => Setting::get('instansi_kontak', 'Surel bwsk1pontianak@pu.go.id'),
+        ];
+    }
+
+    private function extractExtraData(Request $request): array
+    {
+        $extra = $request->input('extra_data', []);
+        if (!is_array($extra)) {
+            $extra = [];
+        }
+        if (isset($extra['schedule_json']) && is_string($extra['schedule_json'])) {
+            $decoded = json_decode($extra['schedule_json'], true);
+            $extra['schedule_rows'] = is_array($decoded) ? $decoded : [];
+            unset($extra['schedule_json']);
+        }
+        return $extra;
+    }
+
+    public function index(Request $request)
+    {
+        $surats = $this->buildFilteredQuery($request)->paginate(10)->withQueryString();
         return view('surat.undangan-index', compact('surats'));
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $surats     = $this->buildFilteredQuery($request)->get();
+        $filename   = 'Buku_Agenda_Surat_Undangan_' . date('Ymd_His') . '.xls';
+        $exportedAt = now()->locale('id')->translatedFormat('d F Y, H:i') . ' WIB';
+
+        ActivityLog::record('export', 'Surat Undangan', 'Mengekspor ' . $surats->count() . ' arsip Surat Undangan ke Excel.');
+
+        $html = view('surat.undangan-export-excel', compact('surats', 'exportedAt'))->render();
+
+        return response($html, 200, [
+            'Content-Type'        => 'application/vnd.ms-excel; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+            'Pragma'              => 'no-cache',
+            'Cache-Control'       => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires'             => '0',
+        ]);
     }
 
     public function create()
     {
-        $pegawais = Pegawai::all();
-        $kop = [
-            'kementerian' => Setting::get('instansi_kementerian', 'KEMENTERIAN PEKERJAAN UMUM'),
-            'ditjen'      => Setting::get('instansi_ditjen', 'DIREKTORAT JENDERAL SUMBER DAYA AIR'),
-            'balai'       => Setting::get('instansi_balai', 'BALAI WILAYAH SUNGAI KALIMANTAN I PONTIANAK'),
-            'alamat'      => Setting::get('instansi_alamat', 'Jalan Kantor No. 1 Pontianak, Kalimantan Barat, 78111'),
-            'kontak'      => Setting::get('instansi_kontak', 'Telp. (0561) 732292 | Email: bws.kalimantan1@pu.go.id'),
-        ];
+        $pegawais   = Pegawai::all();
+        $kop        = $this->defaultKop();
+        $kopPresets = self::kopPresets();
+        $autoNomor  = $this->generateAutoNomor();
 
-        // Auto-nomor: hitung total undangan tahun ini
-        $tahun = date('Y');
-        $prefix = Setting::get('prefix_undangan', 'UM.01.02/Bws1');
-        $urutan = SuratUndangan::whereYear('created_at', $tahun)->count() + 1;
-        $autoNomor = $prefix . '/' . str_pad($urutan, 3, '0', STR_PAD_LEFT) . '/' . $tahun;
+        return view('surat.undangan-create', compact('pegawais', 'kop', 'kopPresets', 'autoNomor'));
+    }
 
-        return view('surat.undangan-create', compact('pegawais', 'kop', 'autoNomor'));
+    public function duplicate($id)
+    {
+        $duplicateFrom = SuratUndangan::with('penerimas')->findOrFail($id);
+        $pegawais      = Pegawai::all();
+        $kop           = $this->defaultKop();
+        $kopPresets    = self::kopPresets();
+        $autoNomor     = $this->generateAutoNomor();
+
+        return view('surat.undangan-create', compact('pegawais', 'kop', 'kopPresets', 'autoNomor', 'duplicateFrom'));
     }
 
     public function store(Request $request)
     {
-        $validated = Validator::make($request->all(), [
+        Validator::make($request->all(), [
             'nomor_surat'           => 'required',
             'hal'                   => 'required',
             'tanggal_surat'         => 'required|date',
@@ -72,14 +187,17 @@ class SuratUndanganController extends Controller
             'penandatangan_jabatan' => 'required',
         ])->validate();
 
-        $surat = SuratUndangan::create($request->except('penerimas'));
+        $payload = $request->except(['penerimas', '_token', 'extra_data']);
+        $payload['extra_data'] = $this->extractExtraData($request);
+
+        $surat = SuratUndangan::create($payload);
 
         if ($request->has('penerimas') && is_array($request->penerimas)) {
             foreach ($request->penerimas as $index => $nama) {
                 if (trim($nama)) {
                     $surat->penerimas()->create([
                         'nama_penerima' => trim($nama),
-                        'urutan'        => $index + 1
+                        'urutan'        => $index + 1,
                     ]);
                 }
             }
@@ -87,37 +205,28 @@ class SuratUndanganController extends Controller
 
         ActivityLog::record('create', 'Surat Undangan', "Membuat Surat Undangan {$surat->nomor_surat} — {$surat->hal}");
 
-        return redirect()->route('surat.undangan.index')->with('success', 'Surat Undangan berhasil disimpan ke database.');
+        return redirect()->route('surat.undangan.show', $surat->id)->with('success', 'Surat Undangan berhasil disimpan ke database.');
     }
 
     public function show($id)
     {
-        $surat = SuratUndangan::with('penerimas')->findOrFail($id);
-        $kop = [
-            'kementerian' => Setting::get('instansi_kementerian', 'KEMENTERIAN PEKERJAAN UMUM'),
-            'ditjen'      => Setting::get('instansi_ditjen', 'DIREKTORAT JENDERAL SUMBER DAYA AIR'),
-            'balai'       => Setting::get('instansi_balai', 'BALAI WILAYAH SUNGAI KALIMANTAN I PONTIANAK'),
-            'alamat'      => Setting::get('instansi_alamat', 'Jalan Kantor No. 1 Pontianak, Kalimantan Barat, 78111'),
-            'kontak'      => Setting::get('instansi_kontak', 'Telp. (0561) 732292 | Email: bws.kalimantan1@pu.go.id'),
-        ];
-        $verifyUrl = VerificationController::makeUrl('undangan', $surat->id);
-        return view('surat.undangan-show', compact('surat', 'kop', 'verifyUrl'));
+        $surat      = SuratUndangan::with('penerimas')->findOrFail($id);
+        $kop        = $this->defaultKop();
+        $kopPresets = self::kopPresets();
+        $verifyUrl  = VerificationController::makeUrl('undangan', $surat->id);
+
+        return view('surat.undangan-show', compact('surat', 'kop', 'kopPresets', 'verifyUrl'));
     }
 
     public function edit($id)
     {
-        $surat = SuratUndangan::with('penerimas')->findOrFail($id);
-        $pegawais = Pegawai::all();
-        $kop = [
-            'kementerian' => Setting::get('instansi_kementerian', 'KEMENTERIAN PEKERJAAN UMUM'),
-            'ditjen'      => Setting::get('instansi_ditjen', 'DIREKTORAT JENDERAL SUMBER DAYA AIR'),
-            'balai'       => Setting::get('instansi_balai', 'BALAI WILAYAH SUNGAI KALIMANTAN I PONTIANAK'),
-            'alamat'      => Setting::get('instansi_alamat', 'Jalan Kantor No. 1 Pontianak, Kalimantan Barat, 78111'),
-            'kontak'      => Setting::get('instansi_kontak', 'Telp. (0561) 732292 | Email: bws.kalimantan1@pu.go.id'),
-        ];
-        $autoNomor = $surat->nomor_surat;
+        $surat      = SuratUndangan::with('penerimas')->findOrFail($id);
+        $pegawais   = Pegawai::all();
+        $kop        = $this->defaultKop();
+        $kopPresets = self::kopPresets();
+        $autoNomor  = $surat->nomor_surat;
 
-        return view('surat.undangan-create', compact('pegawais', 'kop', 'autoNomor', 'surat'));
+        return view('surat.undangan-create', compact('pegawais', 'kop', 'kopPresets', 'autoNomor', 'surat'));
     }
 
     public function update(Request $request, $id)
@@ -133,7 +242,10 @@ class SuratUndanganController extends Controller
             'penandatangan_jabatan' => 'required',
         ])->validate();
 
-        $surat->update($request->except(['penerimas', '_token', '_method']));
+        $payload = $request->except(['penerimas', '_token', '_method', 'extra_data']);
+        $payload['extra_data'] = $this->extractExtraData($request);
+
+        $surat->update($payload);
 
         if ($request->has('penerimas') && is_array($request->penerimas)) {
             $surat->penerimas()->delete();

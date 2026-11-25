@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Validator;
 
 class SuketAbsenController extends Controller
 {
-    public function index(Request $request)
+    private function buildFilteredQuery(Request $request)
     {
         $query = SuketAbsen::latest();
 
@@ -37,8 +37,32 @@ class SuketAbsenController extends Controller
             }
         }
 
-        $sukets = $query->paginate(10)->withQueryString();
+        return $query;
+    }
+
+    public function index(Request $request)
+    {
+        $sukets = $this->buildFilteredQuery($request)->paginate(10)->withQueryString();
         return view('surat.suket-index', compact('sukets'));
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $sukets     = $this->buildFilteredQuery($request)->get();
+        $filename   = 'Rekap_Suket_Absen_' . date('Ymd_His') . '.xls';
+        $exportedAt = now()->locale('id')->translatedFormat('d F Y, H:i') . ' WIB';
+
+        ActivityLog::record('export', 'Suket Absen', 'Mengekspor ' . $sukets->count() . ' data Suket Absen ke Excel.');
+
+        $html = view('surat.suket-export-excel', compact('sukets', 'exportedAt'))->render();
+
+        return response($html, 200, [
+            'Content-Type'        => 'application/vnd.ms-excel; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+            'Pragma'              => 'no-cache',
+            'Cache-Control'       => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires'             => '0',
+        ]);
     }
 
     public function create()
@@ -48,14 +72,14 @@ class SuketAbsenController extends Controller
             'kementerian' => Setting::get('instansi_kementerian', 'KEMENTERIAN PEKERJAAN UMUM'),
             'ditjen'      => Setting::get('instansi_ditjen', 'DIREKTORAT JENDERAL SUMBER DAYA AIR'),
             'balai'       => Setting::get('instansi_balai', 'BALAI WILAYAH SUNGAI KALIMANTAN I PONTIANAK'),
-            'alamat'      => Setting::get('instansi_alamat', 'Jalan Kantor No. 1 Pontianak, Kalimantan Barat, 78111'),
-            'kontak'      => Setting::get('instansi_kontak', 'Telp. (0561) 732292 | Email: bws.kalimantan1@pu.go.id'),
+            'alamat'      => Setting::get('instansi_alamat', 'Jl. A. Sood Nomor 06 Pontianak 78121, Telepon (0561) 734866'),
+            'kontak'      => Setting::get('instansi_kontak', 'Surel bwsk1pontianak@pu.go.id'),
         ];
 
-        // Auto-nomor: hitung total suket tahun ini
-        $tahun = date('Y');
-        $urutan = SuketAbsen::whereYear('created_at', $tahun)->count() + 1;
-        $autoNomor = 'KP.07.03/Bws1/' . str_pad($urutan, 3, '0', STR_PAD_LEFT) . '/' . $tahun;
+        $tahun     = date('Y');
+        $prefix    = Setting::get('prefix_suket', 'KP.07.03/Bws1');
+        $urutan    = SuketAbsen::whereYear('created_at', $tahun)->count() + 1;
+        $autoNomor = $prefix . '/' . str_pad($urutan, 3, '0', STR_PAD_LEFT) . '/' . $tahun;
 
         return view('surat.suket-create', compact('pegawais', 'kop', 'autoNomor'));
     }
