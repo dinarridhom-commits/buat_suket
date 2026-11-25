@@ -565,8 +565,8 @@
             <a href="{{ route('surat.suket.create') }}" class="btn-pill-outline">
                 <span>📝</span> Buat Suket Absen
             </a>
-            <a href="{{ route('pegawai.export.csv') }}" class="btn-pill-outline">
-                <span>📥</span> Ekspor CSV
+            <a href="{{ route('pegawai.export.excel') }}" class="btn-pill-outline">
+                <span>📊</span> Ekspor Excel
             </a>
         </div>
     </div>

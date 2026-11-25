@@ -90,50 +90,37 @@ class PegawaiController extends Controller
         return redirect()->route('pegawai.index')->with('success', 'Data pegawai berhasil dihapus.');
     }
 
-    public function exportCsv()
+    public function exportCsv(Request $request)
     {
-        $pegawais = Pegawai::orderBy('id', 'asc')->get();
-        $filename = 'Daftar_Pegawai_BWS_Kalimantan_I_' . date('Ymd_His') . '.csv';
+        $query = Pegawai::orderBy('id', 'asc');
 
-        $headers = [
-            'Content-Type' => 'text/csv; charset=UTF-8',
+        if ($request->filled('q')) {
+            $q = $request->q;
+            $query->where(function ($w) use ($q) {
+                $w->where('nama', 'like', "%{$q}%")
+                  ->orWhere('nip', 'like', "%{$q}%")
+                  ->orWhere('jabatan', 'like', "%{$q}%");
+            });
+        }
+
+        if ($request->filled('unit')) {
+            $query->where('unit', $request->unit);
+        }
+
+        $pegawais = $query->get();
+        $filename = 'Master_Pegawai_BWS_Kalimantan_I_' . date('Ymd_His') . '.xls';
+        $exportedAt = now()->locale('id')->translatedFormat('d F Y, H:i') . ' WIB';
+
+        ActivityLog::record('export', 'Database Pegawai', 'Mengekspor ' . $pegawais->count() . ' data pegawai ke Excel.');
+
+        $html = view('pegawai.export-excel', compact('pegawais', 'exportedAt'))->render();
+
+        return response($html, 200, [
+            'Content-Type'        => 'application/vnd.ms-excel; charset=UTF-8',
             'Content-Disposition' => "attachment; filename=\"{$filename}\"",
-            'Pragma' => 'no-cache',
-            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
-            'Expires' => '0',
-        ];
-
-        $callback = function() use ($pegawais) {
-            $handle = fopen('php://output', 'w');
-            // Write UTF-8 BOM for Microsoft Excel
-            fprintf($handle, chr(0xEF).chr(0xBB).chr(0xBF));
-
-            // Header row
-            fputcsv($handle, [
-                'No',
-                'NIP',
-                'Nama Lengkap & Gelar',
-                'Pangkat / Golongan',
-                'Jabatan Definitif / Struktural',
-                'Jabatan Rangkap',
-                'Unit Kerja'
-            ]);
-
-            foreach ($pegawais as $idx => $p) {
-                fputcsv($handle, [
-                    $idx + 1,
-                    $p->nip ? "'" . $p->nip : '-',
-                    $p->nama,
-                    $p->pangkat ?? '-',
-                    $p->jabatan ?? '-',
-                    $p->rangkap ?? '-',
-                    $p->unit ?? 'Balai Wilayah Sungai Kalimantan I Pontianak'
-                ]);
-            }
-
-            fclose($handle);
-        };
-
-        return response()->stream($callback, 200, $headers);
+            'Pragma'              => 'no-cache',
+            'Cache-Control'       => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires'             => '0',
+        ]);
     }
 }

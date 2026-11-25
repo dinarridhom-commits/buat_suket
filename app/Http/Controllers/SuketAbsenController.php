@@ -11,9 +11,33 @@ use Illuminate\Support\Facades\Validator;
 
 class SuketAbsenController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $sukets = SuketAbsen::latest()->paginate(10);
+        $query = SuketAbsen::latest();
+
+        if ($request->filled('q')) {
+            $q = $request->q;
+            $query->where(function ($w) use ($q) {
+                $w->where('nomor_surat', 'like', "%{$q}%")
+                  ->orWhere('nama_pegawai', 'like', "%{$q}%")
+                  ->orWhere('nip_pegawai', 'like', "%{$q}%")
+                  ->orWhere('atasan_nama', 'like', "%{$q}%");
+            });
+        }
+
+        if ($request->filled('jenis_absen')) {
+            $query->where('jenis_absen', $request->jenis_absen);
+        }
+
+        if ($request->filled('bulan')) {
+            $parts = explode('-', $request->bulan);
+            if (count($parts) === 2) {
+                $query->whereYear('tanggal_kejadian', $parts[0])
+                      ->whereMonth('tanggal_kejadian', $parts[1]);
+            }
+        }
+
+        $sukets = $query->paginate(10)->withQueryString();
         return view('surat.suket-index', compact('sukets'));
     }
 
@@ -40,7 +64,7 @@ class SuketAbsenController extends Controller
     {
         $validated = Validator::make($request->all(), [
             'nomor_surat'      => 'required',
-            'jenis_absen'      => 'required|in:masuk,pulang',
+            'jenis_absen'      => 'required|in:masuk,pulang,terlambat,pulangawal',
             'nama_pegawai'     => 'required',
             'jabatan_pegawai'  => 'required',
             'tanggal_kejadian' => 'required|date',
@@ -68,6 +92,44 @@ class SuketAbsenController extends Controller
         ];
         $verifyUrl = VerificationController::makeUrl('suket', $suket->id);
         return view('surat.suket-show', compact('suket', 'kop', 'verifyUrl'));
+    }
+
+    public function edit($id)
+    {
+        $suket = SuketAbsen::findOrFail($id);
+        $pegawais = Pegawai::all();
+        $kop = [
+            'kementerian' => Setting::get('instansi_kementerian', 'KEMENTERIAN PEKERJAAN UMUM'),
+            'ditjen'      => Setting::get('instansi_ditjen', 'DIREKTORAT JENDERAL SUMBER DAYA AIR'),
+            'balai'       => Setting::get('instansi_balai', 'BALAI WILAYAH SUNGAI KALIMANTAN I PONTIANAK'),
+            'alamat'      => Setting::get('instansi_alamat', 'Jalan Kantor No. 1 Pontianak, Kalimantan Barat, 78111'),
+            'kontak'      => Setting::get('instansi_kontak', 'Telp. (0561) 732292 | Email: bws.kalimantan1@pu.go.id'),
+        ];
+        $autoNomor = $suket->nomor_surat;
+
+        return view('surat.suket-create', compact('pegawais', 'kop', 'autoNomor', 'suket'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $suket = SuketAbsen::findOrFail($id);
+
+        Validator::make($request->all(), [
+            'nomor_surat'      => 'required',
+            'jenis_absen'      => 'required|in:masuk,pulang,terlambat,pulangawal',
+            'nama_pegawai'     => 'required',
+            'jabatan_pegawai'  => 'required',
+            'tanggal_kejadian' => 'required|date',
+            'waktu_kejadian'   => 'required',
+            'alasan'           => 'required',
+            'atasan_nama'      => 'required',
+            'atasan_jabatan'   => 'required',
+        ])->validate();
+
+        $suket->update($request->except(['_token', '_method']));
+        ActivityLog::record('update', 'Suket Absen', "Memperbarui Suket {$suket->nomor_surat} untuk {$suket->nama_pegawai}");
+
+        return redirect()->route('surat.suket.show', $suket->id)->with('success', 'Perubahan Surat Keterangan berhasil disimpan.');
     }
 
     public function destroy($id)

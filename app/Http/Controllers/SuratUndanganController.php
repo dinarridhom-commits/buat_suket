@@ -11,9 +11,33 @@ use Illuminate\Support\Facades\Validator;
 
 class SuratUndanganController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $surats = SuratUndangan::with('penerimas')->latest()->paginate(10);
+        $query = SuratUndangan::with('penerimas')->latest();
+
+        if ($request->filled('q')) {
+            $q = $request->q;
+            $query->where(function ($w) use ($q) {
+                $w->where('nomor_surat', 'like', "%{$q}%")
+                  ->orWhere('hal', 'like', "%{$q}%")
+                  ->orWhere('tempat', 'like', "%{$q}%")
+                  ->orWhere('penandatangan_nama', 'like', "%{$q}%");
+            });
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('bulan')) {
+            $parts = explode('-', $request->bulan);
+            if (count($parts) === 2) {
+                $query->whereYear('tanggal_surat', $parts[0])
+                      ->whereMonth('tanggal_surat', $parts[1]);
+            }
+        }
+
+        $surats = $query->paginate(10)->withQueryString();
         return view('surat.undangan-index', compact('surats'));
     }
 
@@ -70,14 +94,62 @@ class SuratUndanganController extends Controller
     {
         $surat = SuratUndangan::with('penerimas')->findOrFail($id);
         $kop = [
-            'kementerian' => Setting::get('instansi_kementerian'),
-            'ditjen'      => Setting::get('instansi_ditjen'),
-            'balai'       => Setting::get('instansi_balai'),
-            'alamat'      => Setting::get('instansi_alamat'),
-            'kontak'      => Setting::get('instansi_kontak'),
+            'kementerian' => Setting::get('instansi_kementerian', 'KEMENTERIAN PEKERJAAN UMUM'),
+            'ditjen'      => Setting::get('instansi_ditjen', 'DIREKTORAT JENDERAL SUMBER DAYA AIR'),
+            'balai'       => Setting::get('instansi_balai', 'BALAI WILAYAH SUNGAI KALIMANTAN I PONTIANAK'),
+            'alamat'      => Setting::get('instansi_alamat', 'Jalan Kantor No. 1 Pontianak, Kalimantan Barat, 78111'),
+            'kontak'      => Setting::get('instansi_kontak', 'Telp. (0561) 732292 | Email: bws.kalimantan1@pu.go.id'),
         ];
         $verifyUrl = VerificationController::makeUrl('undangan', $surat->id);
         return view('surat.undangan-show', compact('surat', 'kop', 'verifyUrl'));
+    }
+
+    public function edit($id)
+    {
+        $surat = SuratUndangan::with('penerimas')->findOrFail($id);
+        $pegawais = Pegawai::all();
+        $kop = [
+            'kementerian' => Setting::get('instansi_kementerian', 'KEMENTERIAN PEKERJAAN UMUM'),
+            'ditjen'      => Setting::get('instansi_ditjen', 'DIREKTORAT JENDERAL SUMBER DAYA AIR'),
+            'balai'       => Setting::get('instansi_balai', 'BALAI WILAYAH SUNGAI KALIMANTAN I PONTIANAK'),
+            'alamat'      => Setting::get('instansi_alamat', 'Jalan Kantor No. 1 Pontianak, Kalimantan Barat, 78111'),
+            'kontak'      => Setting::get('instansi_kontak', 'Telp. (0561) 732292 | Email: bws.kalimantan1@pu.go.id'),
+        ];
+        $autoNomor = $surat->nomor_surat;
+
+        return view('surat.undangan-create', compact('pegawais', 'kop', 'autoNomor', 'surat'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $surat = SuratUndangan::findOrFail($id);
+
+        Validator::make($request->all(), [
+            'nomor_surat'           => 'required',
+            'hal'                   => 'required',
+            'tanggal_surat'         => 'required|date',
+            'tempat'                => 'required',
+            'penandatangan_nama'    => 'required',
+            'penandatangan_jabatan' => 'required',
+        ])->validate();
+
+        $surat->update($request->except(['penerimas', '_token', '_method']));
+
+        if ($request->has('penerimas') && is_array($request->penerimas)) {
+            $surat->penerimas()->delete();
+            foreach ($request->penerimas as $index => $nama) {
+                if (trim($nama)) {
+                    $surat->penerimas()->create([
+                        'nama_penerima' => trim($nama),
+                        'urutan'        => $index + 1,
+                    ]);
+                }
+            }
+        }
+
+        ActivityLog::record('update', 'Surat Undangan', "Memperbarui Surat Undangan {$surat->nomor_surat} — {$surat->hal}");
+
+        return redirect()->route('surat.undangan.show', $surat->id)->with('success', 'Perubahan Surat Undangan berhasil disimpan.');
     }
 
     public function updateStatus(Request $request, $id)

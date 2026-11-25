@@ -1,8 +1,14 @@
 @extends('layouts.app')
 
-@section('title', 'Buat Suket Lupa Absen')
-@section('header_title', 'Surat Keterangan Lupa Absen')
-@section('header_subtitle', 'Format Resmi Balai Wilayah Sungai Kalimantan I Pontianak — Kop Balai 1 Halaman')
+@php
+    $isEdit = isset($suket);
+    $jenisVal = old('jenis_absen', $isEdit ? $suket->jenis_absen : 'masuk');
+    $tglVal = old('tanggal_kejadian', $isEdit ? $suket->tanggal_kejadian->format('Y-m-d') : date('Y-m-d'));
+@endphp
+
+@section('title', $isEdit ? 'Edit Suket Lupa Absen' : 'Buat Suket Lupa Absen')
+@section('header_title', $isEdit ? 'Edit Surat Keterangan / Permohonan Izin' : 'Surat Permohonan Izin / Lupa Absen')
+@section('header_subtitle', 'Format Resmi Balai Wilayah Sungai Kalimantan I Pontianak — Standar PDF & Word (.docx)')
 
 @push('styles')
 <style>
@@ -36,179 +42,106 @@
         gap: 8px;
     }
 
-    .form-card-body {
-        padding: 16px 18px;
-    }
-
-    .form-group {
-        margin-bottom: 14px;
-    }
-
-    .form-label {
-        display: block;
-        font-size: 12.5px;
-        font-weight: 600;
-        color: #334155;
-        margin-bottom: 5px;
-    }
-
+    .form-card-body { padding: 16px 18px; }
+    .form-group { margin-bottom: 14px; }
+    .form-label { display: block; font-size: 12.5px; font-weight: 600; color: #334155; margin-bottom: 5px; }
     .form-control {
-        width: 100%;
-        padding: 8px 12px;
-        border: 1px solid #cbd5e1;
-        border-radius: var(--radius-sm);
-        font-size: 13.5px;
-        font-family: inherit;
-        background: #ffffff;
-        outline: none;
-        transition: all 0.15s ease;
+        width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: var(--radius-sm);
+        font-size: 13.5px; font-family: inherit; background: #ffffff; outline: none; transition: all 0.15s ease;
     }
+    .form-control:focus { border-color: var(--pu-blue); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15); }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
-    .form-control:focus {
-        border-color: var(--pu-blue);
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
-    }
-
-    .grid-2 {
+    .radio-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 12px;
+        gap: 8px;
+        margin-top: 6px;
     }
-
-    .preview-pane {
-        position: sticky;
-        top: 86px;
+    .radio-pill {
+        display: flex; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 500;
+        padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: var(--radius-sm); cursor: pointer; background: #fff;
     }
+    .radio-pill:has(input:checked) { border-color: var(--pu-navy); background: var(--pu-navy-50); font-weight: 600; color: var(--pu-navy); }
 
+    .preview-pane { position: sticky; top: 86px; }
     .preview-header-bar {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 12px;
-        background: #ffffff;
-        padding: 10px 16px;
-        border: 1px solid var(--border);
-        border-radius: var(--radius-md);
-        box-shadow: var(--shadow-sm);
+        display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;
+        background: #ffffff; padding: 10px 16px; border: 1px solid var(--border);
+        border-radius: var(--radius-md); box-shadow: var(--shadow-sm); flex-wrap: wrap; gap: 8px;
     }
-
     .preview-scroll-wrapper {
-        background: #cbd5e1;
-        border-radius: var(--radius-lg);
-        padding: 24px;
-        max-height: calc(100vh - 170px);
-        overflow-y: auto;
-        display: flex;
-        justify-content: center;
+        background: #cbd5e1; border-radius: var(--radius-lg); padding: 24px;
+        max-height: calc(100vh - 170px); overflow-y: auto; display: flex; justify-content: center;
     }
 
+    /* ===== A4 SHEET RESMI (SAMA DENGAN FORMAT HTML/DOCX) ===== */
     .sheet-a4 {
         width: 794px;
         min-height: 1123px;
         background: #ffffff;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-        padding: 50px 60px;
+        padding: 38px 56px 46px 56px;
         font-family: Arial, Helvetica, sans-serif;
         color: #000000;
-        font-size: 14.5px;
+        font-size: 14px;
         line-height: 1.5;
         zoom: 0.76;
     }
-    @media (min-width: 1560px) {
-        .sheet-a4 { zoom: 0.92; }
-    }
+    @media (min-width: 1560px) { .sheet-a4 { zoom: 0.92; } }
 
-    .kop-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-bottom: 6px;
-    }
+    .kop-table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+    .kop-table td { vertical-align: bottom; }
+    .kop-logo-cell { width: 92px; text-align: left; padding-right: 10px; }
+    .kop-logo-img { width: 82px; height: 82px; object-fit: contain; display: block; }
+    .kop-text-cell { text-align: center; border-bottom: 2px solid #000000; padding-bottom: 5px; }
+    .kop-line-1 { font-size: 17px; font-weight: 400; letter-spacing: 0.2px; line-height: 1.2; }
+    .kop-line-2 { font-size: 12px; font-weight: 400; line-height: 1.25; }
+    .kop-line-3 { font-size: 9.5px; font-weight: 700; line-height: 1.25; }
+    .kop-line-address { font-size: 8.5px; margin-top: 2px; line-height: 1.25; }
 
-    .kop-table td { vertical-align: middle; }
-    .kop-logo-cell { width: 90px; text-align: center; }
-    .kop-logo-img { width: 80px; height: auto; }
-    .kop-text-cell { text-align: center; padding-right: 20px; }
-    .kop-line-1 { font-size: 14.5px; font-weight: bold; }
-    .kop-line-2 { font-size: 15.5px; font-weight: bold; }
-    .kop-line-3 { font-size: 16px; font-weight: bold; }
-    .kop-line-address { font-size: 10.5px; margin-top: 3px; line-height: 1.3; }
-    .kop-border-bottom {
-        border-bottom: 2.5px solid #000000;
-        margin-top: 6px;
-        margin-bottom: 20px;
-    }
+    .suket-title { text-align: center; margin-bottom: 20px; }
+    .suket-title h3 { margin: 0 0 2px 0; font-size: 14.5px; font-weight: 700; letter-spacing: 0.3px; }
 
-    .suket-title {
-        text-align: center;
-        margin-bottom: 22px;
-    }
+    .suket-bio-table { width: 100%; margin: 6px 0 14px 0; font-size: 14px; border-collapse: collapse; }
+    .suket-bio-table td { padding: 2px 0; vertical-align: top; }
+    .suket-bio-table td:first-child { width: 150px; }
+    .suket-bio-table td:nth-child(2) { width: 14px; }
 
-    .suket-title h3 {
-        margin: 0 0 4px 0;
-        font-size: 17px;
-        font-weight: 700;
-        text-decoration: underline;
-        letter-spacing: 0.5px;
-    }
+    .ttd-dual-table { width: 100%; margin-top: 24px; font-size: 14px; border-collapse: collapse; }
+    .ttd-dual-table td { width: 50%; vertical-align: top; text-align: center; }
 
-    .ttd-dual-table {
-        width: 100%;
-        margin-top: 40px;
-        font-size: 14px;
-    }
-
-    .ttd-dual-table td {
-        width: 50%;
-        vertical-align: top;
-        text-align: center;
+    .catatan-dots {
+        border-bottom: 1.5px dotted #000;
+        height: 22px;
+        margin-bottom: 4px;
     }
 
     .qr-verify-seal {
-        margin: 6px auto;
-        padding: 5px;
-        border: 1px dashed #94a3b8;
-        border-radius: 6px;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        background: #f8fafc;
-        max-width: 250px;
-        text-align: left;
+        margin: 4px auto; padding: 4px 6px; border: 1px dashed #94a3b8; border-radius: 5px;
+        display: inline-flex; align-items: center; gap: 7px; background: #f8fafc; text-align: left;
     }
 
-    @page {
-        size: A4 portrait;
-        margin: 0;
-    }
+    @page { size: A4 portrait; margin: 0; }
 
     @media print {
         html, body {
-            background: #fff !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
+            background: #fff !important; margin: 0 !important; padding: 0 !important;
+            -webkit-print-color-adjust: exact; print-color-adjust: exact;
         }
-        .sidebar, .topbar, .editor-form-col, .preview-header-bar, .alert-toast { display: none !important; }
+        .sidebar, .topbar, .subpage-header, .editor-form-col, .preview-header-bar, .alert-toast { display: none !important; }
         .wrapper { margin-left: 0 !important; }
         .content { padding: 0 !important; }
         .editor-layout { display: block !important; }
         .preview-pane { position: static !important; }
         .preview-scroll-wrapper {
-            background: transparent !important;
-            padding: 0 !important;
-            box-shadow: none !important;
-            max-height: none !important;
-            overflow: visible !important;
-            display: block !important;
+            background: transparent !important; padding: 0 !important; box-shadow: none !important;
+            max-height: none !important; overflow: visible !important; display: block !important;
         }
         .sheet-a4 {
-            zoom: 1 !important;
-            box-shadow: none !important;
-            padding: 15mm 20mm !important;
-            width: 100% !important;
-            min-height: auto !important;
-            margin: 0 !important;
+            zoom: 1 !important; box-shadow: none !important;
+            padding: 10mm 17.5mm 12.5mm 10mm !important;
+            width: 100% !important; min-height: auto !important; margin: 0 !important;
         }
     }
 
@@ -224,23 +157,23 @@
 <div class="editor-layout">
     <!-- LEFT PANE: FORM -->
     <div class="editor-form-col">
-        <form method="POST" action="{{ route('surat.suket.store') }}" id="formSuket">
+        <form method="POST" action="{{ $isEdit ? route('surat.suket.update', $suket->id) : route('surat.suket.store') }}" id="formSuket">
             @csrf
+            @if($isEdit) @method('PUT') @endif
 
             <!-- CARD 1: DATA PEGAWAI -->
             <div class="form-card">
-                <div class="form-card-head">
-                    <span>👤</span> 1. Pegawai yang Bersangkutan
-                </div>
+                <div class="form-card-head"><span>👤</span> 1. Pegawai yang Bersangkutan</div>
                 <div class="form-card-body">
                     <div class="form-group">
                         <label class="form-label">Pilih dari Master Pegawai (148 Pegawai BWS Kalimantan I)</label>
                         <select id="selectPegawai" class="form-control" style="background:#f1f5f9; font-weight:600;">
                             <option value="">-- Pilih Nama Pegawai --</option>
                             @foreach($pegawais as $p)
-                                <option value="{{ $p->id }}" 
-                                    data-nama="{{ $p->nama_gelar }}" 
-                                    data-nip="{{ $p->nip }}" 
+                                <option value="{{ $p->id }}"
+                                    data-nama="{{ $p->nama_gelar }}"
+                                    data-nip="{{ $p->nip }}"
+                                    data-pangkat="{{ $p->pangkat }}"
                                     data-jabatan="{{ $p->jabatan_definitif ?? $p->jabatan_struktural ?? 'Staf Pelaksana' }}">
                                     {{ $p->nama_gelar }} — {{ $p->nip }} ({{ $p->unit ?? 'BWS Kalimantan I' }})
                                 </option>
@@ -251,89 +184,118 @@
                     <div class="grid-2">
                         <div class="form-group">
                             <label class="form-label">Nama Pegawai</label>
-                            <input type="text" name="nama_pegawai" id="inNamaPegawai" value="Juananda Dwi Satria, S.T." class="form-control" required>
+                            <input type="text" name="nama_pegawai" id="inNamaPegawai"
+                                   value="{{ old('nama_pegawai', $isEdit ? $suket->nama_pegawai : 'Juananda Dwi Satria, S.T.') }}"
+                                   class="form-control" required>
                         </div>
                         <div class="form-group">
                             <label class="form-label">NIP</label>
-                            <input type="text" name="nip_pegawai" id="inNipPegawai" value="199407072025061009" class="form-control">
+                            <input type="text" name="nip_pegawai" id="inNipPegawai"
+                                   value="{{ old('nip_pegawai', $isEdit ? $suket->nip_pegawai : '199407072025061009') }}"
+                                   class="form-control">
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <label class="form-label">Jabatan</label>
-                        <input type="text" name="jabatan_pegawai" id="inJabatanPegawai" value="Penata Kelola Penyehatan Lingkungan Ahli Pertama" class="form-control" required>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Pangkat / Golongan</label>
+                            <input type="text" name="pangkat_pegawai" id="inPangkatPegawai"
+                                   value="{{ old('pangkat_pegawai', $isEdit ? $suket->pangkat_pegawai : 'Penata Muda / III/a') }}"
+                                   class="form-control" placeholder="Penata Muda / III/a">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Jabatan</label>
+                            <input type="text" name="jabatan_pegawai" id="inJabatanPegawai"
+                                   value="{{ old('jabatan_pegawai', $isEdit ? $suket->jabatan_pegawai : 'Penata Kelola Penyehatan Lingkungan Ahli Pertama') }}"
+                                   class="form-control" required>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- CARD 2: RINCIAN KENDALA ABSEN -->
             <div class="form-card">
-                <div class="form-card-head">
-                    <span>⏰</span> 2. Rincian Lupa Absen
-                </div>
+                <div class="form-card-head"><span>⏰</span> 2. Rincian Izin / Lupa Absen</div>
                 <div class="form-card-body">
                     <div class="form-group">
                         <label class="form-label">Nomor Surat Keterangan</label>
-                        <input type="text" name="nomor_surat" id="inNomor" value="{{ $autoNomor ?? 'KP.07.03/Bws1/001/2026' }}" class="form-control" required>
+                        <input type="text" name="nomor_surat" id="inNomor"
+                               value="{{ old('nomor_surat', $autoNomor ?? 'KP.07.03/Bws1/001/2026') }}"
+                               class="form-control" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Jenis Keterangan (Yang tidak dipilih otomatis dicoret)</label>
+                        <div class="radio-grid">
+                            <label class="radio-pill">
+                                <input type="radio" name="jenis_absen" value="terlambat" {{ $jenisVal === 'terlambat' ? 'checked' : '' }}>
+                                Terlambat Masuk Kerja
+                            </label>
+                            <label class="radio-pill">
+                                <input type="radio" name="jenis_absen" value="pulangawal" {{ $jenisVal === 'pulangawal' ? 'checked' : '' }}>
+                                Pulang Sebelum Waktunya
+                            </label>
+                            <label class="radio-pill">
+                                <input type="radio" name="jenis_absen" value="masuk" {{ $jenisVal === 'masuk' ? 'checked' : '' }}>
+                                Lupa Absen Kedatangan
+                            </label>
+                            <label class="radio-pill">
+                                <input type="radio" name="jenis_absen" value="pulang" {{ $jenisVal === 'pulang' ? 'checked' : '' }}>
+                                Lupa Absen Kepulangan
+                            </label>
+                        </div>
                     </div>
 
                     <div class="grid-2">
                         <div class="form-group">
-                            <label class="form-label">Jenis Absensi</label>
-                            <div style="display:flex; gap:16px; margin-top:8px;">
-                                <label style="display:flex; align-items:center; gap:6px; font-size:13px; cursor:pointer;">
-                                    <input type="radio" name="jenis_absen" value="masuk" checked> Masuk Kerja
-                                </label>
-                                <label style="display:flex; align-items:center; gap:6px; font-size:13px; cursor:pointer;">
-                                    <input type="radio" name="jenis_absen" value="pulang"> Pulang Kerja
-                                </label>
-                            </div>
+                            <label class="form-label">Tanggal Kejadian</label>
+                            <input type="date" name="tanggal_kejadian" id="inTanggalAbsen" value="{{ $tglVal }}" class="form-control" required>
                         </div>
-
                         <div class="form-group">
                             <label class="form-label">Waktu Kejadian Presensi</label>
-                            <input type="text" name="waktu_kejadian" id="inWaktuKejadian" value="07:30" class="form-control" placeholder="07:30">
+                            <input type="text" name="waktu_kejadian" id="inWaktuKejadian"
+                                   value="{{ old('waktu_kejadian', $isEdit ? $suket->waktu_kejadian : '07:30') }}"
+                                   class="form-control" placeholder="07:30" required>
                         </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Tanggal Kejadian Lupa Absen</label>
-                        <input type="date" name="tanggal_kejadian" id="inTanggalAbsen" value="{{ date('Y-m-d') }}" class="form-control" required>
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">Alasan Kendala</label>
-                        <textarea name="alasan" id="inAlasan" rows="2" class="form-control" required>Jaringan internet seluler bermasalah dan aplikasi absensi online sedang maintenance saat jam presensi.</textarea>
+                        <textarea name="alasan" id="inAlasan" rows="2" class="form-control" required>{{ old('alasan', $isEdit ? $suket->alasan : 'Jaringan internet seluler bermasalah dan aplikasi absensi online sedang maintenance saat jam presensi.') }}</textarea>
                     </div>
                 </div>
             </div>
 
             <!-- CARD 3: ATASAN LANGSUNG -->
             <div class="form-card">
-                <div class="form-card-head">
-                    <span>👔</span> 3. Pejabat yang Menyetujui
-                </div>
+                <div class="form-card-head"><span>👔</span> 3. Pejabat yang Menyetujui</div>
                 <div class="form-card-body">
                     <div class="form-group">
                         <label class="form-label">Jabatan Atasan Langsung</label>
-                        <input type="text" name="atasan_jabatan" id="inAtasanJabatan" value="Kepala Sub Bagian Umum dan Tata Usaha" class="form-control" required>
+                        <input type="text" name="atasan_jabatan" id="inAtasanJabatan"
+                               value="{{ old('atasan_jabatan', $isEdit ? $suket->atasan_jabatan : 'Kepala Sub Bagian Umum dan Tata Usaha') }}"
+                               class="form-control" required>
                     </div>
 
                     <div class="grid-2">
                         <div class="form-group">
                             <label class="form-label">Nama Atasan Langsung</label>
-                            <input type="text" name="atasan_nama" id="inAtasanNama" value="Iswandi, S.E., S.T." class="form-control" required>
+                            <input type="text" name="atasan_nama" id="inAtasanNama"
+                                   value="{{ old('atasan_nama', $isEdit ? $suket->atasan_nama : 'Iswandi, S.E., S.T.') }}"
+                                   class="form-control" required>
                         </div>
                         <div class="form-group">
                             <label class="form-label">NIP Atasan</label>
-                            <input type="text" name="atasan_nip" id="inAtasanNip" value="197603222009111001" class="form-control">
+                            <input type="text" name="atasan_nip" id="inAtasanNip"
+                                   value="{{ old('atasan_nip', $isEdit ? $suket->atasan_nip : '197603222009111001') }}"
+                                   class="form-control">
                         </div>
                     </div>
 
                     <div style="margin-top:10px; padding:10px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:6px;">
                         <label style="font-size:12.5px; font-weight:600; color:#166534; display:flex; align-items:center; gap:8px; cursor:pointer;">
                             <input type="checkbox" id="chkQrStampSuket" checked>
-                            <span>Sertakan Stempel Digital & QR Code e-Sign BWS Kalimantan I</span>
+                            <span>Sertakan Stempel Digital &amp; QR Code e-Sign BWS Kalimantan I</span>
                         </label>
                     </div>
                 </div>
@@ -341,8 +303,13 @@
 
             <!-- SUBMIT BUTTONS -->
             <div style="display:flex; gap:12px; margin-bottom: 24px;">
+                @if($isEdit)
+                    <a href="{{ route('surat.suket.show', $suket->id) }}" class="btn-quick-create" style="background:#f1f5f9; color:#334155; justify-content:center; padding:12px 18px;">
+                        ← Batal
+                    </a>
+                @endif
                 <button type="submit" class="btn-quick-create" style="flex:1; justify-content:center; padding:12px; font-size:14px;">
-                    💾 Simpan ke Database Arsip
+                    💾 {{ $isEdit ? 'Simpan Perubahan Suket' : 'Simpan ke Database Arsip' }}
                 </button>
             </div>
         </form>
@@ -352,9 +319,12 @@
     <div class="preview-pane">
         <div class="preview-header-bar">
             <span style="font-size:13px; font-weight:700; color:var(--text-main); display:flex; align-items:center; gap:6px;">
-                <span>👁️</span> Pratinjau Kertas A4 (Siap Cetak Standar BWS)
+                <span>👁️</span> Pratinjau A4 Resmi (Sesuai Format Standar BWS)
             </span>
             <div style="display:flex; gap:8px;">
+                <button type="button" id="btnExportSuketDocx" class="btn-action" style="background:#0284c7; color:#ffffff; font-weight:600; padding:6px 12px; font-size:12.5px; display:flex; align-items:center; gap:5px; border-radius:6px; border:none; cursor:pointer;">
+                    <span>📄</span> Unduh Word (.docx)
+                </button>
                 <button type="button" onclick="window.print()" class="btn-action" style="background:var(--pu-navy); color:#ffffff; font-weight:600; padding:6px 14px; font-size:12.5px; display:flex; align-items:center; gap:5px; border-radius:6px; border:none; cursor:pointer;">
                     <span>🖨️</span> Cetak / PDF
                 </button>
@@ -363,87 +333,108 @@
 
         <div class="preview-scroll-wrapper">
             <div class="sheet-a4" id="sheetPrintArea">
-                <!-- KOP RESMI -->
-                <table class="kop-table">
-                    <tr>
-                        <td class="kop-logo-cell">
-                            <img src="{{ asset('images/logo_pu.png') }}" alt="Logo PU" class="kop-logo-img">
-                        </td>
-                        <td class="kop-text-cell">
-                            <div class="kop-line-1">{{ $kop['kementerian'] }}</div>
-                            <div class="kop-line-2">{{ $kop['ditjen'] }}</div>
-                            <div class="kop-line-3">{{ $kop['balai'] }}</div>
-                            <div class="kop-line-address">{{ $kop['alamat'] }}</div>
-                            <div class="kop-line-address">{{ $kop['kontak'] }}</div>
-                        </td>
-                    </tr>
-                </table>
-                <div class="kop-border-bottom"></div>
+                <div style="padding-left: 28px;">
+                    <!-- KOP RESMI (GARIS BAWAH DI KOLOM TEKS SEJAJAR LOGO) -->
+                    <table class="kop-table">
+                        <tr>
+                            <td class="kop-logo-cell">
+                                <img src="{{ asset('images/logo_pu.png') }}" alt="Logo PU" class="kop-logo-img">
+                            </td>
+                            <td class="kop-text-cell">
+                                <div class="kop-line-1">{{ $kop['kementerian'] }}</div>
+                                <div class="kop-line-2">{{ $kop['ditjen'] }}</div>
+                                <div class="kop-line-3">{{ $kop['balai'] }}</div>
+                                <div class="kop-line-address">{{ $kop['alamat'] }}</div>
+                            </td>
+                        </tr>
+                    </table>
 
-                <!-- TITLE -->
-                <div class="suket-title">
-                    <h3>SURAT KETERANGAN LUPA ABSEN</h3>
-                    <div style="font-size:13.5px;" id="pvNomor">Nomor : UM.01.02/Bws1/      /2026</div>
-                </div>
+                    <!-- TITLE -->
+                    <div class="suket-title">
+                        <h3>SURAT PERMOHONAN IZIN / PEMBERITAHUAN</h3>
+                        <div style="font-size:13.5px;" id="pvNomor">NOMOR {{ $autoNomor ?? 'KP.07.03/Bws1/001/2026' }}</div>
+                    </div>
 
-                <div style="margin-bottom:14px;">Yang bertanda tangan di bawah ini menerangkan bahwa:</div>
+                    <div style="margin-bottom:6px;">Yang bertandatangan di bawah ini:</div>
 
-                <table style="width:100%; margin-left:24px; margin-bottom:18px; font-size:14.5px;">
-                    <tr>
-                        <td style="width:130px; padding:2px 0;">Nama</td>
-                        <td style="width:15px;">:</td>
-                        <td id="pvNama" style="font-weight:bold;">Juananda Dwi Satria, S.T.</td>
-                    </tr>
-                    <tr>
-                        <td style="padding:2px 0;">NIP</td>
-                        <td>:</td>
-                        <td id="pvNip">199407072025061009</td>
-                    </tr>
-                    <tr>
-                        <td style="padding:2px 0;">Jabatan</td>
-                        <td>:</td>
-                        <td id="pvJabatan">Penata Kelola Penyehatan Lingkungan Ahli Pertama</td>
-                    </tr>
-                </table>
+                    <table class="suket-bio-table">
+                        <tr>
+                            <td>Nama</td>
+                            <td>:</td>
+                            <td id="pvNama">{{ old('nama_pegawai', $isEdit ? $suket->nama_pegawai : 'Juananda Dwi Satria, S.T.') }}</td>
+                        </tr>
+                        <tr>
+                            <td>NIP</td>
+                            <td>:</td>
+                            <td id="pvNip">{{ old('nip_pegawai', $isEdit ? $suket->nip_pegawai : '199407072025061009') }}</td>
+                        </tr>
+                        <tr>
+                            <td>Pangkat/Golongan</td>
+                            <td>:</td>
+                            <td id="pvPangkat">{{ old('pangkat_pegawai', $isEdit ? $suket->pangkat_pegawai : 'Penata Muda / III/a') }}</td>
+                        </tr>
+                        <tr>
+                            <td>Jabatan</td>
+                            <td>:</td>
+                            <td id="pvJabatan">{{ old('jabatan_pegawai', $isEdit ? $suket->jabatan_pegawai : 'Penata Kelola Penyehatan Lingkungan Ahli Pertama') }}</td>
+                        </tr>
+                    </table>
 
-                <div style="text-align:justify; line-height:1.6; margin-bottom:16px;">
-                    Benar bahwa pegawai yang bersangkutan telah hadir bekerja dan mengalami kendala lupa melakukan presensi <b id="pvJenisAbsen">MASUK</b> pada aplikasi absensi online pada tanggal <span id="pvTanggal">{{ date('d F Y') }}</span> pukul <span id="pvWaktu">07:30</span> WIB dengan alasan: <i id="pvAlasan">Jaringan internet seluler bermasalah dan aplikasi absensi online sedang maintenance saat jam presensi.</i>
-                </div>
+                    <div style="text-align:justify; line-height:1.6; margin: 14px 0 18px 0;" id="pvPernyataan">
+                        Dengan ini menerangkan bahwa pada hari <span id="pvHariTgl">{{ \Carbon\Carbon::parse($tglVal)->locale('id')->translatedFormat('l') }} tanggal {{ \Carbon\Carbon::parse($tglVal)->locale('id')->translatedFormat('d F Y') }}</span>,
+                        <span id="pvOpsiKalimat"></span>
+                        (*) karena: <span id="pvAlasan">{{ old('alasan', $isEdit ? $suket->alasan : 'Jaringan internet seluler bermasalah dan aplikasi absensi online sedang maintenance saat jam presensi.') }}</span>
+                    </div>
 
-                <div style="text-align:justify; line-height:1.6;">
-                    Demikian surat keterangan ini dibuat dengan sebenarnya untuk dipergunakan sebagaimana mestinya.
-                </div>
-
-                <!-- TTD DUAL -->
-                <table class="ttd-dual-table">
-                    <tr>
-                        <td>
-                            <div>Pegawai yang bersangkutan,</div>
-                            <div style="height:65px;"></div>
-                            <div id="pvTtdPegawai" style="font-weight:bold; text-decoration:underline;">Juananda Dwi Satria, S.T.</div>
-                            <div id="pvTtdNipPegawai">NIP. 199407072025061009</div>
-                        </td>
-                        <td>
-                            <div>Mengetahui / Menyetujui,</div>
-                            <div id="pvTtdAtasanJabatan">Kepala Sub Bagian Umum dan Tata Usaha</div>
-                            
-                            <!-- QR VERIFICATION STAMP -->
-                            <div id="pvQrSealSuket" style="padding: 6px 0;">
-                                <div class="qr-verify-seal">
-                                    <div id="qrCanvasContainerSuket"></div>
-                                    <div style="font-size:9px; color:#475569; line-height:1.2;">
-                                        <b>KEMENTERIAN PU</b><br>
-                                        BWS Kalimantan I<br>
-                                        <span style="color:#0284c7; font-weight:600;">Disetujui Elektronik</span>
+                    <!-- TTD DUAL -->
+                    <table class="ttd-dual-table">
+                        <tr>
+                            <td></td>
+                            <td>
+                                <div id="pvTglSurat">Pontianak, {{ \Carbon\Carbon::parse($tglVal)->locale('id')->translatedFormat('d F Y') }}</div>
+                                <div>Disetujui/Tidak disetujui (*) oleh</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="vertical-align:bottom; padding-top:4px;">Pegawai yang bersangkutan,</td>
+                            <td style="vertical-align:top; padding-top:4px;" id="pvTtdAtasanJabatan">{{ old('atasan_jabatan', $isEdit ? $suket->atasan_jabatan : 'Kepala Sub Bagian Umum dan Tata Usaha') }}</td>
+                        </tr>
+                        <tr>
+                            <td style="height:78px;"></td>
+                            <td style="height:78px; vertical-align:middle;">
+                                <div id="pvQrSealSuket">
+                                    <div class="qr-verify-seal">
+                                        <div id="qrCanvasContainerSuket"></div>
+                                        <div style="font-size:8.5px; color:#475569; line-height:1.2;">
+                                            <b>KEMENTERIAN PU</b><br>
+                                            BWS Kalimantan I<br>
+                                            <span style="color:#0284c7; font-weight:600;">Disetujui Elektronik</span>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div id="pvTtdPegawai" style="text-decoration:underline;">{{ old('nama_pegawai', $isEdit ? $suket->nama_pegawai : 'Juananda Dwi Satria, S.T.') }}</div>
+                                <div id="pvTtdNipPegawai">NIP. {{ old('nip_pegawai', $isEdit ? $suket->nip_pegawai : '199407072025061009') }}</div>
+                            </td>
+                            <td>
+                                <div id="pvTtdAtasanNama" style="text-decoration:underline;">{{ old('atasan_nama', $isEdit ? $suket->atasan_nama : 'Iswandi, S.E., S.T.') }}</div>
+                                <div id="pvTtdAtasanNip">NIP. {{ old('atasan_nip', $isEdit ? $suket->atasan_nip : '197603222009111001') }}</div>
+                            </td>
+                        </tr>
+                    </table>
 
-                            <div id="pvTtdAtasanNama" style="font-weight:bold; text-decoration:underline;">Iswandi, S.E., S.T.</div>
-                            <div id="pvTtdAtasanNip">NIP. 197603222009111001</div>
-                        </td>
-                    </tr>
-                </table>
+                    <!-- CATATAN ALASAN TIDAK DISETUJUI -->
+                    <div style="margin-top: 34px;">
+                        <div style="margin-bottom: 6px;">Catatan Alasan Tidak Disetujui:</div>
+                        <div class="catatan-dots"></div>
+                        <div class="catatan-dots"></div>
+                        <div class="catatan-dots"></div>
+                        <div style="margin-top: 14px; font-size: 13px;">(*) Coret yang tidak perlu</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -451,11 +442,15 @@
 @endsection
 
 @push('scripts')
+<script src="{{ asset('js/jszip.min.js') }}"></script>
+<script src="{{ asset('js/surat_constants.js') }}"></script>
+<script src="{{ asset('js/docgen.js') }}"></script>
 <script src="{{ asset('js/qrcode.min.js') }}"></script>
 <script>
     const inNomor = document.getElementById('inNomor');
     const inNama = document.getElementById('inNamaPegawai');
     const inNip = document.getElementById('inNipPegawai');
+    const inPangkat = document.getElementById('inPangkatPegawai');
     const inJabatan = document.getElementById('inJabatanPegawai');
     const inAlasan = document.getElementById('inAlasan');
     const inWaktu = document.getElementById('inWaktuKejadian');
@@ -466,6 +461,52 @@
     const selectPegawai = document.getElementById('selectPegawai');
     const chkQrStampSuket = document.getElementById('chkQrStampSuket');
 
+    const SUKET_OPSI = [
+        ['terlambat', 'saya terlambat masuk kerja'],
+        ['pulangawal', 'pulang sebelum waktunya'],
+        ['masuk', 'tidak mengisi daftar hadir kedatangan'],
+        ['pulang', 'tidak mengisi daftar hadir kepulangan']
+    ];
+    const BULAN = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+    const HARI  = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+
+    function fmtPangkat(s) {
+        s = String(s || '').trim();
+        const m = /^(.*?)\s*\/?\s*\(\s*([IV]+)\s*\/\s*([a-e])\s*\)\s*$/i.exec(s);
+        return m ? m[1].trim() + ' / ' + m[2].toUpperCase() + '/' + m[3].toLowerCase() : s;
+    }
+
+    function getSelectedJenis() {
+        const chk = document.querySelector('input[name="jenis_absen"]:checked');
+        return chk ? chk.value : 'masuk';
+    }
+
+    function renderOpsiKalimat() {
+        const pick = getSelectedJenis();
+        let html = '';
+        SUKET_OPSI.forEach((o, i) => {
+            const on = o[0] === pick;
+            const last = i === SUKET_OPSI.length - 1;
+            if (on) {
+                html += (i ? ' ' : '') + '<span>' + o[1] + '</span>' + (last ? '' : ' ');
+            } else if (last) {
+                html += '<del>/ ' + o[1] + '</del>';
+            } else {
+                html += '<del>' + (i ? ' ' : '') + o[1] + ' /</del>';
+            }
+        });
+        document.getElementById('pvOpsiKalimat').innerHTML = html;
+    }
+
+    function renderTanggal() {
+        const val = inTanggalAbsen.value;
+        const p = val ? val.split('-') : [];
+        const d = p.length === 3 ? new Date(+p[0], +p[1] - 1, +p[2]) : new Date();
+        const tglStr = d.getDate() + ' ' + BULAN[d.getMonth()] + ' ' + d.getFullYear();
+        document.getElementById('pvHariTgl').innerText = HARI[d.getDay()] + ' tanggal ' + tglStr;
+        document.getElementById('pvTglSurat').innerText = 'Pontianak, ' + tglStr;
+    }
+
     function renderSuketQr() {
         const wrap = document.getElementById('pvQrSealSuket');
         if (!chkQrStampSuket.checked) {
@@ -475,27 +516,21 @@
         wrap.style.display = 'block';
         const box = document.getElementById('qrCanvasContainerSuket');
         box.innerHTML = '';
-        const txt = 'SUKET LUPA ABSEN BWS KALIMANTAN I\n' +
+        const txt = 'SUKET BWS KALIMANTAN I\n' +
                     'No: ' + inNomor.value + '\n' +
                     'Pegawai: ' + inNama.value + ' (NIP: ' + inNip.value + ')\n' +
                     'Tanggal: ' + inTanggalAbsen.value + '\n' +
                     'Disetujui: ' + inAtasanNama.value;
         if (typeof QRCode !== 'undefined') {
             new QRCode(box, {
-                text: txt,
-                width: 55,
-                height: 55,
-                colorDark: '#0f172a',
-                colorLight: '#ffffff',
+                text: txt, width: 52, height: 52,
+                colorDark: '#0f172a', colorLight: '#ffffff',
                 correctLevel: QRCode.CorrectLevel.M
             });
         }
     }
 
-    inNomor.addEventListener('input', () => {
-        document.getElementById('pvNomor').innerText = 'Nomor : ' + inNomor.value;
-        renderSuketQr();
-    });
+    inNomor.addEventListener('input', () => { document.getElementById('pvNomor').innerText = 'NOMOR ' + inNomor.value; renderSuketQr(); });
     inNama.addEventListener('input', () => {
         document.getElementById('pvNama').innerText = inNama.value;
         document.getElementById('pvTtdPegawai').innerText = inNama.value;
@@ -503,50 +538,101 @@
     });
     inNip.addEventListener('input', () => {
         document.getElementById('pvNip').innerText = inNip.value;
-        document.getElementById('pvTtdNipPegawai').innerText = 'NIP. ' + inNip.value;
+        document.getElementById('pvTtdNipPegawai').innerText = inNip.value ? 'NIP. ' + inNip.value : '';
         renderSuketQr();
     });
+    inPangkat.addEventListener('input', () => document.getElementById('pvPangkat').innerText = inPangkat.value);
     inJabatan.addEventListener('input', () => document.getElementById('pvJabatan').innerText = inJabatan.value);
     inAlasan.addEventListener('input', () => document.getElementById('pvAlasan').innerText = inAlasan.value);
-    inWaktu.addEventListener('input', () => document.getElementById('pvWaktu').innerText = inWaktu.value);
-
-    inTanggalAbsen.addEventListener('input', () => {
-        const d = inTanggalAbsen.value ? new Date(inTanggalAbsen.value) : new Date();
-        const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
-        document.getElementById('pvTanggal').innerText = d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
-        renderSuketQr();
-    });
-
-    inAtasanNama.addEventListener('input', () => {
-        document.getElementById('pvTtdAtasanNama').innerText = inAtasanNama.value;
-        renderSuketQr();
-    });
-    inAtasanNip.addEventListener('input', () => document.getElementById('pvTtdAtasanNip').innerText = 'NIP. ' + inAtasanNip.value);
+    inTanggalAbsen.addEventListener('input', () => { renderTanggal(); renderSuketQr(); });
+    inAtasanNama.addEventListener('input', () => { document.getElementById('pvTtdAtasanNama').innerText = inAtasanNama.value; renderSuketQr(); });
+    inAtasanNip.addEventListener('input', () => document.getElementById('pvTtdAtasanNip').innerText = inAtasanNip.value ? 'NIP. ' + inAtasanNip.value : '');
     inAtasanJabatan.addEventListener('input', () => document.getElementById('pvTtdAtasanJabatan').innerText = inAtasanJabatan.value);
 
-    document.querySelectorAll('input[name="jenis_absen"]').forEach(r => {
-        r.addEventListener('change', function() {
-            document.getElementById('pvJenisAbsen').innerText = this.value.toUpperCase();
-        });
-    });
+    document.querySelectorAll('input[name="jenis_absen"]').forEach(r => r.addEventListener('change', renderOpsiKalimat));
 
     selectPegawai.addEventListener('change', function() {
         const opt = this.options[this.selectedIndex];
         if (opt.value) {
-            inNama.value = opt.getAttribute('data-nama');
+            inNama.value = opt.getAttribute('data-nama') || '';
             inNip.value = opt.getAttribute('data-nip') || '';
-            inJabatan.value = opt.getAttribute('data-jabatan');
+            inPangkat.value = fmtPangkat(opt.getAttribute('data-pangkat') || '');
+            inJabatan.value = opt.getAttribute('data-jabatan') || '';
 
             document.getElementById('pvNama').innerText = inNama.value;
             document.getElementById('pvTtdPegawai').innerText = inNama.value;
             document.getElementById('pvNip').innerText = inNip.value;
-            document.getElementById('pvTtdNipPegawai').innerText = 'NIP. ' + inNip.value;
+            document.getElementById('pvTtdNipPegawai').innerText = inNip.value ? 'NIP. ' + inNip.value : '';
+            document.getElementById('pvPangkat').innerText = inPangkat.value;
             document.getElementById('pvJabatan').innerText = inJabatan.value;
             renderSuketQr();
         }
     });
 
     chkQrStampSuket.addEventListener('change', renderSuketQr);
+    renderOpsiKalimat();
+    renderTanggal();
     renderSuketQr();
+
+    // Export DOCX Suket via DocGen
+    document.getElementById('btnExportSuketDocx').addEventListener('click', function() {
+        const btn = this;
+        const orig = btn.innerHTML;
+        btn.innerHTML = '<span>⏳</span> Membuat .docx...';
+        btn.disabled = true;
+
+        try {
+            const pick = getSelectedJenis();
+            const docData = {
+                mode: 'suket',
+                sk_nomor: inNomor.value,
+                sk_nama: inNama.value,
+                sk_nip: inNip.value,
+                sk_pangkat: inPangkat.value,
+                sk_jabatan: inJabatan.value,
+                sk_tglAbsen: inTanggalAbsen.value,
+                sk_tglSurat: inTanggalAbsen.value,
+                sk_kota: 'Pontianak',
+                sk_jenis: pick === 'pulang' ? 'pulang' : 'masuk',
+                sk_alasan: inAlasan.value,
+                sk_appJab: inAtasanJabatan.value,
+                sk_appNama: inAtasanNama.value,
+                sk_appNip: inAtasanNip.value
+            };
+
+            const kopSpec = {
+                line1: @json($kop['kementerian']),
+                line2: @json($kop['ditjen']),
+                line3: [@json($kop['balai'])],
+                line4: @json($kop['alamat'] . ' | ' . $kop['kontak'])
+            };
+
+            DocGen.build(docData, {
+                kop: kopSpec,
+                logo: { b64: typeof LOGO !== 'undefined' ? LOGO : '' },
+                arialW: typeof ARIALW !== 'undefined' ? ARIALW : null,
+                JSZip: JSZip,
+                outType: 'blob'
+            }).then(function(blob) {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = ('Suket_' + (inNama.value || 'Pegawai')).replace(/[^a-zA-Z0-9_-]/g, '_') + '.docx';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                btn.innerHTML = orig;
+                btn.disabled = false;
+            }).catch(function(err) {
+                alert('Gagal ekspor Word: ' + (err.message || err));
+                btn.innerHTML = orig;
+                btn.disabled = false;
+            });
+        } catch (e) {
+            btn.innerHTML = orig;
+            btn.disabled = false;
+        }
+    });
 </script>
 @endpush

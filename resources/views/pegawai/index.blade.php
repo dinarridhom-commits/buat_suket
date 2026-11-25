@@ -250,8 +250,8 @@
         <button type="button" class="btn-add-pegawai" onclick="openAddModal()">
             <span>➕</span> Tambah Pegawai Baru
         </button>
-        <a href="{{ route('pegawai.export.csv') }}" class="btn-add-pegawai" style="background: #047857; text-decoration:none;">
-            <span>📥</span> Export CSV
+        <a href="{{ route('pegawai.export.excel', request()->only(['q', 'unit'])) }}" class="btn-add-pegawai" style="background: #047857; text-decoration:none;">
+            <span>📊</span> Ekspor Excel
         </a>
     </div>
 

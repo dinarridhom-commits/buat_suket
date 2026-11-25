@@ -1,7 +1,19 @@
 @extends('layouts.app')
 
-@section('title', 'Buat Surat Undangan')
-@section('header_title', 'Generator Surat Undangan Kedinasan')
+@php
+    $isEdit = isset($surat);
+    $tglSuratVal = old('tanggal_surat', $isEdit ? $surat->tanggal_surat->format('Y-m-d') : date('Y-m-d'));
+    $penerimaList = $isEdit && $surat->penerimas->count() > 0
+        ? $surat->penerimas->pluck('nama_penerima')->toArray()
+        : [
+            'Para Pejabat Administrator BWS Kalimantan I',
+            'Para Kepala Satuan Kerja di Lingkungan BWS Kalimantan I',
+            'Para Pejabat Pembuat Komitmen (PPK) di Lingkungan BWS Kalimantan I',
+        ];
+@endphp
+
+@section('title', $isEdit ? 'Edit Surat Undangan' : 'Buat Surat Undangan')
+@section('header_title', $isEdit ? 'Edit Surat Undangan Kedinasan' : 'Generator Surat Undangan Kedinasan')
 @section('header_subtitle', 'Format Resmi Balai Wilayah Sungai Kalimantan I Pontianak — Multi-Lembar (Asli, Paraf, Lampiran, Konsep)')
 
 @push('styles')
@@ -137,37 +149,37 @@
     .kop-table {
         width: 100%;
         border-collapse: collapse;
-        margin-bottom: 6px;
+        margin-bottom: 16px;
     }
 
     .kop-table td {
-        vertical-align: middle;
+        vertical-align: bottom;
     }
 
     .kop-logo-cell {
-        width: 90px;
-        text-align: center;
+        width: 92px;
+        text-align: left;
+        padding-right: 10px;
     }
 
     .kop-logo-img {
-        width: 80px;
-        height: auto;
+        width: 82px;
+        height: 82px;
+        object-fit: contain;
+        display: block;
     }
 
     .kop-text-cell {
         text-align: center;
-        padding-right: 20px;
+        border-bottom: 2px solid #000000;
+        padding-bottom: 5px;
     }
 
-    .kop-line-1 { font-size: 14.5px; font-weight: bold; letter-spacing: 0.3px; }
-    .kop-line-2 { font-size: 15.5px; font-weight: bold; letter-spacing: 0.3px; }
-    .kop-line-3 { font-size: 16px; font-weight: bold; letter-spacing: 0.3px; }
-    .kop-line-address { font-size: 10.5px; margin-top: 3px; line-height: 1.3; }
-    .kop-border-bottom {
-        border-bottom: 2.5px solid #000000;
-        margin-top: 6px;
-        margin-bottom: 16px;
-    }
+    .kop-line-1 { font-size: 17px; font-weight: 400; letter-spacing: 0.2px; line-height: 1.2; }
+    .kop-line-2 { font-size: 12px; font-weight: 400; line-height: 1.25; }
+    .kop-line-3 { font-size: 9.5px; font-weight: 700; line-height: 1.25; }
+    .kop-line-address { font-size: 8.5px; margin-top: 2px; line-height: 1.25; }
+    .kop-border-bottom { display: none; }
 
     .letter-meta-table {
         width: 100%;
@@ -283,7 +295,7 @@
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
         }
-        .sidebar, .topbar, .editor-form-col, .preview-header-bar, .alert-toast { display: none !important; }
+        .sidebar, .topbar, .subpage-header, .editor-form-col, .preview-header-bar, .alert-toast { display: none !important; }
         .wrapper { margin-left: 0 !important; }
         .content { padding: 0 !important; }
         .editor-layout { display: block !important; }
@@ -318,34 +330,35 @@
 <div class="editor-layout">
     <!-- LEFT PANE: FORM -->
     <div class="editor-form-col">
-        <form method="POST" action="{{ route('surat.undangan.store') }}" id="formSurat">
+        <form method="POST" action="{{ $isEdit ? route('surat.undangan.update', $surat->id) : route('surat.undangan.store') }}" id="formSurat">
             @csrf
+            @if($isEdit) @method('PUT') @endif
 
             <!-- CARD 1: KEPALA SURAT -->
             <div class="form-card">
                 <div class="form-card-head">
-                    <span>📑</span> 1. Informasi & Penomoran Surat
+                    <span>📑</span> 1. Informasi &amp; Penomoran Surat
                 </div>
                 <div class="form-card-body">
                     <div class="form-group">
                         <label class="form-label">Nomor Surat Dinas</label>
-                        <input type="text" name="nomor_surat" id="inNomor" value="{{ $autoNomor ?? 'UM.01.02/Bws1/001/2026' }}" class="form-control" required>
+                        <input type="text" name="nomor_surat" id="inNomor" value="{{ old('nomor_surat', $autoNomor ?? 'UM.01.02/Bws1/001/2026') }}" class="form-control" required>
                     </div>
 
                     <div class="grid-2">
                         <div class="form-group">
                             <label class="form-label">Sifat</label>
-                            <input type="text" name="sifat" id="inSifat" value="Biasa / Segera" class="form-control">
+                            <input type="text" name="sifat" id="inSifat" value="{{ old('sifat', $isEdit ? $surat->sifat : 'Biasa / Segera') }}" class="form-control">
                         </div>
                         <div class="form-group">
                             <label class="form-label">Lampiran</label>
-                            <input type="text" name="lampiran" id="inLampiran" value="1 (satu) Berkas" class="form-control">
+                            <input type="text" name="lampiran" id="inLampiran" value="{{ old('lampiran', $isEdit ? $surat->lampiran : '1 (satu) Berkas') }}" class="form-control">
                         </div>
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">Hal / Perihal</label>
-                        <input type="text" name="hal" id="inHal" value="Undangan Rapat Koordinasi Teknis" class="form-control" required>
+                        <input type="text" name="hal" id="inHal" value="{{ old('hal', $isEdit ? $surat->hal : 'Undangan Rapat Koordinasi Teknis') }}" class="form-control" required>
                     </div>
 
                     <div class="grid-2">
@@ -355,7 +368,7 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label">Tanggal Surat</label>
-                            <input type="date" name="tanggal_surat" id="inTanggalSurat" value="{{ date('Y-m-d') }}" class="form-control" required>
+                            <input type="date" name="tanggal_surat" id="inTanggalSurat" value="{{ $tglSuratVal }}" class="form-control" required>
                         </div>
                     </div>
                 </div>
@@ -364,28 +377,28 @@
             <!-- CARD 2: JADWAL & TEMPAT ACARA -->
             <div class="form-card">
                 <div class="form-card-head">
-                    <span>📅</span> 2. Jadwal & Tempat Acara
+                    <span>📅</span> 2. Jadwal &amp; Tempat Acara
                 </div>
                 <div class="form-card-body">
                     <div class="form-group">
                         <label class="form-label">Hari / Tanggal Acara</label>
-                        <input type="text" name="hari_tanggal_acara" id="inHariTanggalAcara" value="Senin / 30 November 2026" class="form-control">
+                        <input type="text" name="hari_tanggal_acara" id="inHariTanggalAcara" value="{{ old('hari_tanggal_acara', $isEdit ? $surat->hari_tanggal_acara : 'Senin / 30 November 2026') }}" class="form-control">
                     </div>
 
                     <div class="grid-2">
                         <div class="form-group">
                             <label class="form-label">Waktu Pelaksanaan</label>
-                            <input type="text" name="waktu_acara" id="inWaktuAcara" value="09.00 WIB s.d Selesai" class="form-control">
+                            <input type="text" name="waktu_acara" id="inWaktuAcara" value="{{ old('waktu_acara', $isEdit ? $surat->waktu_acara : '09.00 WIB s.d Selesai') }}" class="form-control">
                         </div>
                         <div class="form-group">
                             <label class="form-label">Tempat Pertemuan</label>
-                            <input type="text" name="tempat" id="inTempat" value="Ruang Rapat BWS Kalimantan I Pontianak" class="form-control" required>
+                            <input type="text" name="tempat" id="inTempat" value="{{ old('tempat', $isEdit ? $surat->tempat : 'Ruang Rapat BWS Kalimantan I Pontianak') }}" class="form-control" required>
                         </div>
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">Agenda / Pembahasan Pokok</label>
-                        <textarea name="agenda" id="inAgenda" rows="2" class="form-control">Rapat Pembahasan Evaluasi Kinerja Triwulan Program Pengelolaan SDA</textarea>
+                        <textarea name="agenda" id="inAgenda" rows="2" class="form-control">{{ old('agenda', $isEdit ? $surat->agenda : 'Rapat Pembahasan Evaluasi Kinerja Triwulan Program Pengelolaan SDA') }}</textarea>
                     </div>
                 </div>
             </div>
@@ -436,18 +449,12 @@
                 </div>
                 <div class="form-card-body">
                     <div id="penerimaContainer">
-                        <div class="form-group" style="display:flex; gap:6px;">
-                            <input type="text" name="penerimas[]" class="form-control in-penerima" value="Para Pejabat Administrator BWS Kalimantan I">
-                            <button type="button" style="border:1px solid #fca5a5; background:#fff1f2; color:#b91c1c; border-radius:6px; padding:0 10px; cursor:pointer;" onclick="this.parentElement.remove(); syncPenerimaList();">✕</button>
-                        </div>
-                        <div class="form-group" style="display:flex; gap:6px;">
-                            <input type="text" name="penerimas[]" class="form-control in-penerima" value="Para Kepala Satuan Kerja di Lingkungan BWS Kalimantan I">
-                            <button type="button" style="border:1px solid #fca5a5; background:#fff1f2; color:#b91c1c; border-radius:6px; padding:0 10px; cursor:pointer;" onclick="this.parentElement.remove(); syncPenerimaList();">✕</button>
-                        </div>
-                        <div class="form-group" style="display:flex; gap:6px;">
-                            <input type="text" name="penerimas[]" class="form-control in-penerima" value="Para Pejabat Pembuat Komitmen (PPK) di Lingkungan BWS Kalimantan I">
-                            <button type="button" style="border:1px solid #fca5a5; background:#fff1f2; color:#b91c1c; border-radius:6px; padding:0 10px; cursor:pointer;" onclick="this.parentElement.remove(); syncPenerimaList();">✕</button>
-                        </div>
+                        @foreach($penerimaList as $pNama)
+                            <div class="form-group" style="display:flex; gap:6px;">
+                                <input type="text" name="penerimas[]" class="form-control in-penerima" value="{{ $pNama }}">
+                                <button type="button" style="border:1px solid #fca5a5; background:#fff1f2; color:#b91c1c; border-radius:6px; padding:0 10px; cursor:pointer;" onclick="this.parentElement.remove(); syncPenerimaList();">✕</button>
+                            </div>
+                        @endforeach
                     </div>
                 </div>
             </div>
@@ -476,17 +483,17 @@
 
                     <div class="form-group">
                         <label class="form-label">Jabatan Penandatangan</label>
-                        <input type="text" name="penandatangan_jabatan" id="inTtdJabatan" value="Plt. Kepala Balai Wilayah Sungai Kalimantan I Pontianak" class="form-control" required>
+                        <input type="text" name="penandatangan_jabatan" id="inTtdJabatan" value="{{ old('penandatangan_jabatan', $isEdit ? $surat->penandatangan_jabatan : 'Plt. Kepala Balai Wilayah Sungai Kalimantan I Pontianak') }}" class="form-control" required>
                     </div>
 
                     <div class="grid-2">
                         <div class="form-group">
-                            <label class="form-label">Nama Lengkap & Gelar</label>
-                            <input type="text" name="penandatangan_nama" id="inTtdNama" value="Donni Saputra, S.T, M.Si., M.T." class="form-control" required>
+                            <label class="form-label">Nama Lengkap &amp; Gelar</label>
+                            <input type="text" name="penandatangan_nama" id="inTtdNama" value="{{ old('penandatangan_nama', $isEdit ? $surat->penandatangan_nama : 'Donni Saputra, S.T, M.Si., M.T.') }}" class="form-control" required>
                         </div>
                         <div class="form-group">
                             <label class="form-label">NIP</label>
-                            <input type="text" name="penandatangan_nip" id="inTtdNip" value="197611012005021003" class="form-control">
+                            <input type="text" name="penandatangan_nip" id="inTtdNip" value="{{ old('penandatangan_nip', $isEdit ? $surat->penandatangan_nip : '197611012005021003') }}" class="form-control">
                         </div>
                     </div>
 
@@ -512,8 +519,13 @@
 
             <!-- SUBMIT BUTTONS -->
             <div style="display:flex; gap:12px; margin-bottom: 24px;">
+                @if($isEdit)
+                    <a href="{{ route('surat.undangan.show', $surat->id) }}" class="btn-quick-create" style="background:#f1f5f9; color:#334155; justify-content:center; padding:12px 18px;">
+                        ← Batal
+                    </a>
+                @endif
                 <button type="submit" class="btn-quick-create" style="flex:1; justify-content:center; padding:12px; font-size:14px;">
-                    💾 Simpan ke Database Arsip
+                    💾 {{ $isEdit ? 'Simpan Perubahan Surat' : 'Simpan ke Database Arsip' }}
                 </button>
             </div>
         </form>
@@ -1052,7 +1064,27 @@
     }
 
     chkQrStamp.addEventListener('change', renderQrSeal);
-    renderQrSeal();
+
+    // Sinkronisasi awal agar mode Edit & Create langsung sesuai di preview
+    document.getElementById('pvNomor').innerText = inNomor.value;
+    document.getElementById('pvLpNomor').innerText = inNomor.value;
+    document.getElementById('pvKpNomor').innerText = inNomor.value;
+    document.getElementById('pvSifat').innerText = inSifat.value;
+    document.getElementById('pvLampiran').innerText = inLampiran.value;
+    document.getElementById('pvHal').innerText = inHal.value;
+    document.getElementById('pvLpHal').innerText = inHal.value;
+    document.getElementById('pvKpHal').innerText = inHal.value;
+    document.getElementById('pvHariTanggal').innerText = inHariTanggal.value;
+    document.getElementById('pvWaktu').innerText = inWaktu.value;
+    document.getElementById('pvTempat').innerText = inTempat.value;
+    document.getElementById('pvAgenda').innerText = inAgenda.value;
+    document.getElementById('pvTtdJabatan').innerText = inTtdJabatan.value;
+    document.getElementById('pvLpTtdJabatan').innerText = inTtdJabatan.value;
+    document.getElementById('pvTtdNama').innerText = inTtdNama.value;
+    document.getElementById('pvLpTtdNama').innerText = inTtdNama.value;
+    document.getElementById('pvTtdNip').innerText = inTtdNip.value ? 'NIP. ' + inTtdNip.value : '';
+    document.getElementById('pvLpTtdNip').innerText = inTtdNip.value ? 'NIP. ' + inTtdNip.value : '';
+    updateTanggalPreview();
     syncPenerimaList();
 
     // Export DOCX (.docx) via DocGen & JSZip
@@ -1078,37 +1110,45 @@
                 tanggal: inTanggalSurat.value,
                 ythMode: 'langsung',
                 ythText: penerimas.join('\n'),
+                diTempat: 'Tempat',
                 ttd_jab: inTtdJabatan.value,
                 ttd_nama: inTtdNama.value,
                 ttd_nip: inTtdNip.value,
+                showNip: true,
+                konf_jab: 'Kasubbag Umum & TU',
+                konf_nama: inParaf1.value,
+                pem_jab: 'Kasi / Penelaah Teknis',
+                pem_nama: inParaf2.value,
                 body: [
                     {
-                        type: 'para',
+                        type: 'paragraph',
                         indent: true,
                         text: 'Sehubungan dengan pelaksanaan program kegiatan pada Balai Wilayah Sungai Kalimantan I Pontianak, dengan ini kami mengharapkan kehadiran Bapak/Ibu pada rapat yang akan dilaksanakan pada:'
                     },
                     {
-                        type: 'jadwal',
-                        hari: inHariTanggal.value,
-                        waktu: inWaktu.value,
-                        tempat: inTempat.value,
-                        agenda: inAgenda.value
+                        type: 'points',
+                        items: [
+                            { label: 'Hari / Tanggal', value: inHariTanggal.value },
+                            { label: 'Waktu', value: inWaktu.value },
+                            { label: 'Tempat', value: inTempat.value },
+                            { label: 'Agenda', value: inAgenda.value }
+                        ]
                     },
                     {
-                        type: 'para',
-                        indent: true,
+                        type: 'paragraph',
+                        indent: false,
                         text: 'Mengingat pentingnya acara tersebut di atas, diharapkan hadir tepat pada waktunya. Demikian kami sampaikan, atas perhatian dan kehadirannya diucapkan terima kasih.'
                     }
                 ],
-                pages: { asli: true, paraf: true, konsep: true, lampiran: true },
+                pages: { asli: true, paraf: false, konsep: false, lampiran: false },
                 margin: { top: 2.5, bottom: 2.5, left: 2.5, right: 2.5 }
             };
 
             const kopSpec = {
-                line1: 'KEMENTERIAN PEKERJAAN UMUM',
-                line2: 'DIREKTORAT JENDERAL SUMBER DAYA AIR',
-                line3: ['BALAI WILAYAH SUNGAI KALIMANTAN I PONTIANAK'],
-                line4: 'Jl. Ahmad Yani No. 1 Pontianak, Kalimantan Barat'
+                line1: @json($kop['kementerian']),
+                line2: @json($kop['ditjen']),
+                line3: [@json($kop['balai'])],
+                line4: @json($kop['alamat'] . ' | ' . $kop['kontak'])
             };
 
             if (typeof DocGen !== 'undefined' && typeof JSZip !== 'undefined') {

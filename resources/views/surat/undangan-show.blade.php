@@ -48,6 +48,8 @@
     }
 
     .btn-back     { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; }
+    .btn-edit     { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+    .btn-docx     { background: #0284c7; color: #fff; }
     .btn-print    { background: var(--pu-navy); color: #fff; }
     .btn-final    { background: #047857; color: #fff; }
     .btn-draft    { background: #b45309; color: #fff; }
@@ -94,16 +96,16 @@
         position: relative;
     }
 
-    .kop-table { width: 100%; border-collapse: collapse; margin-bottom: 6px; }
-    .kop-table td { vertical-align: middle; }
-    .kop-logo-cell { width: 90px; text-align: center; }
-    .kop-logo-img  { width: 80px; height: auto; }
-    .kop-text-cell { text-align: center; padding-right: 20px; }
-    .kop-line-1 { font-size: 14.5px; font-weight: bold; }
-    .kop-line-2 { font-size: 15.5px; font-weight: bold; }
-    .kop-line-3 { font-size: 16px; font-weight: bold; }
-    .kop-line-address { font-size: 10.5px; margin-top: 3px; line-height: 1.3; }
-    .kop-border-bottom { border-bottom: 2.5px solid #000; margin-top: 6px; margin-bottom: 16px; }
+    .kop-table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+    .kop-table td { vertical-align: bottom; }
+    .kop-logo-cell { width: 92px; text-align: left; padding-right: 10px; }
+    .kop-logo-img  { width: 82px; height: 82px; object-fit: contain; display: block; }
+    .kop-text-cell { text-align: center; border-bottom: 2px solid #000000; padding-bottom: 5px; }
+    .kop-line-1 { font-size: 17px; font-weight: 400; letter-spacing: 0.2px; line-height: 1.2; }
+    .kop-line-2 { font-size: 12px; font-weight: 400; line-height: 1.25; }
+    .kop-line-3 { font-size: 9.5px; font-weight: 700; line-height: 1.25; }
+    .kop-line-address { font-size: 8.5px; margin-top: 2px; line-height: 1.25; }
+    .kop-border-bottom { display: none; }
 
     .letter-meta-table { width: 100%; margin-bottom: 14px; font-size: 14.5px; }
     .letter-meta-table td { vertical-align: top; padding: 1.5px 0; }
@@ -135,7 +137,7 @@
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
         }
-        .sidebar, .topbar, .action-toolbar, .alert-toast { display: none !important; }
+        .sidebar, .topbar, .subpage-header, .action-toolbar, .alert-toast { display: none !important; }
         .wrapper { margin-left: 0 !important; }
         .content { padding: 0 !important; }
         .preview-scroll-wrapper {
@@ -186,6 +188,8 @@
                 <button type="submit" class="btn-toolbar btn-draft">↩️ Kembalikan ke Draft</button>
             </form>
         @endif
+        <a href="{{ route('surat.undangan.edit', $surat->id) }}" class="btn-toolbar btn-edit">✏️ Edit</a>
+        <button type="button" id="btnExportDocx" class="btn-toolbar btn-docx">📄 Unduh Word (.docx)</button>
         <button type="button" onclick="window.print()" class="btn-toolbar btn-print">🖨️ Cetak / PDF</button>
         <form method="POST" action="{{ route('surat.undangan.destroy', $surat->id) }}"
               onsubmit="return confirm('Hapus arsip surat ini secara permanen?')">
@@ -335,6 +339,9 @@
 @endsection
 
 @push('scripts')
+<script src="{{ asset('js/jszip.min.js') }}"></script>
+<script src="{{ asset('js/surat_constants.js') }}"></script>
+<script src="{{ asset('js/docgen.js') }}"></script>
 <script src="{{ asset('js/qrcode.min.js') }}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -349,6 +356,83 @@
                 correctLevel: QRCode.CorrectLevel.M
             });
         }
+
+        document.getElementById('btnExportDocx').addEventListener('click', function() {
+            const btn = this;
+            const orig = btn.innerHTML;
+            btn.innerHTML = '<span>⏳</span> Membuat .docx...';
+            btn.disabled = true;
+
+            const docData = {
+                mode: 'undangan',
+                nomor: @json($surat->nomor_surat),
+                sifat: @json($surat->sifat ?? 'Biasa'),
+                lampiran: @json($surat->lampiran ?? '-'),
+                hal: @json($surat->hal),
+                kota: 'Pontianak',
+                tanggal: @json($surat->tanggal_surat->format('Y-m-d')),
+                ythMode: 'langsung',
+                ythText: @json($surat->penerimas->pluck('nama_penerima')->implode("\n")),
+                diTempat: 'Tempat',
+                ttd_jab: @json($surat->penandatangan_jabatan),
+                ttd_nama: @json($surat->penandatangan_nama),
+                ttd_nip: @json($surat->penandatangan_nip ?? ''),
+                showNip: true,
+                body: [
+                    {
+                        type: 'paragraph',
+                        indent: true,
+                        text: 'Sehubungan dengan pelaksanaan program kegiatan pada Balai Wilayah Sungai Kalimantan I Pontianak, dengan ini kami mengharapkan kehadiran Bapak/Ibu pada rapat yang akan dilaksanakan pada:'
+                    },
+                    {
+                        type: 'points',
+                        items: [
+                            { label: 'Hari / Tanggal', value: @json($surat->hari_tanggal_acara ?? '-') },
+                            { label: 'Waktu', value: @json($surat->waktu_acara ?? '-') },
+                            { label: 'Tempat', value: @json($surat->tempat) },
+                            { label: 'Agenda', value: @json($surat->agenda ?? '-') }
+                        ]
+                    },
+                    {
+                        type: 'paragraph',
+                        indent: false,
+                        text: 'Mengingat pentingnya acara tersebut di atas, diharapkan hadir tepat pada waktunya. Demikian kami sampaikan, atas perhatian dan kehadirannya diucapkan terima kasih.'
+                    }
+                ],
+                pages: { asli: true, paraf: false, konsep: false, lampiran: false },
+                margin: { top: 2.5, bottom: 2.5, left: 2.5, right: 2.5 }
+            };
+
+            const kopSpec = {
+                line1: @json($kop['kementerian']),
+                line2: @json($kop['ditjen']),
+                line3: [@json($kop['balai'])],
+                line4: @json($kop['alamat'] . ' | ' . $kop['kontak'])
+            };
+
+            DocGen.build(docData, {
+                kop: kopSpec,
+                logo: { b64: typeof LOGO !== 'undefined' ? LOGO : '' },
+                arialW: typeof ARIALW !== 'undefined' ? ARIALW : null,
+                JSZip: JSZip,
+                outType: 'blob'
+            }).then(function(blob) {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = @json('Surat_Undangan_' . preg_replace('/[^a-zA-Z0-9_-]/', '_', $surat->hal) . '.docx');
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                btn.innerHTML = orig;
+                btn.disabled = false;
+            }).catch(function(err) {
+                alert('Gagal ekspor Word: ' + (err.message || err));
+                btn.innerHTML = orig;
+                btn.disabled = false;
+            });
+        });
     });
 </script>
 @endpush

@@ -38,6 +38,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/', [PegawaiController::class, 'index'])->name('index');
         Route::get('/search', [PegawaiController::class, 'search'])->name('search');
         Route::get('/ekspor-csv', [PegawaiController::class, 'exportCsv'])->name('export.csv');
+        Route::get('/ekspor-excel', [PegawaiController::class, 'exportCsv'])->name('export.excel');
         Route::post('/simpan', [PegawaiController::class, 'store'])->name('store');
         Route::put('/{id}/update', [PegawaiController::class, 'update'])->name('update');
         Route::delete('/{id}/hapus', [PegawaiController::class, 'destroy'])->name('destroy');
@@ -50,6 +51,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/undangan/buat', [SuratUndanganController::class, 'create'])->name('undangan.create');
         Route::post('/undangan/simpan', [SuratUndanganController::class, 'store'])->name('undangan.store');
         Route::get('/undangan/{id}', [SuratUndanganController::class, 'show'])->name('undangan.show');
+        Route::get('/undangan/{id}/edit', [SuratUndanganController::class, 'edit'])->name('undangan.edit');
+        Route::put('/undangan/{id}', [SuratUndanganController::class, 'update'])->name('undangan.update');
         Route::patch('/undangan/{id}/status', [SuratUndanganController::class, 'updateStatus'])->name('undangan.status');
         Route::delete('/undangan/{id}/hapus', [SuratUndanganController::class, 'destroy'])->name('undangan.destroy');
 
@@ -58,6 +61,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/suket/buat', [SuketAbsenController::class, 'create'])->name('suket.create');
         Route::post('/suket/simpan', [SuketAbsenController::class, 'store'])->name('suket.store');
         Route::get('/suket/{id}', [SuketAbsenController::class, 'show'])->name('suket.show');
+        Route::get('/suket/{id}/edit', [SuketAbsenController::class, 'edit'])->name('suket.edit');
+        Route::put('/suket/{id}', [SuketAbsenController::class, 'update'])->name('suket.update');
         Route::delete('/suket/{id}/hapus', [SuketAbsenController::class, 'destroy'])->name('suket.destroy');
     });
 
