@@ -146,9 +146,21 @@
                     </span>
                 </div>
             @else
+                @php
+                    $jenisLabel = [
+                        'masuk'      => 'Tidak Mengisi Daftar Hadir Kedatangan',
+                        'pulang'     => 'Tidak Mengisi Daftar Hadir Kepulangan',
+                        'terlambat'  => 'Terlambat Masuk Kerja',
+                        'pulangawal' => 'Pulang Sebelum Waktunya',
+                    ];
+                @endphp
                 <div class="doc-row">
                     <span class="doc-label">Jenis Dokumen</span>
-                    <span class="doc-val">Surat Keterangan Lupa Absen</span>
+                    <span class="doc-val">Surat Permohonan Izin / Lupa Absen</span>
+                </div>
+                <div class="doc-row">
+                    <span class="doc-label">Jenis Keterangan</span>
+                    <span class="doc-val">{{ $jenisLabel[$dokumen->jenis_absen] ?? ucfirst($dokumen->jenis_absen) }}</span>
                 </div>
                 <div class="doc-row">
                     <span class="doc-label">Nomor Surat</span>

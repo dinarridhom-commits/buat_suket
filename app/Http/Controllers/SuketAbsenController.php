@@ -101,7 +101,7 @@ class SuketAbsenController extends Controller
         $suket = SuketAbsen::create($request->all());
         ActivityLog::record('create', 'Suket Absen', "Membuat Suket {$suket->nomor_surat} untuk {$suket->nama_pegawai}");
 
-        return redirect()->route('surat.suket.index')->with('success', 'Surat Keterangan Lupa Absen berhasil disimpan ke database.');
+        return redirect()->route('surat.suket.show', $suket->id)->with('success', 'Surat Keterangan Lupa Absen berhasil disimpan dan siap dicetak.');
     }
 
     public function show($id)
