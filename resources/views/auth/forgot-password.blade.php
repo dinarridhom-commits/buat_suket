@@ -1,16 +1,14 @@
 @extends('layouts.auth')
 
 @section('title', 'Lupa Kata Sandi')
+@section('brand_subtitle', 'LUPA KATA SANDI')
 
 @section('form_content')
-    <div class="form-heading">
-        <h3>Lupa Kata Sandi</h3>
-        <p>Masukkan email atau username akun Anda untuk mengatur ulang kata sandi.</p>
-    </div>
+    <p class="auth-desc">Masukkan email atau username akun Anda untuk mengatur ulang kata sandi.</p>
 
     @if(session('status'))
         <div class="alert-box alert-success">
-            <span>✅</span>
+            <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0; margin-top:1px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
             <span>{{ session('status') }}</span>
         </div>
     @endif
@@ -24,19 +22,23 @@
 
     @if($errors->any())
         <div class="alert-box alert-danger">
-            <span>⚠️</span>
+            <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0; margin-top:1px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
             <span>{{ $errors->first() }}</span>
         </div>
     @endif
 
-    <form method="POST" action="{{ route('password.email') }}" id="forgotForm" style="margin-top: 12px;">
+    <form method="POST" action="{{ route('password.email') }}" id="forgotForm">
         @csrf
         <input type="hidden" name="g-recaptcha-response" id="recaptchaTokenForgot">
 
         <div class="form-group">
-            <label class="form-label" for="login">Email atau Username</label>
+            <div class="form-label-row">
+                <label class="form-label" for="login">Email atau Username</label>
+            </div>
             <div class="input-wrap">
-                <span class="input-icon">👤</span>
+                <span class="input-icon">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>
+                </span>
                 <input type="text" name="login" id="login" class="form-control"
                        value="{{ old('login') }}"
                        placeholder="Masukkan email atau username" required autofocus autocomplete="username">
@@ -45,11 +47,10 @@
 
         <button type="submit" class="btn-submit-login">
             <span>Kirim Tautan Atur Ulang</span>
-            <span>→</span>
         </button>
 
         <div style="margin-top: 18px; text-align: center;">
-            <a href="{{ route('login') }}" class="back-link">← Kembali ke halaman Masuk</a>
+            <a href="{{ route('login') }}" class="back-link">&larr; Kembali ke halaman LOGIN</a>
         </div>
 
         <div class="recaptcha-note">

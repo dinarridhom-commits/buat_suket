@@ -7,10 +7,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'Masuk Sistem') — Portal Tata Usaha BWS Kalimantan I Pontianak</title>
+    <title>@yield('title', 'LOGIN') — BWS Kalimantan I Pontianak</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     @if($recaptchaActive)
         <script src="https://www.google.com/recaptcha/api.js?render={{ urlencode($recaptchaSiteKey) }}"></script>
@@ -19,245 +19,200 @@
     <style>
         :root {
             --pu-navy: #13243d;
-            --pu-navy-dark: #0a1422;
-            --pu-navy-light: #1e3a63;
+            --pu-navy-hover: #0d1a2e;
             --pu-blue: #1d4ed8;
             --pu-gold: #f59e0b;
-            --pu-gold-dark: #d97706;
-            --bg-surface: #ffffff;
-            --border: #e2e8f0;
+            --border: #cbd5e1;
+            --border-soft: #e2e8f0;
             --text-main: #0f172a;
             --text-muted: #64748b;
-            --radius-md: 10px;
-            --radius-lg: 16px;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
             font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-            background: linear-gradient(135deg, #0b1526 0%, #13243d 50%, #1a3456 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 24px;
+            padding: 28px 18px;
             color: var(--text-main);
+            background: linear-gradient(155deg, #eef3f8 0%, #dbe5f1 100%);
             position: relative;
             overflow-x: hidden;
         }
 
-        body::before {
-            content: "";
-            position: absolute;
-            width: 600px;
-            height: 600px;
-            background: radial-gradient(circle, rgba(245, 158, 11, 0.08) 0%, rgba(245, 158, 11, 0) 70%);
-            top: -100px;
-            right: -100px;
-            border-radius: 50%;
-            pointer-events: none;
-        }
-
-        body::after {
-            content: "";
-            position: absolute;
-            width: 500px;
-            height: 500px;
-            background: radial-gradient(circle, rgba(37, 99, 235, 0.12) 0%, rgba(37, 99, 235, 0) 70%);
-            bottom: -150px;
-            left: -150px;
-            border-radius: 50%;
-            pointer-events: none;
-        }
-
-        .login-container {
+        /* Latar belakang motion gelombang aliran sungai */
+        .motion-bg-canvas {
+            position: fixed;
+            inset: 0;
             width: 100%;
-            max-width: 960px;
-            background: #ffffff;
-            border-radius: 20px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.45);
-            overflow: hidden;
-            display: grid;
-            grid-template-columns: 1.15fr 1fr;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .top-pu-accent {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, var(--pu-navy) 0%, var(--pu-navy) 70%, var(--pu-gold) 100%);
+            z-index: 20;
+        }
+
+        /* Kartu terpusat Opsi 1 (proporsional & lega) */
+        .auth-card {
             position: relative;
             z-index: 10;
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            width: 100%;
+            max-width: 440px;
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(203, 213, 225, 0.85);
+            border-radius: 18px;
+            box-shadow: 0 20px 45px -12px rgba(15, 23, 42, 0.14), 0 4px 12px rgba(15, 23, 42, 0.05);
+            padding: 36px 38px 30px;
         }
 
-        /* LEFT BRAND PANEL */
-        .brand-panel {
-            background: linear-gradient(145deg, #0f1c30 0%, #172d4d 100%);
-            color: #ffffff;
-            padding: 48px 44px;
+        .auth-brand {
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
-            position: relative;
-            border-right: 1px solid rgba(255, 255, 255, 0.08);
+            align-items: center;
+            text-align: center;
+            padding-bottom: 20px;
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--border-soft);
         }
 
-        .brand-header { display: flex; align-items: center; gap: 16px; }
-
-        .brand-logo-img {
-            width: 52px;
-            height: 52px;
-            background: #ffffff;
-            border-radius: 10px;
-            padding: 5px;
+        .auth-logo {
+            width: 64px;
+            height: 64px;
             object-fit: contain;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-            border: 2px solid var(--pu-gold);
+            border-radius: 12px;
+            margin-bottom: 14px;
+            filter: drop-shadow(0 4px 10px rgba(19, 36, 61, 0.12));
         }
 
-        .brand-title h1 {
-            font-size: 15.5px;
+        .auth-brand-title {
+            font-size: 19px;
             font-weight: 800;
-            letter-spacing: 0.5px;
-            color: #ffffff;
+            letter-spacing: 0.4px;
+            color: var(--pu-navy);
             line-height: 1.25;
         }
 
-        .brand-title span {
-            font-size: 11.5px;
-            color: var(--pu-gold);
-            font-weight: 600;
-            display: block;
-            margin-top: 2px;
-        }
-
-        .brand-hero { margin: 40px 0; }
-
-        .brand-hero h2 {
-            font-size: 26px;
-            font-weight: 800;
-            line-height: 1.3;
-            margin-bottom: 14px;
-            color: #ffffff;
-            letter-spacing: -0.4px;
-        }
-
-        .brand-hero p {
+        .auth-brand-subtitle {
             font-size: 13.5px;
-            color: #94a3b8;
-            line-height: 1.6;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: #475569;
+            margin-top: 6px;
+            text-transform: uppercase;
         }
 
-        .feature-bullets {
-            list-style: none;
-            margin-top: 22px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
+        .auth-desc {
+            font-size: 13px;
+            color: var(--text-muted);
+            text-align: center;
+            line-height: 1.55;
+            margin: -10px 0 20px;
         }
-
-        .feature-bullet {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 12.5px;
-            color: #cbd5e1;
-            font-weight: 500;
-        }
-
-        .bullet-icon {
-            width: 22px;
-            height: 22px;
-            border-radius: 50%;
-            background: rgba(245, 158, 11, 0.18);
-            color: var(--pu-gold);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            font-weight: bold;
-            flex-shrink: 0;
-        }
-
-        .brand-footer {
-            font-size: 11.5px;
-            color: #64748b;
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
-            padding-top: 18px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        /* RIGHT FORM PANEL */
-        .form-panel {
-            padding: 48px 42px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            background: #ffffff;
-        }
-
-        .form-heading { margin-bottom: 26px; }
-        .form-heading h3 { font-size: 22px; font-weight: 800; color: var(--pu-navy); letter-spacing: -0.3px; }
-        .form-heading p { font-size: 13px; color: var(--text-muted); margin-top: 4px; line-height: 1.5; }
 
         .form-group { margin-bottom: 18px; }
-        .form-label { display: block; font-size: 12.5px; font-weight: 700; color: #334155; margin-bottom: 6px; }
 
-        .input-wrap { position: relative; display: flex; align-items: center; }
+        .form-label-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 7px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #334155;
+        }
+
+        .input-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
 
         .input-icon {
             position: absolute;
             left: 14px;
-            font-size: 16px;
             color: #94a3b8;
+            display: inline-flex;
+            align-items: center;
             pointer-events: none;
         }
 
         .form-control {
             width: 100%;
-            padding: 12px 14px 12px 42px;
-            border: 1.5px solid #cbd5e1;
-            border-radius: var(--radius-md);
-            font-size: 14px;
+            height: 44px;
+            padding: 10px 14px 10px 42px;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            font-size: 13.5px;
             font-family: inherit;
             color: var(--text-main);
+            background: #f8fafc;
             outline: none;
-            transition: all 0.15s ease;
-            background: #fafbfc;
+            transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .form-control.has-toggle {
+            padding-right: 42px;
         }
 
         .form-control:focus {
             background: #ffffff;
             border-color: var(--pu-blue);
-            box-shadow: 0 0 0 3.5px rgba(37, 99, 235, 0.12);
+            box-shadow: 0 0 0 3.5px rgba(29, 78, 216, 0.11);
         }
 
         .toggle-password-btn {
             position: absolute;
-            right: 12px;
+            right: 10px;
             background: transparent;
             border: none;
             color: #64748b;
             cursor: pointer;
-            font-size: 16px;
-            padding: 4px;
-            border-radius: 4px;
+            padding: 6px;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.15s ease, background 0.15s ease;
+        }
+
+        .toggle-password-btn:hover {
+            color: var(--pu-navy);
+            background: #f1f5f9;
         }
 
         .form-options {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 10px;
-            flex-wrap: wrap;
-            font-size: 12.5px;
-            margin-bottom: 22px;
+            margin: 4px 0 22px;
         }
 
         .remember-checkbox {
-            display: flex;
+            display: inline-flex;
             align-items: center;
             gap: 8px;
+            font-size: 13px;
             color: #475569;
             cursor: pointer;
             font-weight: 500;
+            user-select: none;
         }
 
         .remember-checkbox input {
@@ -281,28 +236,28 @@
 
         .btn-submit-login {
             width: 100%;
-            padding: 13px;
-            background: linear-gradient(135deg, var(--pu-navy) 0%, var(--pu-navy-light) 100%);
+            height: 46px;
+            background: var(--pu-navy);
             color: #ffffff;
             border: none;
-            border-radius: var(--radius-md);
+            border-radius: 10px;
             font-size: 14.5px;
             font-weight: 700;
-            letter-spacing: 0.3px;
+            letter-spacing: 0.2px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 14px rgba(19, 36, 61, 0.35);
+            transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+            box-shadow: 0 4px 12px rgba(19, 36, 61, 0.22);
             font-family: inherit;
         }
 
         .btn-submit-login:hover {
+            background: var(--pu-navy-hover);
             transform: translateY(-1px);
-            box-shadow: 0 6px 18px rgba(19, 36, 61, 0.45);
-            background: linear-gradient(135deg, #0b1526 0%, var(--pu-navy) 100%);
+            box-shadow: 0 6px 16px rgba(19, 36, 61, 0.28);
         }
 
         .btn-submit-login:disabled {
@@ -313,7 +268,7 @@
 
         .alert-box {
             padding: 11px 14px;
-            border-radius: var(--radius-md);
+            border-radius: 10px;
             font-size: 13px;
             margin-bottom: 18px;
             display: flex;
@@ -326,7 +281,7 @@
         .alert-success { background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; }
 
         .recaptcha-note {
-            margin-top: 16px;
+            margin-top: 18px;
             font-size: 11.5px;
             color: #94a3b8;
             text-align: center;
@@ -339,9 +294,9 @@
         }
 
         .dev-reset-box {
-            margin-top: 14px;
+            margin-bottom: 18px;
             padding: 12px 14px;
-            border-radius: var(--radius-md);
+            border-radius: 10px;
             background: #fffbeb;
             border: 1px solid #fde68a;
             color: #92400e;
@@ -351,81 +306,117 @@
 
         .dev-reset-box a {
             display: inline-block;
-            margin-top: 6px;
-            padding: 6px 12px;
+            margin-top: 8px;
+            padding: 7px 13px;
             background: var(--pu-navy);
             color: #ffffff;
-            border-radius: 6px;
+            border-radius: 7px;
             font-weight: 600;
             text-decoration: none;
             font-size: 12px;
         }
 
-        @media (max-width: 820px) {
-            .login-container { grid-template-columns: 1fr; max-width: 480px; }
-            .brand-panel { display: none; }
-            .form-panel { padding: 36px 28px; }
+        @media (max-width: 480px) {
+            .auth-card { padding: 28px 22px 24px; }
+            .auth-logo { width: 56px; height: 56px; }
         }
     </style>
 </head>
 <body>
+    <div class="top-pu-accent"></div>
+    <canvas id="authMotionCanvas" class="motion-bg-canvas" aria-hidden="true"></canvas>
 
-    <div class="login-container">
-        <!-- LEFT PANEL: BRANDING -->
-        <div class="brand-panel">
-            <div class="brand-header">
-                <img src="{{ asset('images/logo_pu.png') }}" alt="Logo PU" class="brand-logo-img">
-                <div class="brand-title">
-                    <h1>BWS KALIMANTAN I</h1>
-                    <span>Kementerian Pekerjaan Umum</span>
-                </div>
-            </div>
-
-            <div class="brand-hero">
-                <h2>Portal Administrasi & Tata Usaha Kedinasan</h2>
-                <p>Sistem manajemen arsip Surat Undangan, Surat Keterangan Lupa Absen, serta Master Database 148 Pegawai BWS Kalimantan I.</p>
-
-                <ul class="feature-bullets">
-                    <li class="feature-bullet">
-                        <span class="bullet-icon">✓</span>
-                        <span>Format Naskah Resmi Standar Balai (A4 Siap Cetak)</span>
-                    </li>
-                    <li class="feature-bullet">
-                        <span class="bullet-icon">✓</span>
-                        <span>Sinkronisasi Jabatan & Pejabat Penandatangan</span>
-                    </li>
-                    <li class="feature-bullet">
-                        <span class="bullet-icon">✓</span>
-                        <span>Keamanan Akses Terpusat Berbasis Kredensial</span>
-                    </li>
-                </ul>
-            </div>
-
-            <div class="brand-footer">
-                <span>© 2026 BWS Kalimantan I Pontianak</span>
-                <span>Ditjen Sumber Daya Air</span>
-            </div>
+    <main class="auth-card">
+        <div class="auth-brand">
+            <img src="{{ asset('images/logo_pu.png') }}" alt="Logo PU" class="auth-logo">
+            <h1 class="auth-brand-title">BWS KALIMANTAN I</h1>
+            <div class="auth-brand-subtitle">@yield('brand_subtitle', 'LOGIN')</div>
         </div>
 
-        <!-- RIGHT PANEL: FORM CONTENT -->
-        <div class="form-panel">
-            @yield('form_content')
-        </div>
-    </div>
+        @yield('form_content')
+    </main>
 
     <script>
-        // Toggle Show / Hide Password untuk semua tombol toggle
+        // Animasi latar belakang gelombang aliran sungai yang halus (ringan & responsif)
+        (function () {
+            const canvas = document.getElementById('authMotionCanvas');
+            if (!canvas || !canvas.getContext) return;
+            const ctx = canvas.getContext('2d');
+            const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            let w = 0, h = 0, dpr = 1, t = 0;
+
+            const layers = [
+                { amp: 32, freq: 0.0038, spd: 0.65, yOff: 0.62, color: 'rgba(19, 36, 61, 0.10)' },
+                { amp: 26, freq: 0.0048, spd: -0.82, yOff: 0.68, color: 'rgba(29, 78, 216, 0.08)' },
+                { amp: 20, freq: 0.0056, spd: 1.05, yOff: 0.74, color: 'rgba(14, 165, 233, 0.09)' }
+            ];
+
+            function resize() {
+                dpr = Math.min(window.devicePixelRatio || 1, 2);
+                w = window.innerWidth;
+                h = window.innerHeight;
+                canvas.width = w * dpr;
+                canvas.height = h * dpr;
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            }
+
+            function draw() {
+                const bg = ctx.createLinearGradient(0, 0, w, h);
+                bg.addColorStop(0, '#eef3f8');
+                bg.addColorStop(1, '#d7e2ef');
+                ctx.fillStyle = bg;
+                ctx.fillRect(0, 0, w, h);
+
+                layers.forEach(function (L) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, h);
+                    for (let x = 0; x <= w; x += 12) {
+                        const y = h * L.yOff
+                            + Math.sin(x * L.freq + t * L.spd) * L.amp
+                            + Math.cos(x * L.freq * 0.55 - t * 0.45) * 10;
+                        ctx.lineTo(x, y);
+                    }
+                    ctx.lineTo(w, h);
+                    ctx.closePath();
+                    ctx.fillStyle = L.color;
+                    ctx.fill();
+                });
+
+                ctx.beginPath();
+                for (let x = 0; x <= w; x += 12) {
+                    const y = h * 0.54 + Math.sin(x * 0.0032 + t * 0.58) * 30;
+                    if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+                }
+                ctx.strokeStyle = 'rgba(245, 158, 11, 0.34)';
+                ctx.lineWidth = 1.6;
+                ctx.stroke();
+
+                if (!reduceMotion) {
+                    t += 0.014;
+                    requestAnimationFrame(draw);
+                }
+            }
+
+            window.addEventListener('resize', resize);
+            resize();
+            draw();
+        })();
+
+        // Toggle lihat / sembunyikan kata sandi dengan ikon SVG
+        const eyeShowSvg = '<svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z"/><circle cx="12" cy="12" r="2.5"/></svg>';
+        const eyeHideSvg = '<svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 18c-6.5 0-10-6-10-6a18.8 18.8 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c6.5 0 10 6 10 6a18.5 18.5 0 0 1-2.16 3.19"/><line x1="2" y1="2" x2="22" y2="22"/></svg>';
+
         document.querySelectorAll('.toggle-password-btn[data-target]').forEach(function (btn) {
             btn.addEventListener('click', function () {
                 const input = document.getElementById(btn.getAttribute('data-target'));
                 if (!input) return;
                 const isPass = input.type === 'password';
                 input.type = isPass ? 'text' : 'password';
-                btn.textContent = isPass ? '🙈' : '👁️';
+                btn.innerHTML = isPass ? eyeHideSvg : eyeShowSvg;
             });
         });
 
-        // Google reCAPTCHA v3 form binding
+        // Integrasi Google reCAPTCHA v3 saat submit formulir
         window.bindRecaptchaV3 = function (formId, inputId, action) {
             const siteKey = @json($recaptchaActive ? $recaptchaSiteKey : '');
             const form = document.getElementById(formId);
