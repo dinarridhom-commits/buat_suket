@@ -299,12 +299,6 @@
         <a href="#nomor" class="settings-nav-item" onclick="scrollToSection(this, '#nomor')">
             <span>🔢</span> Format Nomor Surat
         </a>
-        <a href="#keamanan" class="settings-nav-item" onclick="scrollToSection(this, '#keamanan')">
-            <span>🔐</span> Keamanan & reCAPTCHA v3
-        </a>
-        <a href="#sistem" class="settings-nav-item" onclick="scrollToSection(this, '#sistem')">
-            <span>⚙️</span> Info Sistem
-        </a>
     </div>
 
     {{-- RIGHT: CONTENT --}}
@@ -412,90 +406,6 @@
 
                 <div class="info-box">
                     💡 <strong>Nomor Otomatis:</strong> Sistem akan menghitung urutan nomor surat secara otomatis berdasarkan jumlah surat yang telah dibuat dalam tahun berjalan. Format: <code style="background:#fef3c7; padding:1px 5px; border-radius:3px;">PREFIX/XXX/TAHUN</code>
-                </div>
-            </div>
-        </div>
-
-        {{-- ===== SECTION 3: KEAMANAN & RECAPTCHA V3 ===== --}}
-        <div class="settings-card" id="keamanan">
-            <div class="settings-card-head">
-                <div class="settings-card-head-left">
-                    <div class="settings-card-icon">🔐</div>
-                    <div>
-                        <div class="settings-card-title">Keamanan Login & Google reCAPTCHA v3</div>
-                        <div class="settings-card-desc">Proteksi otomatis halaman Masuk &amp; Lupa Kata Sandi dari bot</div>
-                    </div>
-                </div>
-            </div>
-            <div class="settings-card-body">
-                <div class="form-group">
-                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:13px; font-weight:600; color:#334155;">
-                        <input type="checkbox" name="recaptcha_enabled" value="1"
-                               style="width:16px; height:16px; accent-color:var(--pu-navy);"
-                               {{ ($settings['recaptcha_enabled'] ?? '1') === '1' ? 'checked' : '' }}>
-                        <span>Aktifkan Google reCAPTCHA v3 pada Login, Lupa Password, &amp; Reset Password</span>
-                    </label>
-                </div>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
-                    <div class="form-group">
-                        <label class="form-label">Site Key (reCAPTCHA v3)</label>
-                        <input type="text" name="recaptcha_site_key" class="form-control"
-                               value="{{ $settings['recaptcha_site_key'] ?? '' }}"
-                               placeholder="6Lc...">
-                        <div class="form-hint">Didapat dari Google reCAPTCHA Admin Console (tipe v3).</div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Secret Key (reCAPTCHA v3)</label>
-                        <input type="text" name="recaptcha_secret_key" class="form-control"
-                               value="{{ $settings['recaptcha_secret_key'] ?? '' }}"
-                               placeholder="6Lc...">
-                        <div class="form-hint">Digunakan server untuk memverifikasi token Google reCAPTCHA v3.</div>
-                    </div>
-                </div>
-                <div class="form-group" style="max-width:220px;">
-                    <label class="form-label">Skor Minimum Lolos (0.1 – 0.9)</label>
-                    <input type="number" step="0.1" min="0.1" max="0.9" name="recaptcha_min_score" class="form-control"
-                           value="{{ $settings['recaptcha_min_score'] ?? '0.5' }}">
-                    <div class="form-hint">Rekomendasi Google: <strong>0.5</strong></div>
-                </div>
-                <div class="info-box">
-                    ℹ️ Jika Site Key atau Secret Key belum diisi, formulir login tetap dapat digunakan normal agar akses portal tidak terkunci selama setup awal.
-                </div>
-            </div>
-        </div>
-
-        {{-- ===== SECTION 4: INFO SISTEM ===== --}}
-        <div class="settings-card" id="sistem">
-            <div class="settings-card-head">
-                <div class="settings-card-head-left">
-                    <div class="settings-card-icon">⚙️</div>
-                    <div>
-                        <div class="settings-card-title">Informasi Sistem</div>
-                        <div class="settings-card-desc">Status dan versi komponen portal</div>
-                    </div>
-                </div>
-            </div>
-            <div class="settings-card-body">
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-                    @php
-                        $sysInfo = [
-                            ['label' => 'Framework', 'value' => 'Laravel ' . app()->version(), 'icon' => '🔴'],
-                            ['label' => 'PHP Version', 'value' => PHP_VERSION, 'icon' => '🐘'],
-                            ['label' => 'Database', 'value' => strtoupper(config('database.default', 'mysql')), 'icon' => '🗄️'],
-                            ['label' => 'Versi Portal', 'value' => 'v5.2 — Build 2026', 'icon' => '🏷️'],
-                            ['label' => 'Waktu Server', 'value' => now()->locale('id')->translatedFormat('d F Y, H:i') . ' WIB', 'icon' => '🕐'],
-                            ['label' => 'Lingkungan', 'value' => ucfirst(app()->environment()), 'icon' => '🌐'],
-                        ];
-                    @endphp
-                    @foreach($sysInfo as $info)
-                        <div style="display:flex; align-items:center; gap:10px; padding:12px 14px; background:#f8fafc; border:1px solid var(--border); border-radius:var(--radius-sm);">
-                            <span style="font-size:18px;">{{ $info['icon'] }}</span>
-                            <div>
-                                <div style="font-size:11px; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">{{ $info['label'] }}</div>
-                                <div style="font-size:13px; font-weight:700; color:var(--text-main); margin-top:2px;">{{ $info['value'] }}</div>
-                            </div>
-                        </div>
-                    @endforeach
                 </div>
             </div>
         </div>

@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\Setting;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -10,31 +9,21 @@ class RecaptchaV3Service
 {
     public static function siteKey(): string
     {
-        $fromDb = trim((string) Setting::get('recaptcha_site_key', ''));
-        return $fromDb !== '' ? $fromDb : trim((string) config('services.recaptcha.site_key', ''));
+        return trim((string) config('services.recaptcha.site_key', ''));
     }
 
     public static function secretKey(): string
     {
-        $fromDb = trim((string) Setting::get('recaptcha_secret_key', ''));
-        return $fromDb !== '' ? $fromDb : trim((string) config('services.recaptcha.secret_key', ''));
+        return trim((string) config('services.recaptcha.secret_key', ''));
     }
 
     public static function minScore(): float
     {
-        $fromDb = Setting::get('recaptcha_min_score', '');
-        if ($fromDb !== '' && is_numeric($fromDb)) {
-            return max(0.0, min(1.0, (float) $fromDb));
-        }
         return max(0.0, min(1.0, (float) config('services.recaptcha.min_score', 0.5)));
     }
 
     public static function isEnabledFlag(): bool
     {
-        $dbFlag = Setting::get('recaptcha_enabled', '');
-        if ($dbFlag !== '') {
-            return $dbFlag === '1';
-        }
         return (bool) config('services.recaptcha.enabled', true);
     }
 
