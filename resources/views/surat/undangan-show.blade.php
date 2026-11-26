@@ -19,9 +19,9 @@
     $kota = $extra['kota'] ?? 'Pontianak';
     $showSchedule = $extra['show_schedule'] ?? '0';
     $konsep = $extra['konsep'] ?? [];
-    $pagesCfg = $extra['pages'] ?? ['konsep' => true, 'paraf' => true, 'asli' => true, 'lampiran' => true];
+    $pagesCfg = $extra['pages'] ?? ['konsep' => false, 'paraf' => false, 'asli' => true, 'lampiran' => true];
     $konsepMarginTpl = array_key_exists('konsep_margin', $extra) ? !empty($extra['konsep_margin']) : true;
-    $margin = $extra['margin'] ?? ['top' => 2.5, 'bottom' => 2.5, 'left' => 2.5, 'right' => 2.5, 'lamp_top' => 1, 'lamp_bottom' => 1];
+    $margin = $extra['margin'] ?? ['top' => 1.5, 'bottom' => 1.5, 'left' => 1.8, 'right' => 1.8, 'lamp_top' => 1, 'lamp_bottom' => 1];
     $lampVal = is_numeric($surat->lampiran)
         ? ((int) $surat->lampiran > 0 ? ((int) $surat->lampiran . ' Lembar') : '-')
         : ($surat->lampiran ?: '-');
@@ -368,16 +368,16 @@
                 tetap_nama: konsep.tetap_nama || '',
                 body: @json($bodySections),
                 pages: {
-                    asli: @json(!empty($pagesCfg['asli'])),
-                    paraf: @json(!empty($pagesCfg['paraf'])),
-                    konsep: @json(!empty($pagesCfg['konsep'])),
-                    lampiran: @json(!empty($pagesCfg['lampiran'])) && ythMode === 'terlampir'
+                    asli: true,
+                    paraf: false,
+                    konsep: false,
+                    lampiran: ythMode === 'terlampir'
                 },
                 margin: {
-                    top: +(margin.top || 2.5),
-                    bottom: +(margin.bottom || 2.5),
-                    left: +(margin.left || 2.5),
-                    right: +(margin.right || 2.5)
+                    top: +(margin.top || 1.5),
+                    bottom: +(margin.bottom || 1.5),
+                    left: +(margin.left || 1.8),
+                    right: +(margin.right || 1.8)
                 },
                 marginLampiran: {
                     top: +(margin.lamp_top || 1),

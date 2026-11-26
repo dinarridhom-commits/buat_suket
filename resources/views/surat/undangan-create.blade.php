@@ -13,13 +13,13 @@
     $kopAlamatVal = old('extra_data.kop_alamat', $defaultKopAlamat);
 
     $urutanVal = old('extra_data.urutan', $extra['urutan'] ?? 'paraf-dulu');
-    $pagesCfg = $extra['pages'] ?? ['konsep' => '1', 'paraf' => '1', 'asli' => '1', 'lampiran' => '1'];
-    $pgKonsepVal = old('extra_data.pages.konsep', $pagesCfg['konsep'] ?? '1');
-    $pgParafVal = old('extra_data.pages.paraf', $pagesCfg['paraf'] ?? '1');
+    $pagesCfg = $extra['pages'] ?? ['konsep' => '0', 'paraf' => '0', 'asli' => '1', 'lampiran' => '1'];
+    $pgKonsepVal = old('extra_data.pages.konsep', $pagesCfg['konsep'] ?? '0');
+    $pgParafVal = old('extra_data.pages.paraf', $pagesCfg['paraf'] ?? '0');
     $pgAsliVal = old('extra_data.pages.asli', $pagesCfg['asli'] ?? '1');
     $pgLampiranVal = old('extra_data.pages.lampiran', $pagesCfg['lampiran'] ?? '1');
 
-    $margin = $extra['margin'] ?? ['top' => 2.5, 'bottom' => 2.5, 'left' => 2.5, 'right' => 2.5, 'lamp_top' => 1, 'lamp_bottom' => 1];
+    $margin = $extra['margin'] ?? ['top' => 1.5, 'bottom' => 1.5, 'left' => 1.8, 'right' => 1.8, 'lamp_top' => 1, 'lamp_bottom' => 1];
     $konsepMarginVal = old('extra_data.konsep_margin', array_key_exists('konsep_margin', $extra) ? $extra['konsep_margin'] : '1');
     $gapYthVal = old('extra_data.gap_yth', $extra['gap_yth'] ?? '240');
     $showNipVal = old('extra_data.show_nip', $extra['show_nip'] ?? '0');
@@ -1776,10 +1776,10 @@
                 lampiran: el('pgLampiran').checked && getYthMode() !== 'langsung'
             },
             margin: {
-                top: +el('inMcTop').value || 2.5,
-                bottom: +el('inMcBottom').value || 2.5,
-                left: +el('inMcLeft').value || 2.5,
-                right: +el('inMcRight').value || 2.5
+                top: +el('inMcTop').value || 1.5,
+                bottom: +el('inMcBottom').value || 1.5,
+                left: +el('inMcLeft').value || 1.8,
+                right: +el('inMcRight').value || 1.8
             },
             marginLampiran: {
                 top: +el('inMlcTop').value || 1,

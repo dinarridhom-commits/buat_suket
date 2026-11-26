@@ -143,10 +143,10 @@ var DocGen = (function () {
   var LOGO_SZ = 1276, LOGO_GAP = 170;   // logo bawaan 2,25 cm; jarak logo ke garis/teks
   function logoTw(k) { return k.logoTw || LOGO_SZ; }
   function kopLines(k) {
-    var L = [{ t: k.line1, pt: 18, h: 380 }, { t: k.line2, pt: 12, h: 270 }];
+    var L = [{ t: k.line1, pt: 13.5, h: 300 }, { t: k.line2, pt: 9.5, h: 220 }];
     var l3 = (k.line3 || []).filter(function (s) { return String(s).trim(); });
-    l3.forEach(function (t, i) { L.push({ t: t, pt: 8, min: 6, b: l3.length === 1 || i === l3.length - 1, h: 190 }); });
-    L.push({ t: k.line4, pt: 7.5, h: 185, last: true });
+    l3.forEach(function (t, i) { L.push({ t: t, pt: 8, min: 6, b: l3.length === 1 || i === l3.length - 1, h: 170 }); });
+    L.push({ t: k.line4, pt: 6.5, h: 160, last: true });
     return L;
   }
   function kopHeight(k) { return Math.max(logoTw(k), sumW(kopLines(k).map(function (l) { return l.h; })) + 60); }
@@ -178,24 +178,40 @@ var DocGen = (function () {
 
   /* ---------- isi surat (dipakai di hal konsep [mini], paraf, asli) ---------- */
   function letterBody(d, o) {
-    var S = o.S, W = o.width, x = o.mini ? '' : p('', { sz: 12 });
+    var S = o.S, W = o.width, x = '';
     var NL = o.nextList;
+    if (o.withKop && o.kop) {
+      x += kopXml(o.kop, W, o.logoRid || 'rIdLogo');
+      x += p('', { sz: 12, sp: { line: 120, rule: 'exact', after: 140 } });
+    } else if (!o.mini) {
+      x += p('', { sz: 12 });
+    }
     function cp(t, e) { e = e || {}; return p(r(t, { sz: S, b: e.b }), { sz: S, sp: { line: 276 }, jc: e.jc }); }
     // blok Nomor / Sifat / Lampiran / Hal
-    var hw = scaleCols([1100, 230, 4360, 3400], W);
+    var hw = scaleCols([1150, 220, 4330, 3390], W);
     var tt = (d.kota ? d.kota + ', ' : '') + fmtTgl(d.tanggal);
     var lamp = (+d.lampiran > 0) ? (d.lampiran + ' Lembar') : '-';
     var rows = [['Nomor', d.nomor, tt], ['Sifat', d.sifat, ''], ['Lampiran', lamp, ''], ['Hal', d.hal, '']];
-    x += tbl(hw, rows.map(function (rw) {
-      return { cells: [{ content: cp(rw[0]) }, { content: cp(':') }, { content: cp(rw[1]) }, { content: cp(rw[2], { jc: 'right' }) }] };
+    x += tbl(hw, rows.map(function (rw, rIdx) {
+      return { cells: [{ content: cp(rw[0]) }, { content: cp(':') }, { content: cp(rw[1], { b: rIdx === 3 }) }, { content: cp(rw[2], { jc: 'right' }) }] };
     }), { cm: 0 });
     var gap = d.gapYth == null || d.gapYth === '' ? 240 : +d.gapYth;   // jarak Hal -> Yth. (240 = 1 baris)
     x += p(r('Yth.', { sz: S }), { sz: S, sp: { line: 276, before: o.mini ? Math.round(gap * 0.75) : gap } });
-    var yl = d.ythMode === 'langsung' ? lines(d.ythText) : ['(Daftar Terlampir)'];
-    if (!yl.length) yl = [''];
-    yl.forEach(function (t, i) { x += p(r(t, { sz: S }), { sz: S, sp: { line: 276, after: i === yl.length - 1 ? 160 : 0 } }); });
-    x += p(r('di-', { sz: S }), { sz: S, sp: { after: 120, line: 360 } });
-    x += p(r(d.diTempat || 'Tempat', { sz: S }), { sz: S, ind: { left: 284 }, sp: { after: 160, line: 360 } });
+    if (d.ythMode === 'langsung') {
+      var yl = lines(d.ythText);
+      if (yl.length) {
+        var yNid = NL();
+        yl.forEach(function (t, i) {
+          x += p(r(t, { sz: S }), { sz: S, numId: yNid, ind: { left: 426, hanging: 284 }, sp: { line: 276, after: i === yl.length - 1 ? 100 : 0 } });
+        });
+      } else {
+        x += p(r('', { sz: S }), { sz: S, sp: { line: 276, after: 100 } });
+      }
+    } else {
+      x += p(r('(Daftar Terlampir)', { sz: S }), { sz: S, sp: { line: 276, after: 100 } });
+    }
+    x += p(r('di -', { sz: S }), { sz: S, sp: { after: 60, line: 276 } });
+    x += p(r(d.diTempat || 'Tempat', { sz: S, b: true }), { sz: S, ind: { left: 284 }, sp: { after: 180, line: 276 } });
     // isi surat: daftar bagian (paragraf / poin)
     bodyOf(d).forEach(function (sec) {
       if (sec.type === 'points') {
@@ -214,30 +230,37 @@ var DocGen = (function () {
       }
     });
     x += p('', { sz: S });
-    // tanda tangan (+ kotak paraf)
+    // tanda tangan (+ kotak paraf bila halaman paraf)
     var nameP = p(r(d.ttd_nama, { sz: S, b: true }), { sz: S, jc: 'center' });
     if (d.showNip && d.ttd_nip) nameP += p(r('NIP. ' + d.ttd_nip, { sz: S }), { sz: S, jc: 'center' });
-    var jabP = p(r(withComma(d.ttd_jab), { sz: S }), { sz: S, jc: 'center' });
+    var jabP = p(r(String(d.ttd_jab || '').trim(), { sz: S }), { sz: S, jc: 'center' });
     if (o.mini) {
       var sw = scaleCols([3235, 1600, 4070], W);
       x += tbl(sw, [
         { cantSplit: true, cells: [{}, {}, { content: jabP }] },
         { cantSplit: true, h: 1050, cells: [{}, {}, { vAlign: 'bottom', content: nameP }] }
       ], { cm: 108 });
+    } else if (!o.paraf) {
+      var leftW = Math.round(W * 0.48), rightW = W - leftW;
+      x += tbl([leftW, rightW], [
+        { cantSplit: true, cells: [{}, { content: jabP }] },
+        { cantSplit: true, h: 1140, cells: [{}, {}] },
+        { cantSplit: true, cells: [{}, { vAlign: 'bottom', content: nameP }] }
+      ], { cm: 0 });
     } else {
-      // tabel menjorok, kotak paraf kecil di bawah jabatan penanda tangan
-      var g = scaleCols([1350, 1980, 1622, 4125], W), ind = g[0], cols = g.slice(1);
-      var PB = 18, box = o.paraf ? 'tlbr' : '';
+      // tabel menjorok dengan kotak paraf kecil di kiri
+      var g = scaleCols([1350, 1980, 1024, 4723], W), ind = g[0], cols = g.slice(1);
+      var PB = 18, box = 'tlbr';
       var konfJab = (d.konf_jabParaf || '').trim() || d.konf_jab;
       var sp0 = p('', { sz: 2, sp: { line: 20, rule: 'exact' } });
       x += tbl(cols, [
         { cantSplit: true, cells: [{}, {}, { content: jabP }] },
         { cantSplit: true, h: 260, hRule: 'exact', cells: [{ content: sp0 }, { content: sp0 }, { content: sp0 }] },
         { cantSplit: true, cells: [
-          { borders: box, mar: [0, 40, 0, 40], content: o.paraf ? p(r(konfJab, { sz: PB }), { sz: PB, jc: 'center', sp: { before: 20, after: 40 } }) : p('', { sz: PB, sp: { after: 40 } }) },
+          { borders: box, mar: [0, 40, 0, 40], content: p(r(konfJab, { sz: PB }), { sz: PB, jc: 'center', sp: { before: 20, after: 40 } }) },
           {}, {}] },
         { cantSplit: true, h: 830, cells: [
-          { borders: box, mar: [0, 40, 0, 40], vAlign: 'bottom', content: o.paraf ? p(r(d.konf_nama, { sz: PB, b: true }), { sz: PB, jc: 'center', sp: { after: 40 } }) : '' },
+          { borders: box, mar: [0, 40, 0, 40], vAlign: 'bottom', content: p(r(d.konf_nama, { sz: PB, b: true }), { sz: PB, jc: 'center', sp: { after: 40 } }) },
           {}, {}] },
         { cantSplit: true, h: 560, cells: [{}, {}, {}] },
         { cantSplit: true, cells: [{}, {}, { vAlign: 'bottom', content: nameP }] }
@@ -413,7 +436,7 @@ var DocGen = (function () {
         var isLast = i === pages.length - 1, content, sp;
         if (pg === 'konsep') { content = konsepPage(d, LK, ctx); sp = sectPr(mK, false); }
         else if (pg === 'lampiran') { content = lampiranPage(d, LS, ctx); sp = sectPr(mL, false); /* lampiran tanpa kop */ }
-        else { content = letterBody(d, { S: 24, width: LS.W, paraf: pg === 'paraf', nextList: ctx.nextList }); sp = sectPr(mS, true); }
+        else { content = letterBody(d, { S: 22, width: LS.W, paraf: pg === 'paraf', withKop: true, kop: ctx.kop, logoRid: 'rIdLogo', nextList: ctx.nextList }); sp = sectPr(mS, false); }
         body += content;
         if (isLast) body += sp;
         else body += p('', { sz: 2, sp: { line: 20, rule: 'exact' }, sect: sp });
