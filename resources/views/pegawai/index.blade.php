@@ -333,8 +333,13 @@
                     <option value="{{ $u }}" {{ request('unit') == $u ? 'selected' : '' }}>{{ $u }}</option>
                 @endforeach
             </select>
+            <select name="per_page" class="select-unit" style="min-width: 108px; width: auto;" onchange="this.form.submit()" title="Jumlah data per halaman">
+                @foreach([15, 25, 50, 100] as $opt)
+                    <option value="{{ $opt }}" {{ ($perPage ?? 15) == $opt ? 'selected' : '' }}>{{ $opt }} / hal</option>
+                @endforeach
+            </select>
             <button type="submit" class="btn-filter">Cari</button>
-            @if(request('q') || request('unit'))
+            @if(request('q') || request('unit') || request('per_page'))
                 <a href="{{ route('pegawai.index') }}" style="font-size: 12.5px; color: var(--text-muted); text-decoration: none; padding: 0 4px;">Reset</a>
             @endif
         </form>
@@ -356,11 +361,24 @@
     <!-- PEGAWAI TABLE -->
     <div class="pegawai-table-card">
         <div class="pegawai-info-strip">
-            <div>
+            <div style="flex: 1; min-width: 260px;">
                 Kolom <strong>Jabatan di Surat</strong>, <strong>Rangkap di Surat</strong>, dan <strong>Nama di Surat</strong> (opsional) otomatis dipakai pada generator surat bila penulisan di surat berbeda dari SK (misal tanpa gelar atau jabatan disingkat).
             </div>
-            <div style="font-weight: 700; color: var(--pu-navy); white-space: nowrap;">
-                Menampilkan {{ $pegawais->count() }} dari {{ $totalPegawai }} pegawai
+            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                <form method="POST" action="{{ route('pegawai.destroy.bulk') }}" id="bulkFormPegawai" class="bulk-bar">
+                    @csrf
+                    @method('DELETE')
+                    <div id="bulkInputsPegawai"></div>
+                    <span class="bulk-count-pill" id="bulkCountPegawai">0 dipilih</span>
+                    <button type="submit" class="btn-bulk-delete">
+                        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                        Hapus Terpilih
+                    </button>
+                    <button type="button" class="btn-bulk-cancel" id="bulkCancelPegawai">Batal</button>
+                </form>
+                <div style="font-weight: 700; color: var(--pu-navy); white-space: nowrap;">
+                    Menampilkan {{ $pegawais->count() > 0 ? $pegawais->firstItem() . '–' . $pegawais->lastItem() : 0 }} dari {{ $pegawais->total() }} pegawai
+                </div>
             </div>
         </div>
 
@@ -368,6 +386,9 @@
             <table class="table-pegawai">
                 <thead>
                     <tr>
+                        <th style="width: 38px; text-align:center;">
+                            <input type="checkbox" class="chk-input" id="selectAllPegawai" title="Pilih semua di halaman ini">
+                        </th>
                         <th style="width: 44px; text-align:center;">No</th>
                         <th style="min-width: 190px;">Unit</th>
                         <th style="min-width: 210px;">Nama Lengkap</th>
@@ -386,7 +407,7 @@
                 <tbody>
                     @php
                         $lastGroup = null;
-                        $unitCounts = $pegawais->groupBy(fn($x) => ($x->unit ?: 'Balai Wilayah Sungai Kalimantan I Pontianak') . '|' . ($x->satker ?? ''))->map->count();
+                        $unitCounts = $pegawais->getCollection()->groupBy(fn($x) => ($x->unit ?: 'Balai Wilayah Sungai Kalimantan I Pontianak') . '|' . ($x->satker ?? ''))->map->count();
                     @endphp
                     @forelse($pegawais as $index => $p)
                         @php
@@ -396,7 +417,7 @@
                         @if($groupKey !== $lastGroup)
                             @php $lastGroup = $groupKey; @endphp
                             <tr class="group-row">
-                                <td colspan="13">
+                                <td colspan="14">
                                     <span>{{ $unitName }}</span>
                                     @if($p->satker && $p->satker !== $unitName)
                                         <span class="group-satker-tag">{{ $p->satker }}</span>
@@ -406,8 +427,11 @@
                             </tr>
                         @endif
                         <tr class="data-row">
+                            <td style="text-align:center;">
+                                <input type="checkbox" class="chk-input row-chk-pegawai" value="{{ $p->id }}" aria-label="Pilih {{ $p->nama }}">
+                            </td>
                             <td style="text-align:center; color: var(--text-subtle); font-variant-numeric: tabular-nums;">
-                                {{ $index + 1 }}
+                                {{ ($pegawais->firstItem() ?? 1) + $index }}
                             </td>
                             <td>
                                 <span class="badge-unit">{{ $unitName }}</span>
@@ -476,7 +500,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="13" style="text-align: center; padding: 36px; color: var(--text-muted);">
+                            <td colspan="14" style="text-align: center; padding: 36px; color: var(--text-muted);">
                                 Tidak ada data pegawai yang sesuai dengan pencarian.
                             </td>
                         </tr>
@@ -484,6 +508,11 @@
                 </tbody>
             </table>
         </div>
+        @if($pegawais->hasPages())
+            <div class="pagination-wrap">
+                {{ $pegawais->links() }}
+            </div>
+        @endif
     </div>
 
     <!-- MODAL TAMBAH PEGAWAI -->
@@ -709,6 +738,21 @@
     window.addEventListener('click', function(e) {
         if (e.target.classList.contains('modal-backdrop')) {
             e.target.style.display = 'none';
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        if (window.initBulkSelect) {
+            window.initBulkSelect({
+                selectAllId: 'selectAllPegawai',
+                rowSelector: '.row-chk-pegawai',
+                barId: 'bulkFormPegawai',
+                countId: 'bulkCountPegawai',
+                formId: 'bulkFormPegawai',
+                inputsId: 'bulkInputsPegawai',
+                cancelId: 'bulkCancelPegawai',
+                entityLabel: 'data pegawai'
+            });
         }
     });
 </script>

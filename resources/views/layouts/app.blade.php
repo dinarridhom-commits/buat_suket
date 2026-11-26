@@ -593,6 +593,78 @@
             background: var(--pu-navy-50); border-color: var(--pu-navy); color: var(--pu-navy);
         }
 
+        /* ── Bulk Selection & Pagination Utilities ── */
+        .chk-input {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--pu-navy);
+            cursor: pointer;
+            vertical-align: middle;
+        }
+        tr.row-selected td {
+            background: #eff6ff !important;
+        }
+        .bulk-bar {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .bulk-bar.is-visible {
+            display: inline-flex;
+        }
+        .bulk-count-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: rgba(239, 68, 68, 0.10);
+            color: var(--danger);
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .btn-bulk-delete {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 1px solid #fecaca;
+            background: var(--danger);
+            color: #ffffff;
+            font-size: 12px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background 0.15s;
+            white-space: nowrap;
+        }
+        .btn-bulk-delete:hover {
+            background: #dc2626;
+        }
+        .btn-bulk-cancel {
+            padding: 6px 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: #ffffff;
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .btn-bulk-cancel:hover {
+            background: var(--bg-soft);
+            color: var(--text-main);
+        }
+        .pagination-wrap {
+            padding: 14px 20px;
+            border-top: 1px solid var(--border);
+            background: #ffffff;
+        }
+
         /* ══════════════════════════════════════
            RESPONSIVE
         ══════════════════════════════════════ */
@@ -776,6 +848,72 @@
                 document.body.classList.add('sidebar-hidden');
             }
         } catch(e) {}
+
+        // ── Shared Bulk Selection Helper ───────────────────────────────
+        window.initBulkSelect = function (cfg) {
+            const selectAll = document.getElementById(cfg.selectAllId);
+            const bar = document.getElementById(cfg.barId);
+            const countEl = document.getElementById(cfg.countId);
+            const form = document.getElementById(cfg.formId);
+            const inputsWrap = document.getElementById(cfg.inputsId);
+            const cancelBtn = cfg.cancelId ? document.getElementById(cfg.cancelId) : null;
+            if (!selectAll || !form || !inputsWrap) return;
+
+            const getRows = () => Array.from(document.querySelectorAll(cfg.rowSelector));
+
+            function sync() {
+                const rows = getRows();
+                const checked = rows.filter(cb => cb.checked);
+                rows.forEach(cb => {
+                    const tr = cb.closest('tr');
+                    if (tr) tr.classList.toggle('row-selected', cb.checked);
+                });
+                if (bar) bar.classList.toggle('is-visible', checked.length > 0);
+                if (countEl) countEl.textContent = checked.length + ' dipilih';
+                selectAll.checked = rows.length > 0 && checked.length === rows.length;
+                selectAll.indeterminate = checked.length > 0 && checked.length < rows.length;
+            }
+
+            selectAll.addEventListener('change', () => {
+                getRows().forEach(cb => { cb.checked = selectAll.checked; });
+                sync();
+            });
+
+            document.addEventListener('change', (e) => {
+                if (e.target && e.target.matches(cfg.rowSelector)) sync();
+            });
+
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', () => {
+                    selectAll.checked = false;
+                    getRows().forEach(cb => { cb.checked = false; });
+                    sync();
+                });
+            }
+
+            form.addEventListener('submit', (e) => {
+                const checked = getRows().filter(cb => cb.checked);
+                if (checked.length === 0) {
+                    e.preventDefault();
+                    return;
+                }
+                const label = cfg.entityLabel || 'data';
+                if (!confirm('Hapus ' + checked.length + ' ' + label + ' terpilih? Tindakan ini tidak dapat dibatalkan.')) {
+                    e.preventDefault();
+                    return;
+                }
+                inputsWrap.innerHTML = '';
+                checked.forEach(cb => {
+                    const inp = document.createElement('input');
+                    inp.type = 'hidden';
+                    inp.name = 'ids[]';
+                    inp.value = cb.value;
+                    inputsWrap.appendChild(inp);
+                });
+            });
+
+            sync();
+        };
 
         // ── Auto-dismiss alerts after 5 s
         document.addEventListener('DOMContentLoaded', () => {

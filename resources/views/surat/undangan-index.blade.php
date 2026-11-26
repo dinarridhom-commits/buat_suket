@@ -37,14 +37,28 @@
 </div>
 
 <div class="panel-card">
-    <div class="panel-head">
+    <div class="panel-head" style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
         <h3>Daftar Surat Undangan Terbit ({{ $surats->total() }})</h3>
+        <form method="POST" action="{{ route('surat.undangan.destroy.bulk') }}" id="bulkFormUndangan" class="bulk-bar">
+            @csrf
+            @method('DELETE')
+            <div id="bulkInputsUndangan"></div>
+            <span class="bulk-count-pill" id="bulkCountUndangan">0 dipilih</span>
+            <button type="submit" class="btn-bulk-delete">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                Hapus Terpilih
+            </button>
+            <button type="button" class="btn-bulk-cancel" id="bulkCancelUndangan">Batal</button>
+        </form>
     </div>
     <div class="panel-body" style="padding: 0;">
         @if($surats->count() > 0)
             <table class="table-modern">
                 <thead>
                     <tr>
+                        <th style="width:38px; text-align:center;">
+                            <input type="checkbox" class="chk-input" id="selectAllUndangan" title="Pilih semua di halaman ini">
+                        </th>
                         <th>Nomor Surat</th>
                         <th>Hal / Acara</th>
                         <th>Tanggal Surat</th>
@@ -58,6 +72,9 @@
                 <tbody>
                     @foreach($surats as $s)
                         <tr>
+                            <td style="text-align:center;">
+                                <input type="checkbox" class="chk-input row-chk-undangan" value="{{ $s->id }}" aria-label="Pilih {{ $s->nomor_surat }}">
+                            </td>
                             <td style="font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600;">
                                 {{ $s->nomor_surat }}
                             </td>
@@ -116,3 +133,22 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if (window.initBulkSelect) {
+            window.initBulkSelect({
+                selectAllId: 'selectAllUndangan',
+                rowSelector: '.row-chk-undangan',
+                barId: 'bulkFormUndangan',
+                countId: 'bulkCountUndangan',
+                formId: 'bulkFormUndangan',
+                inputsId: 'bulkInputsUndangan',
+                cancelId: 'bulkCancelUndangan',
+                entityLabel: 'arsip surat undangan'
+            });
+        }
+    });
+</script>
+@endpush

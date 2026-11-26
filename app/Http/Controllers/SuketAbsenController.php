@@ -150,4 +150,21 @@ class SuketAbsenController extends Controller
 
         return redirect()->route('surat.suket.index')->with('success', 'Arsip suket lupa absen berhasil dihapus.');
     }
+
+    public function destroyBulk(Request $request)
+    {
+        $validated = $request->validate([
+            'ids'   => 'required|array|min:1',
+            'ids.*' => 'integer',
+        ], [
+            'ids.required' => 'Pilih minimal satu arsip suket lupa absen yang akan dihapus.',
+            'ids.min'      => 'Pilih minimal satu arsip suket lupa absen yang akan dihapus.',
+        ]);
+
+        $ids = array_values(array_unique(array_map('intval', $validated['ids'])));
+        $deleted = SuketAbsen::whereIn('id', $ids)->delete();
+
+        return redirect()->route('surat.suket.index')
+            ->with('success', $deleted . ' arsip suket lupa absen berhasil dihapus.');
+    }
 }

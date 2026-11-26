@@ -970,6 +970,7 @@
                             <button type="button" class="btn-v5" id="btnSortPenerima">Urutkan A&ndash;Z</button>
                             <button type="button" class="btn-v5" id="btnRevPenerima">Balik urutan</button>
                             <button type="button" class="btn-v5" id="btnBulkTextPenerima">Edit sebagai teks</button>
+                            <button type="button" class="btn-v5" id="btnClearPenerima" style="color:#dc2626; border-color:#fecaca;">Hapus semua</button>
                         </div>
 
                         <div id="bulkTextBox" style="display:none; background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; padding:10px; margin-bottom:8px;">
@@ -1521,6 +1522,12 @@
     });
     el('btnRevPenerima').addEventListener('click', () => {
         setPenerimaList(getPenerimaValues().reverse());
+    });
+    el('btnClearPenerima').addEventListener('click', () => {
+        if (getPenerimaValues().length === 0) return;
+        if (confirm('Hapus semua daftar penerima tujuan yang ada?')) {
+            setPenerimaList([]);
+        }
     });
     el('btnBulkTextPenerima').addEventListener('click', () => {
         el('bulkPenerimaTextarea').value = getPenerimaValues().join('\n');

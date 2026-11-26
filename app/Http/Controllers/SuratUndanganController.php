@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\SuratUndangan;
+use App\Models\SuratUndanganPenerima;
 use App\Models\Pegawai;
 use App\Models\Setting;
 use Illuminate\Http\Request;
@@ -280,5 +281,23 @@ class SuratUndanganController extends Controller
         $surat->delete();
 
         return redirect()->route('surat.undangan.index')->with('success', 'Arsip surat undangan berhasil dihapus.');
+    }
+
+    public function destroyBulk(Request $request)
+    {
+        $validated = $request->validate([
+            'ids'   => 'required|array|min:1',
+            'ids.*' => 'integer',
+        ], [
+            'ids.required' => 'Pilih minimal satu arsip surat undangan yang akan dihapus.',
+            'ids.min'      => 'Pilih minimal satu arsip surat undangan yang akan dihapus.',
+        ]);
+
+        $ids = array_values(array_unique(array_map('intval', $validated['ids'])));
+        SuratUndanganPenerima::whereIn('surat_undangan_id', $ids)->delete();
+        $deleted = SuratUndangan::whereIn('id', $ids)->delete();
+
+        return redirect()->route('surat.undangan.index')
+            ->with('success', $deleted . ' arsip surat undangan berhasil dihapus.');
     }
 }

@@ -57,11 +57,12 @@ class PegawaiController extends Controller
 
     public function index(Request $request)
     {
-        $pegawais     = $this->buildFilteredQuery($request)->get();
+        $perPage      = in_array((int) $request->input('per_page'), [15, 25, 50, 100], true) ? (int) $request->input('per_page') : 15;
+        $pegawais     = $this->buildFilteredQuery($request)->paginate($perPage)->withQueryString();
         $totalPegawai = Pegawai::count();
         $units        = Pegawai::orderBy('id', 'asc')->pluck('unit')->filter()->unique()->values();
 
-        return view('pegawai.index', compact('pegawais', 'totalPegawai', 'units'));
+        return view('pegawai.index', compact('pegawais', 'totalPegawai', 'units', 'perPage'));
     }
 
     public function search(Request $request)
@@ -100,6 +101,23 @@ class PegawaiController extends Controller
         $pegawai->delete();
 
         return redirect()->route('pegawai.index')->with('success', 'Data pegawai berhasil dihapus.');
+    }
+
+    public function destroyBulk(Request $request)
+    {
+        $validated = $request->validate([
+            'ids'   => 'required|array|min:1',
+            'ids.*' => 'integer',
+        ], [
+            'ids.required' => 'Pilih minimal satu data pegawai yang akan dihapus.',
+            'ids.min'      => 'Pilih minimal satu data pegawai yang akan dihapus.',
+        ]);
+
+        $ids = array_values(array_unique(array_map('intval', $validated['ids'])));
+        $deleted = Pegawai::whereIn('id', $ids)->delete();
+
+        return redirect()->route('pegawai.index')
+            ->with('success', $deleted . ' data pegawai berhasil dihapus.');
     }
 
     public function exportCsv(Request $request)
