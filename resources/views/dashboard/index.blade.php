@@ -556,7 +556,7 @@
     <div class="dash-header">
         <div class="dash-header-title">
             <h1>Dashboard</h1>
-            <p>Pantau aktivitas persuratan, database pegawai, dan utilitas dokumen BWS Kalimantan I.</p>
+            <p>Kelola Surat Undangan Kedinasan, Suket Lupa Absen, dan Database Pegawai BWS Kalimantan I.</p>
         </div>
         <div class="dash-header-actions">
             <a href="{{ route('surat.undangan.create') }}" class="btn-pill-primary">
@@ -611,13 +611,13 @@
 
         <a href="{{ route('pegawai.index') }}" class="bento-kpi-card">
             <div class="kpi-top-row">
-                <span class="kpi-title">Master Pegawai & QR</span>
+                <span class="kpi-title">Master Pegawai</span>
                 <span class="kpi-arrow-btn">↗</span>
             </div>
             <div class="kpi-number">{{ $totalPegawai }}</div>
             <div class="kpi-trend">
                 <span class="trend-pill">{{ $unitKerjaCount }} Satker</span>
-                <span>• {{ $totalQr }} QR tersimpan</span>
+                <span>• Terdaftar di sistem</span>
             </div>
         </a>
     </div>
@@ -721,7 +721,7 @@
         <div class="bento-card">
             <div class="bento-card-head">
                 <h3>Status Arsip Surat</h3>
-                <a href="{{ route('qrcode.index') }}" class="btn-mini-pill">QR Studio</a>
+                <a href="{{ route('surat.undangan.index') }}" class="btn-mini-pill">Arsip Surat</a>
             </div>
             <div class="donut-wrap">
                 <div class="donut-ring" style="background: conic-gradient(var(--pu-navy) 0% {{ $finalPct }}%, var(--pu-gold) {{ $finalPct }}% 100%);">
@@ -745,8 +745,8 @@
                 <div class="clock-date">{{ now()->locale('id')->translatedFormat('l, d F Y') }}</div>
             </div>
             <div class="clock-actions">
-                <a href="{{ route('pdf.index') }}" class="clock-quick-btn clock-btn-gold">📑 PDF Studio</a>
-                <a href="{{ route('qrcode.index') }}" class="clock-quick-btn clock-btn-ghost">📱 QR PU</a>
+                <a href="{{ route('surat.undangan.create') }}" class="clock-quick-btn clock-btn-gold">Buat Undangan</a>
+                <a href="{{ route('surat.suket.create') }}" class="clock-quick-btn clock-btn-ghost">Buat Suket</a>
             </div>
         </div>
     </div>

@@ -261,15 +261,7 @@
 
         <table style="width:100%; margin-top:28px; border-collapse:collapse;">
             <tr>
-                <td style="width:48%; vertical-align:bottom;">
-                    <div style="display:inline-flex; align-items:center; gap:10px; border:1px dashed #94a3b8; border-radius:6px; padding:6px 10px; background:#f8fafc;">
-                        <div id="qrVerifyCanvas"></div>
-                        <div style="font-size:9.5px; color:#334155; line-height:1.35; max-width:165px;">
-                            <div style="font-weight:700; color:#13243d;">VERIFIKASI DOKUMEN</div>
-                            <div>Pindai QR untuk cek keaslian arsip digital BWS Kalimantan I.</div>
-                        </div>
-                    </div>
-                </td>
+                <td style="width:48%; vertical-align:bottom;"></td>
                 <td style="width:52%; text-align:center; vertical-align:top; font-size:14.5px;">
                     <div>{{ $surat->penandatangan_jabatan }}</div>
                     <div style="height:78px;"></div>
@@ -330,19 +322,8 @@
 <script src="{{ asset('js/jszip.min.js') }}"></script>
 <script src="{{ asset('js/surat_constants.js') }}"></script>
 <script src="{{ asset('js/docgen.js') }}"></script>
-<script src="{{ asset('js/qrcode.min.js') }}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const el = document.getElementById('qrVerifyCanvas');
-        if (el && typeof QRCode !== 'undefined') {
-            new QRCode(el, {
-                text: @json($verifyUrl),
-                width: 62, height: 62,
-                colorDark: '#13243d', colorLight: '#ffffff',
-                correctLevel: QRCode.CorrectLevel.M
-            });
-        }
-
         document.getElementById('btnExportDocx').addEventListener('click', function() {
             const btn = this;
             const orig = btn.innerHTML;

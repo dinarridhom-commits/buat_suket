@@ -117,11 +117,6 @@
         margin-bottom: 4px;
     }
 
-    .qr-verify-seal {
-        margin: 4px auto; padding: 4px 6px; border: 1px dashed #94a3b8; border-radius: 5px;
-        display: inline-flex; align-items: center; gap: 7px; background: #f8fafc; text-align: left;
-    }
-
     @page { size: A4 portrait; margin: 0; }
 
     @media print {
@@ -227,23 +222,15 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Jenis Keterangan (Yang tidak dipilih otomatis dicoret)</label>
+                        <label class="form-label">Jenis Lupa Absen</label>
                         <div class="radio-grid">
                             <label class="radio-pill">
-                                <input type="radio" name="jenis_absen" value="terlambat" {{ $jenisVal === 'terlambat' ? 'checked' : '' }}>
-                                Terlambat Masuk Kerja
-                            </label>
-                            <label class="radio-pill">
-                                <input type="radio" name="jenis_absen" value="pulangawal" {{ $jenisVal === 'pulangawal' ? 'checked' : '' }}>
-                                Pulang Sebelum Waktunya
-                            </label>
-                            <label class="radio-pill">
-                                <input type="radio" name="jenis_absen" value="masuk" {{ $jenisVal === 'masuk' ? 'checked' : '' }}>
-                                Lupa Absen Kedatangan
+                                <input type="radio" name="jenis_absen" value="masuk" {{ $jenisVal !== 'pulang' ? 'checked' : '' }}>
+                                Lupa Absen Masuk
                             </label>
                             <label class="radio-pill">
                                 <input type="radio" name="jenis_absen" value="pulang" {{ $jenisVal === 'pulang' ? 'checked' : '' }}>
-                                Lupa Absen Kepulangan
+                                Lupa Absen Pulang
                             </label>
                         </div>
                     </div>
@@ -316,12 +303,6 @@
                         <a href="#" id="btnReapplyRule" style="color:var(--pu-blue); font-weight:600;">Terapkan aturan lagi</a>
                     </div>
 
-                    <div style="margin-top:10px; padding:10px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:6px;">
-                        <label style="font-size:12.5px; font-weight:600; color:#166534; display:flex; align-items:center; gap:8px; cursor:pointer;">
-                            <input type="checkbox" id="chkQrStampSuket" checked>
-                            <span>Sertakan Stempel Digital &amp; QR Code e-Sign BWS Kalimantan I</span>
-                        </label>
-                    </div>
                 </div>
             </div>
 
@@ -407,7 +388,7 @@
                     <div style="text-align:justify; line-height:1.6; margin: 14px 0 18px 0;" id="pvPernyataan">
                         Dengan ini menerangkan bahwa pada hari <span id="pvHariTgl">{{ \Carbon\Carbon::parse($tglVal)->locale('id')->translatedFormat('l') }} tanggal {{ \Carbon\Carbon::parse($tglVal)->locale('id')->translatedFormat('d F Y') }}</span>,
                         <span id="pvOpsiKalimat"></span>
-                        (*) karena: <span id="pvAlasan">{{ old('alasan', $isEdit ? $suket->alasan : 'Jaringan internet seluler bermasalah dan aplikasi absensi online sedang maintenance saat jam presensi.') }}</span>
+                        (*) karena: <span id="pvAlasan">{{ old('alasan', $isEdit ? $suket->alasan : 'Lupa absensi masuk di Satu Bravo') }}</span>
                     </div>
 
                     <!-- TTD DUAL -->
@@ -425,18 +406,7 @@
                         </tr>
                         <tr>
                             <td style="height:78px;"></td>
-                            <td style="height:78px; vertical-align:middle;">
-                                <div id="pvQrSealSuket">
-                                    <div class="qr-verify-seal">
-                                        <div id="qrCanvasContainerSuket"></div>
-                                        <div style="font-size:8.5px; color:#475569; line-height:1.2;">
-                                            <b>KEMENTERIAN PU</b><br>
-                                            BWS Kalimantan I<br>
-                                            <span style="color:#0284c7; font-weight:600;">Disetujui Elektronik</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </td>
+                            <td style="height:78px;"></td>
                         </tr>
                         <tr>
                             <td>
@@ -469,7 +439,6 @@
 <script src="{{ asset('js/jszip.min.js') }}"></script>
 <script src="{{ asset('js/surat_constants.js') }}"></script>
 <script src="{{ asset('js/docgen.js') }}"></script>
-<script src="{{ asset('js/qrcode.min.js') }}"></script>
 <script>
     const inNomor = document.getElementById('inNomor');
     const inNama = document.getElementById('inNamaPegawai');
@@ -483,7 +452,6 @@
     const inAtasanNip = document.getElementById('inAtasanNip');
     const inAtasanJabatan = document.getElementById('inAtasanJabatan');
     const selectPegawai = document.getElementById('selectPegawai');
-    const chkQrStampSuket = document.getElementById('chkQrStampSuket');
 
     const SUKET_OPSI = [
         ['terlambat', 'saya terlambat masuk kerja'],
@@ -531,45 +499,20 @@
         document.getElementById('pvTglSurat').innerText = 'Pontianak, ' + tglStr;
     }
 
-    function renderSuketQr() {
-        const wrap = document.getElementById('pvQrSealSuket');
-        if (!chkQrStampSuket.checked) {
-            wrap.style.display = 'none';
-            return;
-        }
-        wrap.style.display = 'block';
-        const box = document.getElementById('qrCanvasContainerSuket');
-        box.innerHTML = '';
-        const txt = 'SUKET BWS KALIMANTAN I\n' +
-                    'No: ' + inNomor.value + '\n' +
-                    'Pegawai: ' + inNama.value + ' (NIP: ' + inNip.value + ')\n' +
-                    'Tanggal: ' + inTanggalAbsen.value + '\n' +
-                    'Disetujui: ' + inAtasanNama.value;
-        if (typeof QRCode !== 'undefined') {
-            new QRCode(box, {
-                text: txt, width: 52, height: 52,
-                colorDark: '#0f172a', colorLight: '#ffffff',
-                correctLevel: QRCode.CorrectLevel.M
-            });
-        }
-    }
-
-    inNomor.addEventListener('input', () => { document.getElementById('pvNomor').innerText = 'NOMOR ' + inNomor.value; renderSuketQr(); });
+    inNomor.addEventListener('input', () => { document.getElementById('pvNomor').innerText = 'NOMOR ' + inNomor.value; });
     inNama.addEventListener('input', () => {
         document.getElementById('pvNama').innerText = inNama.value;
         document.getElementById('pvTtdPegawai').innerText = inNama.value;
-        renderSuketQr();
     });
     inNip.addEventListener('input', () => {
         document.getElementById('pvNip').innerText = inNip.value;
         document.getElementById('pvTtdNipPegawai').innerText = inNip.value ? 'NIP. ' + inNip.value : '';
-        renderSuketQr();
     });
     inPangkat.addEventListener('input', () => document.getElementById('pvPangkat').innerText = inPangkat.value);
     inJabatan.addEventListener('input', () => document.getElementById('pvJabatan').innerText = inJabatan.value);
     inAlasan.addEventListener('input', () => document.getElementById('pvAlasan').innerText = inAlasan.value);
-    inTanggalAbsen.addEventListener('input', () => { renderTanggal(); renderSuketQr(); });
-    inAtasanNama.addEventListener('input', () => { document.getElementById('pvTtdAtasanNama').innerText = inAtasanNama.value; renderSuketQr(); });
+    inTanggalAbsen.addEventListener('input', renderTanggal);
+    inAtasanNama.addEventListener('input', () => { document.getElementById('pvTtdAtasanNama').innerText = inAtasanNama.value; });
     inAtasanNip.addEventListener('input', () => document.getElementById('pvTtdAtasanNip').innerText = inAtasanNip.value ? 'NIP. ' + inAtasanNip.value : '');
     inAtasanJabatan.addEventListener('input', () => document.getElementById('pvTtdAtasanJabatan').innerText = inAtasanJabatan.value);
 
@@ -605,7 +548,6 @@
         document.getElementById('pvTtdAtasanJabatan').innerText = inAtasanJabatan.value;
         document.getElementById('pvTtdAtasanNama').innerText = inAtasanNama.value;
         document.getElementById('pvTtdAtasanNip').innerText = inAtasanNip.value ? 'NIP. ' + inAtasanNip.value : '';
-        renderSuketQr();
     }
 
     document.getElementById('btnReapplyRule').addEventListener('click', function(e) {
@@ -624,7 +566,6 @@
             document.getElementById('pvTtdAtasanJabatan').innerText = inAtasanJabatan.value;
             document.getElementById('pvTtdAtasanNama').innerText = inAtasanNama.value;
             document.getElementById('pvTtdAtasanNip').innerText = inAtasanNip.value ? 'NIP. ' + inAtasanNip.value : '';
-            renderSuketQr();
         }
     });
 
@@ -645,14 +586,11 @@
             document.getElementById('pvPangkat').innerText = inPangkat.value;
             document.getElementById('pvJabatan').innerText = inJabatan.value;
             applyAtasanRule(false);
-            renderSuketQr();
         }
     });
 
-    chkQrStampSuket.addEventListener('change', renderSuketQr);
     renderOpsiKalimat();
     renderTanggal();
-    renderSuketQr();
 
     // Export DOCX Suket via DocGen
     document.getElementById('btnExportSuketDocx').addEventListener('click', function() {

@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ActivityLog;
 use App\Models\Pegawai;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -56,7 +55,6 @@ class PegawaiController extends Controller
         ])->validate();
 
         $pegawai = Pegawai::create($request->all());
-        ActivityLog::record('create', 'Database Pegawai', "Menambahkan pegawai baru: {$pegawai->nama}");
 
         return redirect()->route('pegawai.index')->with('success', 'Data pegawai baru berhasil ditambahkan.');
     }
@@ -75,7 +73,6 @@ class PegawaiController extends Controller
         ])->validate();
 
         $pegawai->update($request->all());
-        ActivityLog::record('update', 'Database Pegawai', "Memperbarui data pegawai: {$pegawai->nama}");
 
         return redirect()->route('pegawai.index')->with('success', 'Data pegawai berhasil diperbarui.');
     }
@@ -85,7 +82,6 @@ class PegawaiController extends Controller
         $pegawai = Pegawai::findOrFail($id);
         $nama = $pegawai->nama;
         $pegawai->delete();
-        ActivityLog::record('delete', 'Database Pegawai', "Menghapus data pegawai: {$nama}");
 
         return redirect()->route('pegawai.index')->with('success', 'Data pegawai berhasil dihapus.');
     }
@@ -110,8 +106,6 @@ class PegawaiController extends Controller
         $pegawais = $query->get();
         $filename = 'Master_Pegawai_BWS_Kalimantan_I_' . date('Ymd_His') . '.xls';
         $exportedAt = now()->locale('id')->translatedFormat('d F Y, H:i') . ' WIB';
-
-        ActivityLog::record('export', 'Database Pegawai', 'Mengekspor ' . $pegawais->count() . ' data pegawai ke Excel.');
 
         $html = view('pegawai.export-excel', compact('pegawais', 'exportedAt'))->render();
 
@@ -194,8 +188,6 @@ class PegawaiController extends Controller
                 $created++;
             }
         }
-
-        ActivityLog::record('import', 'Database Pegawai', "Impor CSV pegawai: {$created} baru, {$updated} diperbarui.");
 
         return redirect()->route('pegawai.index')->with('success', "Impor selesai: {$created} pegawai ditambahkan, {$updated} pegawai diperbarui.");
     }

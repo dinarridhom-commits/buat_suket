@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ActivityLog;
 use App\Models\SuratUndangan;
 use App\Models\Pegawai;
 use App\Models\Setting;
@@ -147,8 +146,6 @@ class SuratUndanganController extends Controller
         $filename   = 'Buku_Agenda_Surat_Undangan_' . date('Ymd_His') . '.xls';
         $exportedAt = now()->locale('id')->translatedFormat('d F Y, H:i') . ' WIB';
 
-        ActivityLog::record('export', 'Surat Undangan', 'Mengekspor ' . $surats->count() . ' arsip Surat Undangan ke Excel.');
-
         $html = view('surat.undangan-export-excel', compact('surats', 'exportedAt'))->render();
 
         return response($html, 200, [
@@ -208,8 +205,6 @@ class SuratUndanganController extends Controller
             }
         }
 
-        ActivityLog::record('create', 'Surat Undangan', "Membuat Surat Undangan {$surat->nomor_surat} — {$surat->hal}");
-
         return redirect()->route('surat.undangan.show', $surat->id)->with('success', 'Surat Undangan berhasil disimpan ke database.');
     }
 
@@ -218,9 +213,8 @@ class SuratUndanganController extends Controller
         $surat      = SuratUndangan::with('penerimas')->findOrFail($id);
         $kop        = $this->defaultKop();
         $kopPresets = self::kopPresets();
-        $verifyUrl  = VerificationController::makeUrl('undangan', $surat->id);
 
-        return view('surat.undangan-show', compact('surat', 'kop', 'kopPresets', 'verifyUrl'));
+        return view('surat.undangan-show', compact('surat', 'kop', 'kopPresets'));
     }
 
     public function edit($id)
@@ -264,8 +258,6 @@ class SuratUndanganController extends Controller
             }
         }
 
-        ActivityLog::record('update', 'Surat Undangan', "Memperbarui Surat Undangan {$surat->nomor_surat} — {$surat->hal}");
-
         return redirect()->route('surat.undangan.show', $surat->id)->with('success', 'Perubahan Surat Undangan berhasil disimpan.');
     }
 
@@ -273,16 +265,13 @@ class SuratUndanganController extends Controller
     {
         $surat = SuratUndangan::findOrFail($id);
         $surat->update(['status' => $request->status]);
-        ActivityLog::record('update', 'Surat Undangan', "Mengubah status surat {$surat->nomor_surat} menjadi " . ucfirst($request->status));
         return redirect()->back()->with('success', 'Status surat berhasil diperbarui.');
     }
 
     public function destroy($id)
     {
         $surat = SuratUndangan::findOrFail($id);
-        $nomor = $surat->nomor_surat;
         $surat->delete();
-        ActivityLog::record('delete', 'Surat Undangan', "Menghapus arsip Surat Undangan {$nomor}");
 
         return redirect()->route('surat.undangan.index')->with('success', 'Arsip surat undangan berhasil dihapus.');
     }

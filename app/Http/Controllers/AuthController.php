@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ActivityLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -52,7 +51,6 @@ class AuthController extends Controller
         if (Auth::attempt([$loginField => $request->input('login'), 'password' => $request->input('password')], $remember)) {
             RateLimiter::clear($throttleKey);
             $request->session()->regenerate();
-            ActivityLog::record('login', 'Keamanan & Autentikasi', 'Berhasil masuk ke portal (' . Auth::user()->email . ').');
 
             return redirect()->intended(route('dashboard'))
                 ->with('success', 'Selamat datang kembali, ' . Auth::user()->name . '!');
@@ -136,7 +134,6 @@ class AuthController extends Controller
         $user->update([
             'password' => Hash::make($request->password),
         ]);
-        ActivityLog::record('update', 'Keamanan & Autentikasi', 'Mengubah kata sandi akun (' . $user->email . ').');
 
         return redirect()->route('profil.index')
             ->with('success', 'Kata sandi berhasil diubah.');

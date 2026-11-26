@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ActivityLog;
 use App\Models\Setting;
 use Illuminate\Http\Request;
 
@@ -45,7 +44,6 @@ class SettingController extends Controller
         if ($request->filled('prefix_suket')) {
             Setting::set('prefix_suket', $request->prefix_suket);
         }
-        ActivityLog::record('update', 'Pengaturan Instansi', 'Memperbarui konfigurasi Kop Balai & penomoran surat.');
 
         return redirect()->route('settings.index')->with('success', 'Pengaturan Kop Balai & Profil Instansi berhasil diperbarui.');
     }

@@ -3,7 +3,7 @@ title PORTAL RESMI BWS KALIMANTAN I - KEMENTERIAN PEKERJAAN UMUM
 color 1F
 
 echo ==============================================================================
-echo       PORTAL TATA NASKAH DINAS, QR CODE ^& PDF STUDIO
+echo       PORTAL SURAT UNDANGAN ^& SUKET LUPA ABSEN
 echo       BALAI WILAYAH SUNGAI KALIMANTAN I PONTIANAK
 echo       KEMENTERIAN PEKERJAAN UMUM RI
 echo ==============================================================================

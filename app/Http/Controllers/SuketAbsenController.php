@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ActivityLog;
 use App\Models\SuketAbsen;
 use App\Models\Pegawai;
 use App\Models\Setting;
@@ -52,8 +51,6 @@ class SuketAbsenController extends Controller
         $filename   = 'Rekap_Suket_Absen_' . date('Ymd_His') . '.xls';
         $exportedAt = now()->locale('id')->translatedFormat('d F Y, H:i') . ' WIB';
 
-        ActivityLog::record('export', 'Suket Absen', 'Mengekspor ' . $sukets->count() . ' data Suket Absen ke Excel.');
-
         $html = view('surat.suket-export-excel', compact('sukets', 'exportedAt'))->render();
 
         return response($html, 200, [
@@ -65,16 +62,21 @@ class SuketAbsenController extends Controller
         ]);
     }
 
-    public function create()
+    private function defaultKop(): array
     {
-        $pegawais = Pegawai::all();
-        $kop = [
+        return [
             'kementerian' => Setting::get('instansi_kementerian', 'KEMENTERIAN PEKERJAAN UMUM'),
             'ditjen'      => Setting::get('instansi_ditjen', 'DIREKTORAT JENDERAL SUMBER DAYA AIR'),
             'balai'       => Setting::get('instansi_balai', 'BALAI WILAYAH SUNGAI KALIMANTAN I PONTIANAK'),
             'alamat'      => Setting::get('instansi_alamat', 'Jl. A. Sood Nomor 06 Pontianak 78121, Telepon (0561) 734866'),
             'kontak'      => Setting::get('instansi_kontak', 'Surel bwsk1pontianak@pu.go.id'),
         ];
+    }
+
+    public function create()
+    {
+        $pegawais = Pegawai::all();
+        $kop      = $this->defaultKop();
 
         $tahun     = date('Y');
         $prefix    = Setting::get('prefix_suket', 'KP.07.03/Bws1');
@@ -86,9 +88,9 @@ class SuketAbsenController extends Controller
 
     public function store(Request $request)
     {
-        $validated = Validator::make($request->all(), [
+        Validator::make($request->all(), [
             'nomor_surat'      => 'required',
-            'jenis_absen'      => 'required|in:masuk,pulang,terlambat,pulangawal',
+            'jenis_absen'      => 'required|in:masuk,pulang',
             'nama_pegawai'     => 'required',
             'jabatan_pegawai'  => 'required',
             'tanggal_kejadian' => 'required|date',
@@ -99,7 +101,6 @@ class SuketAbsenController extends Controller
         ])->validate();
 
         $suket = SuketAbsen::create($request->all());
-        ActivityLog::record('create', 'Suket Absen', "Membuat Suket {$suket->nomor_surat} untuk {$suket->nama_pegawai}");
 
         return redirect()->route('surat.suket.show', $suket->id)->with('success', 'Surat Keterangan Lupa Absen berhasil disimpan dan siap dicetak.');
     }
@@ -107,28 +108,15 @@ class SuketAbsenController extends Controller
     public function show($id)
     {
         $suket = SuketAbsen::findOrFail($id);
-        $kop = [
-            'kementerian' => Setting::get('instansi_kementerian', 'KEMENTERIAN PEKERJAAN UMUM'),
-            'ditjen'      => Setting::get('instansi_ditjen', 'DIREKTORAT JENDERAL SUMBER DAYA AIR'),
-            'balai'       => Setting::get('instansi_balai', 'BALAI WILAYAH SUNGAI KALIMANTAN I PONTIANAK'),
-            'alamat'      => Setting::get('instansi_alamat', 'Jalan Kantor No. 1 Pontianak, Kalimantan Barat, 78111'),
-            'kontak'      => Setting::get('instansi_kontak', 'Telp. (0561) 732292 | Email: bws.kalimantan1@pu.go.id'),
-        ];
-        $verifyUrl = VerificationController::makeUrl('suket', $suket->id);
-        return view('surat.suket-show', compact('suket', 'kop', 'verifyUrl'));
+        $kop   = $this->defaultKop();
+        return view('surat.suket-show', compact('suket', 'kop'));
     }
 
     public function edit($id)
     {
-        $suket = SuketAbsen::findOrFail($id);
-        $pegawais = Pegawai::all();
-        $kop = [
-            'kementerian' => Setting::get('instansi_kementerian', 'KEMENTERIAN PEKERJAAN UMUM'),
-            'ditjen'      => Setting::get('instansi_ditjen', 'DIREKTORAT JENDERAL SUMBER DAYA AIR'),
-            'balai'       => Setting::get('instansi_balai', 'BALAI WILAYAH SUNGAI KALIMANTAN I PONTIANAK'),
-            'alamat'      => Setting::get('instansi_alamat', 'Jalan Kantor No. 1 Pontianak, Kalimantan Barat, 78111'),
-            'kontak'      => Setting::get('instansi_kontak', 'Telp. (0561) 732292 | Email: bws.kalimantan1@pu.go.id'),
-        ];
+        $suket     = SuketAbsen::findOrFail($id);
+        $pegawais  = Pegawai::all();
+        $kop       = $this->defaultKop();
         $autoNomor = $suket->nomor_surat;
 
         return view('surat.suket-create', compact('pegawais', 'kop', 'autoNomor', 'suket'));
@@ -140,7 +128,7 @@ class SuketAbsenController extends Controller
 
         Validator::make($request->all(), [
             'nomor_surat'      => 'required',
-            'jenis_absen'      => 'required|in:masuk,pulang,terlambat,pulangawal',
+            'jenis_absen'      => 'required|in:masuk,pulang',
             'nama_pegawai'     => 'required',
             'jabatan_pegawai'  => 'required',
             'tanggal_kejadian' => 'required|date',
@@ -151,7 +139,6 @@ class SuketAbsenController extends Controller
         ])->validate();
 
         $suket->update($request->except(['_token', '_method']));
-        ActivityLog::record('update', 'Suket Absen', "Memperbarui Suket {$suket->nomor_surat} untuk {$suket->nama_pegawai}");
 
         return redirect()->route('surat.suket.show', $suket->id)->with('success', 'Perubahan Surat Keterangan berhasil disimpan.');
     }
@@ -159,9 +146,7 @@ class SuketAbsenController extends Controller
     public function destroy($id)
     {
         $suket = SuketAbsen::findOrFail($id);
-        $info = "{$suket->nomor_surat} ({$suket->nama_pegawai})";
         $suket->delete();
-        ActivityLog::record('delete', 'Suket Absen', "Menghapus arsip Suket {$info}");
 
         return redirect()->route('surat.suket.index')->with('success', 'Arsip suket lupa absen berhasil dihapus.');
     }

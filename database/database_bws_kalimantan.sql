@@ -263,20 +263,5 @@ CREATE TABLE IF NOT EXISTS `suket_absens` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- --------------------------------------------------------
--- Struktur Tabel `qr_codes`
--- --------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `qr_codes` (
-  `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
-  `konten` text NOT NULL,
-  `keterangan` varchar(255) DEFAULT NULL,
-  `warna_gelap` varchar(20) DEFAULT '#000000',
-  `warna_terang` varchar(20) DEFAULT '#ffffff',
-  `ukuran` int(11) DEFAULT 300,
-  `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;

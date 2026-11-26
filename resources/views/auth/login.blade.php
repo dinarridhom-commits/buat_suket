@@ -406,7 +406,7 @@
 
             <div class="brand-hero">
                 <h2>Portal Administrasi & Tata Usaha Kedinasan</h2>
-                <p>Sistem manajemen arsip Surat Undangan, Surat Keterangan Absen, Verifikasi QR Code berlogo PU, serta Master Database 148 Pegawai terintegrasi.</p>
+                <p>Sistem manajemen arsip Surat Undangan, Surat Keterangan Lupa Absen, serta Master Database 148 Pegawai BWS Kalimantan I.</p>
 
                 <ul class="feature-bullets">
                     <li class="feature-bullet">

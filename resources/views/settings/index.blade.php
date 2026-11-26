@@ -430,7 +430,7 @@
                         $sysInfo = [
                             ['label' => 'Framework', 'value' => 'Laravel ' . app()->version(), 'icon' => '🔴'],
                             ['label' => 'PHP Version', 'value' => PHP_VERSION, 'icon' => '🐘'],
-                            ['label' => 'Database', 'value' => 'SQLite (Local)', 'icon' => '🗄️'],
+                            ['label' => 'Database', 'value' => strtoupper(config('database.default', 'mysql')), 'icon' => '🗄️'],
                             ['label' => 'Versi Portal', 'value' => 'v5.2 — Build 2026', 'icon' => '🏷️'],
                             ['label' => 'Waktu Server', 'value' => now()->locale('id')->translatedFormat('d F Y, H:i') . ' WIB', 'icon' => '🕐'],
                             ['label' => 'Lingkungan', 'value' => ucfirst(app()->environment()), 'icon' => '🌐'],

@@ -21,11 +21,9 @@
         <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari nomor suket, nama pegawai, NIP, atau atasan..."
                style="flex:1; min-width:220px; padding:8px 14px; border:1.5px solid var(--border); border-radius:50px; font-size:13px; background:var(--bg-subtle); outline:none;">
         <select name="jenis_absen" style="padding:8px 14px; border:1.5px solid var(--border); border-radius:50px; font-size:13px; background:var(--bg-subtle); outline:none;">
-            <option value="">Semua Jenis Izin</option>
+            <option value="">Semua Jenis</option>
             <option value="masuk" {{ request('jenis_absen') == 'masuk' ? 'selected' : '' }}>Lupa Absen Masuk</option>
             <option value="pulang" {{ request('jenis_absen') == 'pulang' ? 'selected' : '' }}>Lupa Absen Pulang</option>
-            <option value="terlambat" {{ request('jenis_absen') == 'terlambat' ? 'selected' : '' }}>Terlambat Masuk</option>
-            <option value="pulangawal" {{ request('jenis_absen') == 'pulangawal' ? 'selected' : '' }}>Pulang Sebelum Waktunya</option>
         </select>
         <input type="month" name="bulan" value="{{ request('bulan') }}" title="Filter Bulan Kejadian"
                style="padding:7px 12px; border:1.5px solid var(--border); border-radius:50px; font-size:13px; background:var(--bg-subtle); outline:none;">

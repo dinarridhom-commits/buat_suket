@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Pegawai;
 use App\Models\SuratUndangan;
 use App\Models\SuketAbsen;
-use App\Models\QrCodeItem;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -16,7 +15,6 @@ class DashboardController extends Controller
         $totalPegawai = Pegawai::count();
         $totalSuratUndangan = SuratUndangan::count();
         $totalSuket = SuketAbsen::count();
-        $totalQr = QrCodeItem::count();
         $totalSuratKeluar = $totalSuratUndangan + $totalSuket;
 
         $suratFinalCount = SuratUndangan::where('status', 'final')->count();
@@ -60,7 +58,6 @@ class DashboardController extends Controller
             'totalPegawai',
             'totalSuratUndangan',
             'totalSuket',
-            'totalQr',
             'totalSuratKeluar',
             'suratFinalCount',
             'suratDraftCount',

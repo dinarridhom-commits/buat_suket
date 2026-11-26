@@ -430,13 +430,6 @@
                         </div>
                     </div>
 
-                    <div style="margin:10px 0 14px; padding:10px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:6px;">
-                        <label style="font-size:12.5px; font-weight:600; color:#166534; display:flex; align-items:center; gap:8px; cursor:pointer;">
-                            <input type="checkbox" id="chkQrStamp" checked>
-                            <span>Sertakan Stempel Digital &amp; QR Code Verifikasi</span>
-                        </label>
-                    </div>
-
                     <details open style="border-top:1px dashed var(--border); padding-top:12px;">
                         <summary style="cursor:pointer; font-size:12px; font-weight:700; color:var(--pu-navy); margin-bottom:10px; text-transform:uppercase;">Lembar Konsep (Hal. 1) &amp; Paraf (Hal. 2)</summary>
                         <div class="grid-2">
@@ -620,15 +613,6 @@
                                     <div id="pvParafVal1" style="font-weight:700; margin-top:26px;">Iswandi, S.E., S.T.</div>
                                 </div>
                             </div>
-                            <div id="pvQrSealWrapper" style="padding: 4px 0;">
-                                <div class="qr-verify-seal" style="display:inline-flex; align-items:center; gap:8px; border:1px dashed #94a3b8; border-radius:6px; padding:5px 9px; background:#f8fafc;">
-                                    <div id="qrCanvasContainer"></div>
-                                    <div style="font-size:9px; color:#334155; line-height:1.3; max-width:155px;">
-                                        <div style="font-weight:700; color:#13243d;">VERIFIKASI DOKUMEN</div>
-                                        <div>Pindai QR untuk cek keaslian arsip digital BWS Kalimantan I.</div>
-                                    </div>
-                                </div>
-                            </div>
                         </td>
                         <td style="width: 52%; text-align: center; vertical-align: top;">
                             <div id="pvTtdJabatan"></div>
@@ -722,7 +706,6 @@
 <script src="{{ asset('js/jszip.min.js') }}"></script>
 <script src="{{ asset('js/surat_constants.js') }}"></script>
 <script src="{{ asset('js/docgen.js') }}"></script>
-<script src="{{ asset('js/qrcode.min.js') }}"></script>
 
 <script>
     const KOP_PRESETS = @json($kopPresets);
@@ -1002,7 +985,6 @@
 
         updateKopPreview();
         syncPenerimaList();
-        renderQrSeal();
     }
 
     el('inKopType').addEventListener('change', function() {
@@ -1048,17 +1030,6 @@
         div.querySelectorAll('input').forEach(inp => inp.addEventListener('input', syncSchedulePreview));
     });
 
-    function renderQrSeal() {
-        const wrapper = el('pvQrSealWrapper');
-        if (!el('chkQrStamp').checked) { wrapper.style.display = 'none'; return; }
-        wrapper.style.display = 'block';
-        const container = el('qrCanvasContainer'); container.innerHTML = '';
-        const qrText = 'VERIFIKASI SURAT DINAS BWS KALIMANTAN I\nNo: ' + el('inNomor').value + '\nHal: ' + el('inHal').value + '\nTgl: ' + el('inTanggalSurat').value + '\nTTD: ' + el('inTtdNama').value;
-        if (typeof QRCode !== 'undefined') {
-            new QRCode(container, { text: qrText, width: 58, height: 58, colorDark: '#13243d', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
-        }
-    }
-
     el('selPreviewPage').addEventListener('change', function() {
         const val = this.value;
         el('viewSheetAsli').style.display = (val === 'asli' || val === 'paraf') ? 'block' : 'none';
@@ -1085,7 +1056,6 @@
     document.querySelectorAll('.in-penerima').forEach(inp => inp.addEventListener('input', syncPenerimaList));
     document.querySelectorAll('.schedule-row input').forEach(inp => inp.addEventListener('input', syncSchedulePreview));
     el('chkShowSchedule').addEventListener('change', syncSchedulePreview);
-    el('chkQrStamp').addEventListener('change', renderQrSeal);
     el('formSurat').addEventListener('submit', () => { syncDynamicBodyPreview(); syncSchedulePreview(); });
 
     function printActiveSheet() { document.body.classList.remove('print-all-sheets'); window.print(); }
