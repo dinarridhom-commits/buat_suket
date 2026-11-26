@@ -174,7 +174,9 @@
                                     data-nama="{{ $p->nama_gelar }}"
                                     data-nip="{{ $p->nip }}"
                                     data-pangkat="{{ $p->pangkat }}"
-                                    data-jabatan="{{ $p->jabatan_definitif ?? $p->jabatan_struktural ?? 'Staf Pelaksana' }}">
+                                    data-jabatan="{{ $p->jabatan_definitif ?? $p->jabatan_struktural ?? 'Staf Pelaksana' }}"
+                                    data-raw-jabatan="{{ $p->jabatan }}"
+                                    data-rangkap="{{ $p->rangkap }}">
                                     {{ $p->nama_gelar }} — {{ $p->nip }} ({{ $p->unit ?? 'BWS Kalimantan I' }})
                                 </option>
                             @endforeach
@@ -261,19 +263,36 @@
 
                     <div class="form-group">
                         <label class="form-label">Alasan Kendala</label>
-                        <textarea name="alasan" id="inAlasan" rows="2" class="form-control" required>{{ old('alasan', $isEdit ? $suket->alasan : 'Jaringan internet seluler bermasalah dan aplikasi absensi online sedang maintenance saat jam presensi.') }}</textarea>
+                        <textarea name="alasan" id="inAlasan" rows="2" class="form-control" required>{{ old('alasan', $isEdit ? $suket->alasan : 'Lupa absensi masuk di Satu Bravo') }}</textarea>
                     </div>
                 </div>
             </div>
 
             <!-- CARD 3: ATASAN LANGSUNG -->
             <div class="form-card">
-                <div class="form-card-head"><span>👔</span> 3. Pejabat yang Menyetujui</div>
+                <div class="form-card-head" style="justify-content:space-between;">
+                    <span>3. Pejabat yang Menyetujui</span>
+                    <span id="skAppRuleBadge" style="font-size:11px; background:#e0f2fe; color:#0369a1; padding:2px 8px; border-radius:20px; text-transform:none;">Otomatis</span>
+                </div>
                 <div class="form-card-body">
+                    <div class="form-group">
+                        <label class="form-label">Ganti Manual dari Master Pegawai (Opsional)</label>
+                        <select id="selectAtasan" class="form-control" style="background:#f8fafc;">
+                            <option value="">-- Pilih Pejabat Penyetuju --</option>
+                            @foreach($pegawais as $p)
+                                <option value="{{ $p->id }}"
+                                    data-nama="{{ $p->nama_gelar }}"
+                                    data-nip="{{ $p->nip }}"
+                                    data-jabatan="{{ $p->jabatan_definitif ?? $p->jabatan_struktural }}">
+                                    {{ $p->nama_gelar }} — {{ $p->jabatan_definitif ?? $p->jabatan_struktural }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
                     <div class="form-group">
                         <label class="form-label">Jabatan Atasan Langsung</label>
                         <input type="text" name="atasan_jabatan" id="inAtasanJabatan"
-                               value="{{ old('atasan_jabatan', $isEdit ? $suket->atasan_jabatan : 'Kepala Sub Bagian Umum dan Tata Usaha') }}"
+                               value="{{ old('atasan_jabatan', $isEdit ? $suket->atasan_jabatan : 'Kepala Subbagian Umum dan Tata Usaha') }}"
                                class="form-control" required>
                     </div>
 
@@ -290,6 +309,11 @@
                                    value="{{ old('atasan_nip', $isEdit ? $suket->atasan_nip : '197603222009111001') }}"
                                    class="form-control">
                         </div>
+                    </div>
+
+                    <div style="font-size:11.5px; color:#64748b; line-height:1.45; margin-bottom:10px;">
+                        Aturan V5: pegawai yang menjabat <b>PPK / Kepala Satker / Kepala Seksi</b> (termasuk jabatan rangkap) disetujui oleh <b>Kepala Balai</b>; selain itu oleh <b>Kepala Subbagian Umum dan Tata Usaha</b>.
+                        <a href="#" id="btnReapplyRule" style="color:var(--pu-blue); font-weight:600;">Terapkan aturan lagi</a>
                     </div>
 
                     <div style="margin-top:10px; padding:10px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:6px;">
@@ -549,7 +573,60 @@
     inAtasanNip.addEventListener('input', () => document.getElementById('pvTtdAtasanNip').innerText = inAtasanNip.value ? 'NIP. ' + inAtasanNip.value : '');
     inAtasanJabatan.addEventListener('input', () => document.getElementById('pvTtdAtasanJabatan').innerText = inAtasanJabatan.value);
 
-    document.querySelectorAll('input[name="jenis_absen"]').forEach(r => r.addEventListener('change', renderOpsiKalimat));
+    document.querySelectorAll('input[name="jenis_absen"]').forEach(r => r.addEventListener('change', function() {
+        renderOpsiKalimat();
+        const cur = inAlasan.value.trim();
+        if (cur === 'Lupa absensi masuk di Satu Bravo' || cur === 'Lupa absensi pulang di Satu Bravo') {
+            inAlasan.value = this.value === 'pulang' ? 'Lupa absensi pulang di Satu Bravo' : 'Lupa absensi masuk di Satu Bravo';
+            document.getElementById('pvAlasan').innerText = inAlasan.value;
+        }
+    }));
+
+    const RE_PIMPINAN = /(^|[\s.(])PPK\b|Pejabat Pembuat Komitmen|Kepala Satker|Kepala Satuan Kerja|Kepala SNVT|Kepala Seksi/i;
+    let skAppManual = {{ $isEdit ? 'true' : 'false' }};
+    let selectedRawJabatan = '';
+    let selectedRangkap = '';
+
+    function applyAtasanRule(force) {
+        if (!force && skAppManual) return;
+        const texts = [inJabatan.value, selectedRawJabatan, selectedRangkap];
+        const isPimpinan = texts.some(t => RE_PIMPINAN.test(String(t || '')));
+        if (isPimpinan) {
+            inAtasanJabatan.value = 'Plt. Kepala Balai Wilayah Sungai Kalimantan I Pontianak';
+            inAtasanNama.value    = 'Donni Saputra, S.T, M.Si., M.T.';
+            inAtasanNip.value     = '197611012005021003';
+        } else {
+            inAtasanJabatan.value = 'Kepala Subbagian Umum dan Tata Usaha';
+            inAtasanNama.value    = 'Iswandi, S.E., S.T.';
+            inAtasanNip.value     = '197603222009111001';
+        }
+        skAppManual = false;
+        document.getElementById('skAppRuleBadge').innerText = 'Otomatis';
+        document.getElementById('pvTtdAtasanJabatan').innerText = inAtasanJabatan.value;
+        document.getElementById('pvTtdAtasanNama').innerText = inAtasanNama.value;
+        document.getElementById('pvTtdAtasanNip').innerText = inAtasanNip.value ? 'NIP. ' + inAtasanNip.value : '';
+        renderSuketQr();
+    }
+
+    document.getElementById('btnReapplyRule').addEventListener('click', function(e) {
+        e.preventDefault();
+        applyAtasanRule(true);
+    });
+
+    document.getElementById('selectAtasan').addEventListener('change', function() {
+        const opt = this.options[this.selectedIndex];
+        if (opt.value) {
+            inAtasanNama.value = opt.getAttribute('data-nama') || '';
+            inAtasanNip.value = opt.getAttribute('data-nip') || '';
+            inAtasanJabatan.value = opt.getAttribute('data-jabatan') || '';
+            skAppManual = true;
+            document.getElementById('skAppRuleBadge').innerText = 'Manual';
+            document.getElementById('pvTtdAtasanJabatan').innerText = inAtasanJabatan.value;
+            document.getElementById('pvTtdAtasanNama').innerText = inAtasanNama.value;
+            document.getElementById('pvTtdAtasanNip').innerText = inAtasanNip.value ? 'NIP. ' + inAtasanNip.value : '';
+            renderSuketQr();
+        }
+    });
 
     selectPegawai.addEventListener('change', function() {
         const opt = this.options[this.selectedIndex];
@@ -558,6 +635,8 @@
             inNip.value = opt.getAttribute('data-nip') || '';
             inPangkat.value = fmtPangkat(opt.getAttribute('data-pangkat') || '');
             inJabatan.value = opt.getAttribute('data-jabatan') || '';
+            selectedRawJabatan = opt.getAttribute('data-raw-jabatan') || '';
+            selectedRangkap = opt.getAttribute('data-rangkap') || '';
 
             document.getElementById('pvNama').innerText = inNama.value;
             document.getElementById('pvTtdPegawai').innerText = inNama.value;
@@ -565,6 +644,7 @@
             document.getElementById('pvTtdNipPegawai').innerText = inNip.value ? 'NIP. ' + inNip.value : '';
             document.getElementById('pvPangkat').innerText = inPangkat.value;
             document.getElementById('pvJabatan').innerText = inJabatan.value;
+            applyAtasanRule(false);
             renderSuketQr();
         }
     });

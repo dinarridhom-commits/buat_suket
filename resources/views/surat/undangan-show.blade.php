@@ -9,9 +9,37 @@
     $kopType = $extra['kop_type'] ?? 'balai';
     $preset = $kopPresets[$kopType] ?? $kopPresets['balai'];
     $ythMode = $extra['yth_mode'] ?? 'langsung';
+    $diTempat = $extra['di_tempat'] ?? 'Tempat';
+    $showNip = !empty($extra['show_nip']);
+    $gapYth = $extra['gap_yth'] ?? '240';
+    $gapPx = $gapYth == '120' ? '8px' : ($gapYth == '480' ? '26px' : '14px');
     $tembusanLines = array_values(array_filter(array_map('trim', explode("\n", $extra['tembusan'] ?? ''))));
     $kota = $extra['kota'] ?? 'Pontianak';
-    $showSchedule = $extra['show_schedule'] ?? '1';
+    $showSchedule = $extra['show_schedule'] ?? '0';
+    $konsep = $extra['konsep'] ?? [];
+    $margin = $extra['margin'] ?? ['top' => 2.5, 'bottom' => 2.5, 'left' => 2.5, 'right' => 2.5, 'lamp_top' => 1, 'lamp_bottom' => 1];
+
+    $bodySections = !empty($extra['body']) && is_array($extra['body']) ? $extra['body'] : [
+        [
+            'type' => 'paragraph',
+            'indent' => true,
+            'text' => 'Sehubungan dengan pelaksanaan program kegiatan pada Balai Wilayah Sungai Kalimantan I Pontianak, dengan ini kami mengharapkan kehadiran Bapak/Ibu pada rapat yang akan dilaksanakan pada:',
+        ],
+        [
+            'type' => 'points',
+            'items' => [
+                ['label' => 'Hari / Tanggal', 'value' => $surat->hari_tanggal_acara ?? '-'],
+                ['label' => 'Jam', 'value' => $surat->waktu_acara ?? '-'],
+                ['label' => 'Tempat', 'value' => $surat->tempat],
+                ['label' => 'Agenda', 'value' => $surat->agenda ?? '-'],
+            ],
+        ],
+        [
+            'type' => 'paragraph',
+            'indent' => false,
+            'text' => 'Mengingat pentingnya acara tersebut di atas, diharapkan hadir tepat pada waktunya. Demikian kami sampaikan, atas perhatian dan kehadirannya diucapkan terima kasih.',
+        ],
+    ];
 @endphp
 
 @push('styles')
@@ -65,8 +93,11 @@
     .letter-meta-table { width: 100%; margin-bottom: 14px; font-size: 14.5px; border-collapse: collapse; }
     .letter-meta-table td { vertical-align: top; padding: 1.5px 0; }
 
-    .undangan-tujuan-box { margin: 14px 0; font-size: 14.5px; line-height: 1.5; }
+    .undangan-tujuan-box { margin-bottom: 14px; font-size: 14.5px; line-height: 1.5; }
     .undangan-list { padding-left: 22px; margin-top: 4px; }
+
+    .pv-points-table { width: 100%; margin: 10px 0 10px 36px; font-size: 14.5px; border-collapse: collapse; }
+    .pv-points-table td { vertical-align: top; padding: 2px 0; }
 
     .schedule-table-preview { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13.5px; }
     .schedule-table-preview th, .schedule-table-preview td { border: 1px solid #333; padding: 6px 10px; }
@@ -168,7 +199,7 @@
             <tr><td>Hal</td><td>:</td><td style="font-weight:bold;">{{ $surat->hal }}</td><td></td></tr>
         </table>
 
-        <div class="undangan-tujuan-box">
+        <div class="undangan-tujuan-box" style="margin-top:{{ $gapPx }};">
             <div>Yth.</div>
             @if($ythMode === 'terlampir')
                 <div style="margin-top:2px;">(Daftar Terlampir)</div>
@@ -180,23 +211,32 @@
                 </ol>
             @endif
             <div style="margin-top:4px;">di -</div>
-            <div style="padding-left:20px; font-weight:bold;">Tempat</div>
+            <div style="padding-left:20px; font-weight:bold;">{{ $diTempat }}</div>
         </div>
 
-        <div style="text-align:justify; text-indent:36px; margin-top:14px;">
-            Sehubungan dengan pelaksanaan program kegiatan pada Balai Wilayah Sungai Kalimantan I Pontianak, dengan ini kami mengharapkan kehadiran Bapak/Ibu pada rapat yang akan dilaksanakan pada:
-        </div>
-
-        <table style="width:100%; margin:12px 0 12px 36px; font-size:14.5px;">
-            <tr>
-                <td style="width:130px; padding:2px 0;">Hari / Tanggal</td>
-                <td style="width:15px;">:</td>
-                <td style="font-weight:500;">{{ $surat->hari_tanggal_acara ?? '-' }}</td>
-            </tr>
-            <tr><td style="padding:2px 0;">Waktu</td><td>:</td><td>{{ $surat->waktu_acara ?? '-' }}</td></tr>
-            <tr><td style="padding:2px 0;">Tempat</td><td>:</td><td>{{ $surat->tempat }}</td></tr>
-            <tr><td style="padding:2px 0;">Agenda</td><td>:</td><td style="font-weight:bold;">{{ $surat->agenda ?? '-' }}</td></tr>
-        </table>
+        @foreach($bodySections as $sec)
+            @if(($sec['type'] ?? 'paragraph') === 'points')
+                <table class="pv-points-table">
+                    @foreach($sec['items'] ?? [] as $it)
+                        @if(trim($it['label'] ?? '') !== '' || trim($it['value'] ?? '') !== '')
+                            <tr>
+                                <td style="width:140px;">{{ $it['label'] ?? '' }}</td>
+                                <td style="width:14px;">:</td>
+                                <td>{!! nl2br(e($it['value'] ?? '')) !!}</td>
+                            </tr>
+                        @endif
+                    @endforeach
+                </table>
+            @else
+                @php
+                    $paras = array_values(array_filter(array_map('trim', preg_split('/\n\s*\n/', $sec['text'] ?? ''))));
+                    $indentStyle = ($sec['indent'] ?? true) ? 'text-indent:36px;' : '';
+                @endphp
+                @foreach($paras as $para)
+                    <div style="text-align:justify; {{ $indentStyle }} margin-top:12px;">{{ $para }}</div>
+                @endforeach
+            @endif
+        @endforeach
 
         @if($showSchedule && !empty($extra['schedule_rows']))
             <table class="schedule-table-preview">
@@ -219,10 +259,6 @@
             </table>
         @endif
 
-        <div style="text-align:justify; text-indent:36px; margin-top:14px;">
-            Mengingat pentingnya acara tersebut di atas, diharapkan hadir tepat pada waktunya. Demikian kami sampaikan, atas perhatian dan kehadirannya diucapkan terima kasih.
-        </div>
-
         <table style="width:100%; margin-top:28px; border-collapse:collapse;">
             <tr>
                 <td style="width:48%; vertical-align:bottom;">
@@ -238,7 +274,7 @@
                     <div>{{ $surat->penandatangan_jabatan }}</div>
                     <div style="height:78px;"></div>
                     <div style="font-weight:bold;">{{ $surat->penandatangan_nama }}</div>
-                    @if($surat->penandatangan_nip)
+                    @if($showNip && $surat->penandatangan_nip)
                         <div>NIP. {{ $surat->penandatangan_nip }}</div>
                     @endif
                 </td>
@@ -280,7 +316,7 @@
                 <div>{{ $surat->penandatangan_jabatan }}</div>
                 <div style="height: 72px;"></div>
                 <div style="font-weight: bold;">{{ $surat->penandatangan_nama }}</div>
-                @if($surat->penandatangan_nip)
+                @if($showNip && $surat->penandatangan_nip)
                     <div>NIP. {{ $surat->penandatangan_nip }}</div>
                 @endif
             </div>
@@ -315,58 +351,54 @@
 
             const penerimasText = @json($surat->penerimas->pluck('nama_penerima')->implode("\n"));
             const ythMode = @json($ythMode);
-            const konsep = @json($extra['konsep'] ?? []);
+            const konsep = @json($konsep);
+            const margin = @json($margin);
 
             const docData = {
                 mode: 'undangan',
                 nomor: @json($surat->nomor_surat),
                 sifat: @json($surat->sifat ?? 'Biasa'),
-                lampiran: @json($surat->lampiran ?? '-'),
+                lampiran: parseInt(@json($surat->lampiran ?? '1'), 10) || 0,
                 hal: @json($surat->hal),
                 kota: @json($kota),
                 tanggal: @json($surat->tanggal_surat->format('Y-m-d')),
                 ythMode: ythMode,
                 ythText: penerimasText,
                 daftarUndangan: penerimasText,
-                diTempat: 'Tempat',
+                diTempat: @json($diTempat),
                 tembusan: @json($extra['tembusan'] ?? ''),
+                gapYth: @json($gapYth),
+                urutan: @json($extra['urutan'] ?? 'paraf-dulu'),
+                konsepMarginTemplate: true,
                 ttd_jab: @json($surat->penandatangan_jabatan),
                 ttd_nama: @json($surat->penandatangan_nama),
                 ttd_nip: @json($surat->penandatangan_nip ?? ''),
-                showNip: true,
+                showNip: @json($showNip),
                 konf_jab: konsep.konf_jab || 'Kasubbag Umum & TU',
                 konf_nama: konsep.konf_nama || '',
+                konf_jabParaf: konsep.konf_jab_paraf || '',
                 pem_jab: konsep.pem_jab || 'Kepala Subbagian TU',
                 pem_nama: konsep.pem_nama || '',
+                pen_jab: konsep.pen_jab || '',
                 pen_nama: konsep.pen_nama || '',
                 ketik_nama: konsep.ketik_nama || '',
                 kembali: konsep.kembali || '',
+                ajukan: konsep.ajukan || '',
                 deadline: konsep.deadline || '',
                 jumlahLembar: konsep.jumlah_lembar || 1,
-                tetap_nama: @json($surat->penandatangan_nama),
-                body: [
-                    {
-                        type: 'paragraph',
-                        indent: true,
-                        text: 'Sehubungan dengan pelaksanaan program kegiatan pada Balai Wilayah Sungai Kalimantan I Pontianak, dengan ini kami mengharapkan kehadiran Bapak/Ibu pada rapat yang akan dilaksanakan pada:'
-                    },
-                    {
-                        type: 'points',
-                        items: [
-                            { label: 'Hari / Tanggal', value: @json($surat->hari_tanggal_acara ?? '-') },
-                            { label: 'Waktu', value: @json($surat->waktu_acara ?? '-') },
-                            { label: 'Tempat', value: @json($surat->tempat) },
-                            { label: 'Agenda', value: @json($surat->agenda ?? '-') }
-                        ]
-                    },
-                    {
-                        type: 'paragraph',
-                        indent: false,
-                        text: 'Mengingat pentingnya acara tersebut di atas, diharapkan hadir tepat pada waktunya. Demikian kami sampaikan, atas perhatian dan kehadirannya diucapkan terima kasih.'
-                    }
-                ],
-                pages: { asli: true, paraf: false, konsep: false, lampiran: ythMode === 'terlampir' },
-                margin: { top: 2.5, bottom: 2.5, left: 2.5, right: 2.5 }
+                tetap_nama: konsep.tetap_nama || @json($surat->penandatangan_nama),
+                body: @json($bodySections),
+                pages: { asli: true, paraf: true, konsep: true, lampiran: ythMode === 'terlampir' },
+                margin: {
+                    top: +(margin.top || 2.5),
+                    bottom: +(margin.bottom || 2.5),
+                    left: +(margin.left || 2.5),
+                    right: +(margin.right || 2.5)
+                },
+                marginLampiran: {
+                    top: +(margin.lamp_top || 1),
+                    bottom: +(margin.lamp_bottom || 1)
+                }
             };
 
             const kopSpec = {

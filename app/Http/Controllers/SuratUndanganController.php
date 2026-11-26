@@ -127,6 +127,11 @@ class SuratUndanganController extends Controller
             $extra['schedule_rows'] = is_array($decoded) ? $decoded : [];
             unset($extra['schedule_json']);
         }
+        if (isset($extra['body_json']) && is_string($extra['body_json'])) {
+            $decodedBody = json_decode($extra['body_json'], true);
+            $extra['body'] = is_array($decodedBody) ? $decodedBody : [];
+            unset($extra['body_json']);
+        }
         return $extra;
     }
 
