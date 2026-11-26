@@ -1025,7 +1025,7 @@
                     <a href="{{ route('surat.undangan.show', $surat->id) }}" class="btn-quick-create" style="background:#f1f5f9; color:#334155; justify-content:center; padding:12px 18px;">Batal</a>
                 @endif
                 <button type="submit" class="btn-quick-create" style="flex:1; justify-content:center; padding:12px; font-size:14px;">
-                    {{ $isEdit ? 'Simpan Perubahan Surat' : 'Simpan ke Database Arsip' }}
+                    {{ $isEdit ? 'Simpan Perubahan & Lanjut Cetak' : 'Simpan & Lanjut Cetak' }}
                 </button>
             </div>
         </form>
