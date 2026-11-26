@@ -18,14 +18,14 @@ class SuratUndanganController extends Controller
 
         return [
             'balai' => [
-                'label'       => 'Balai Wilayah Sungai Kalimantan I Pontianak',
+                'label'       => 'Kop Balai',
                 'kementerian' => $kementerian,
                 'ditjen'      => $ditjen,
                 'lines3'      => ['BALAI WILAYAH SUNGAI KALIMANTAN I PONTIANAK'],
                 'alamat'      => $alamat,
             ],
             'satker_op' => [
-                'label'       => 'Satker Operasi dan Pemeliharaan SDA Kalimantan I',
+                'label'       => 'Kop Satker O&P SDA',
                 'kementerian' => $kementerian,
                 'ditjen'      => $ditjen,
                 'lines3'      => [
@@ -35,7 +35,7 @@ class SuratUndanganController extends Controller
                 'alamat'      => $alamat,
             ],
             'satker_pjpa' => [
-                'label'       => 'Satker SNVT Pelaksanaan Jaringan Pemanfaatan Air Kalimantan I',
+                'label'       => 'Kop SNVT PJPA',
                 'kementerian' => $kementerian,
                 'ditjen'      => $ditjen,
                 'lines3'      => [
@@ -45,7 +45,7 @@ class SuratUndanganController extends Controller
                 'alamat'      => $alamat,
             ],
             'satker_pjsa' => [
-                'label'       => 'Satker SNVT Pelaksanaan Jaringan Sumber Air Kalimantan I',
+                'label'       => 'Kop SNVT PJSA',
                 'kementerian' => $kementerian,
                 'ditjen'      => $ditjen,
                 'lines3'      => [
@@ -55,7 +55,7 @@ class SuratUndanganController extends Controller
                 'alamat'      => $alamat,
             ],
             'satker_bws' => [
-                'label'       => 'Satker Balai Wilayah Sungai Kalimantan I Pontianak',
+                'label'       => 'Kop Satker Balai',
                 'kementerian' => $kementerian,
                 'ditjen'      => $ditjen,
                 'lines3'      => [
@@ -131,6 +131,10 @@ class SuratUndanganController extends Controller
             $extra['body'] = is_array($decodedBody) ? $decodedBody : [];
             unset($extra['body_json']);
         }
+        if (isset($extra['kop_lines3_text']) && is_string($extra['kop_lines3_text'])) {
+            $extra['kop_lines3'] = array_values(array_filter(array_map('trim', preg_split('/\r\n|\r|\n/', $extra['kop_lines3_text']))));
+            unset($extra['kop_lines3_text']);
+        }
         return $extra;
     }
 
@@ -184,12 +188,13 @@ class SuratUndanganController extends Controller
             'nomor_surat'           => 'required',
             'hal'                   => 'required',
             'tanggal_surat'         => 'required|date',
-            'tempat'                => 'required',
+            'tempat'                => 'nullable|string',
             'penandatangan_nama'    => 'required',
             'penandatangan_jabatan' => 'required',
         ])->validate();
 
         $payload = $request->except(['penerimas', '_token', 'extra_data']);
+        $payload['tempat']     = trim((string) $request->input('tempat', '')) ?: '-';
         $payload['extra_data'] = $this->extractExtraData($request);
 
         $surat = SuratUndangan::create($payload);
@@ -236,12 +241,13 @@ class SuratUndanganController extends Controller
             'nomor_surat'           => 'required',
             'hal'                   => 'required',
             'tanggal_surat'         => 'required|date',
-            'tempat'                => 'required',
+            'tempat'                => 'nullable|string',
             'penandatangan_nama'    => 'required',
             'penandatangan_jabatan' => 'required',
         ])->validate();
 
         $payload = $request->except(['penerimas', '_token', '_method', 'extra_data']);
+        $payload['tempat']     = trim((string) $request->input('tempat', '')) ?: '-';
         $payload['extra_data'] = $this->extractExtraData($request);
 
         $surat->update($payload);

@@ -8,7 +8,9 @@
     $extra = $surat->extra_data ?? [];
     $kopType = $extra['kop_type'] ?? 'balai';
     $preset = $kopPresets[$kopType] ?? $kopPresets['balai'];
-    $ythMode = $extra['yth_mode'] ?? 'langsung';
+    $kopLines3 = (!empty($extra['kop_lines3']) && is_array($extra['kop_lines3'])) ? $extra['kop_lines3'] : $preset['lines3'];
+    $kopAlamat = !empty($extra['kop_alamat']) ? $extra['kop_alamat'] : $preset['alamat'];
+    $ythMode = $extra['yth_mode'] ?? 'terlampir';
     $diTempat = $extra['di_tempat'] ?? 'Tempat';
     $showNip = !empty($extra['show_nip']);
     $gapYth = $extra['gap_yth'] ?? '240';
@@ -17,7 +19,12 @@
     $kota = $extra['kota'] ?? 'Pontianak';
     $showSchedule = $extra['show_schedule'] ?? '0';
     $konsep = $extra['konsep'] ?? [];
+    $pagesCfg = $extra['pages'] ?? ['konsep' => true, 'paraf' => true, 'asli' => true, 'lampiran' => true];
+    $konsepMarginTpl = array_key_exists('konsep_margin', $extra) ? !empty($extra['konsep_margin']) : true;
     $margin = $extra['margin'] ?? ['top' => 2.5, 'bottom' => 2.5, 'left' => 2.5, 'right' => 2.5, 'lamp_top' => 1, 'lamp_bottom' => 1];
+    $lampVal = is_numeric($surat->lampiran)
+        ? ((int) $surat->lampiran > 0 ? ((int) $surat->lampiran . ' Lembar') : '-')
+        : ($surat->lampiran ?: '-');
 
     $bodySections = !empty($extra['body']) && is_array($extra['body']) ? $extra['body'] : [
         [
@@ -177,10 +184,10 @@
                 <td class="kop-text-cell">
                     <div class="kop-line-1">{{ $preset['kementerian'] }}</div>
                     <div class="kop-line-2">{{ $preset['ditjen'] }}</div>
-                    @foreach($preset['lines3'] as $l3)
+                    @foreach($kopLines3 as $l3)
                         <div class="kop-line-3">{{ $l3 }}</div>
                     @endforeach
-                    <div class="kop-line-address">{{ $preset['alamat'] }}</div>
+                    <div class="kop-line-address">{{ $kopAlamat }}</div>
                 </td>
             </tr>
         </table>
@@ -195,7 +202,7 @@
                 </td>
             </tr>
             <tr><td>Sifat</td><td>:</td><td>{{ $surat->sifat ?? 'Biasa' }}</td><td></td></tr>
-            <tr><td>Lampiran</td><td>:</td><td>{{ $surat->lampiran ?? '-' }}</td><td></td></tr>
+            <tr><td>Lampiran</td><td>:</td><td>{{ $lampVal }}</td><td></td></tr>
             <tr><td>Hal</td><td>:</td><td style="font-weight:bold;">{{ $surat->hal }}</td><td></td></tr>
         </table>
 
@@ -289,7 +296,7 @@
     @if($ythMode === 'terlampir' && $surat->penerimas->count() > 0)
         <div class="sheet-a4">
             <div style="margin-left: 50%; font-size: 13.5px; line-height: 1.4; margin-bottom: 24px;">
-                <div>Lampiran I Surat {{ $surat->penandatangan_jabatan }}</div>
+                <div>Lampiran I Surat {{ rtrim($surat->penandatangan_jabatan, ',') }}</div>
                 <div>Nomor : {{ $surat->nomor_surat }}</div>
                 <div>Tanggal : {{ $surat->tanggal_surat->locale('id')->translatedFormat('d F Y') }}</div>
             </div>
@@ -303,15 +310,6 @@
                     <li>{{ $p->nama_penerima }}</li>
                 @endforeach
             </ol>
-
-            <div style="width: 320px; margin-left: auto; text-align: center; margin-top: 50px; font-size: 14px;">
-                <div>{{ $surat->penandatangan_jabatan }}</div>
-                <div style="height: 72px;"></div>
-                <div style="font-weight: bold;">{{ $surat->penandatangan_nama }}</div>
-                @if($showNip && $surat->penandatangan_nip)
-                    <div>NIP. {{ $surat->penandatangan_nip }}</div>
-                @endif
-            </div>
         </div>
     @endif
 </div>
@@ -350,15 +348,15 @@
                 tembusan: @json($extra['tembusan'] ?? ''),
                 gapYth: @json($gapYth),
                 urutan: @json($extra['urutan'] ?? 'paraf-dulu'),
-                konsepMarginTemplate: true,
+                konsepMarginTemplate: @json($konsepMarginTpl),
                 ttd_jab: @json($surat->penandatangan_jabatan),
                 ttd_nama: @json($surat->penandatangan_nama),
                 ttd_nip: @json($surat->penandatangan_nip ?? ''),
                 showNip: @json($showNip),
-                konf_jab: konsep.konf_jab || 'Kasubbag Umum & TU',
+                konf_jab: konsep.konf_jab || '',
                 konf_nama: konsep.konf_nama || '',
                 konf_jabParaf: konsep.konf_jab_paraf || '',
-                pem_jab: konsep.pem_jab || 'Kepala Subbagian TU',
+                pem_jab: konsep.pem_jab || '',
                 pem_nama: konsep.pem_nama || '',
                 pen_jab: konsep.pen_jab || '',
                 pen_nama: konsep.pen_nama || '',
@@ -366,10 +364,15 @@
                 kembali: konsep.kembali || '',
                 ajukan: konsep.ajukan || '',
                 deadline: konsep.deadline || '',
-                jumlahLembar: konsep.jumlah_lembar || 1,
-                tetap_nama: konsep.tetap_nama || @json($surat->penandatangan_nama),
+                jumlahLembar: konsep.jumlah_lembar ?? 1,
+                tetap_nama: konsep.tetap_nama || '',
                 body: @json($bodySections),
-                pages: { asli: true, paraf: true, konsep: true, lampiran: ythMode === 'terlampir' },
+                pages: {
+                    asli: @json(!empty($pagesCfg['asli'])),
+                    paraf: @json(!empty($pagesCfg['paraf'])),
+                    konsep: @json(!empty($pagesCfg['konsep'])),
+                    lampiran: @json(!empty($pagesCfg['lampiran'])) && ythMode === 'terlampir'
+                },
                 margin: {
                     top: +(margin.top || 2.5),
                     bottom: +(margin.bottom || 2.5),
@@ -385,8 +388,9 @@
             const kopSpec = {
                 line1: @json($preset['kementerian']),
                 line2: @json($preset['ditjen']),
-                line3: @json($preset['lines3']),
-                line4: @json($preset['alamat'])
+                line3: @json($kopLines3),
+                line4: @json($kopAlamat),
+                logoTw: Math.round((@json($kopType) === 'balai' ? 2.25 : 2.75) * 567)
             };
 
             DocGen.build(docData, {

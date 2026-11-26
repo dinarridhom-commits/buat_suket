@@ -4,54 +4,117 @@
     $isEdit = isset($surat);
     $src = $surat ?? ($duplicateFrom ?? null);
     $extra = $src ? ($src->extra_data ?? []) : [];
+
     $kopTypeVal = old('extra_data.kop_type', $extra['kop_type'] ?? 'balai');
-    $ythModeVal = old('extra_data.yth_mode', $extra['yth_mode'] ?? 'langsung');
-    $tembusanVal = old('extra_data.tembusan', $extra['tembusan'] ?? '');
-    $diTempatVal = old('extra_data.di_tempat', $extra['di_tempat'] ?? 'Tempat');
-    $showNipVal = old('extra_data.show_nip', $extra['show_nip'] ?? '0');
-    $gapYthVal = old('extra_data.gap_yth', $extra['gap_yth'] ?? '240');
+    $activePreset = $kopPresets[$kopTypeVal] ?? $kopPresets['balai'];
+    $defaultKopLines3 = implode("\n", (!empty($extra['kop_lines3']) && is_array($extra['kop_lines3'])) ? $extra['kop_lines3'] : ($activePreset['lines3'] ?? []));
+    $defaultKopAlamat = !empty($extra['kop_alamat']) ? $extra['kop_alamat'] : ($activePreset['alamat'] ?? '');
+    $kopLines3Val = old('extra_data.kop_lines3_text', $defaultKopLines3);
+    $kopAlamatVal = old('extra_data.kop_alamat', $defaultKopAlamat);
+
     $urutanVal = old('extra_data.urutan', $extra['urutan'] ?? 'paraf-dulu');
-    $showScheduleVal = old('extra_data.show_schedule', $extra['show_schedule'] ?? '0');
-    $konsep = $extra['konsep'] ?? [];
+    $pagesCfg = $extra['pages'] ?? ['konsep' => '1', 'paraf' => '1', 'asli' => '1', 'lampiran' => '1'];
+    $pgKonsepVal = old('extra_data.pages.konsep', $pagesCfg['konsep'] ?? '1');
+    $pgParafVal = old('extra_data.pages.paraf', $pagesCfg['paraf'] ?? '1');
+    $pgAsliVal = old('extra_data.pages.asli', $pagesCfg['asli'] ?? '1');
+    $pgLampiranVal = old('extra_data.pages.lampiran', $pagesCfg['lampiran'] ?? '1');
+
     $margin = $extra['margin'] ?? ['top' => 2.5, 'bottom' => 2.5, 'left' => 2.5, 'right' => 2.5, 'lamp_top' => 1, 'lamp_bottom' => 1];
+    $konsepMarginVal = old('extra_data.konsep_margin', array_key_exists('konsep_margin', $extra) ? $extra['konsep_margin'] : '1');
+    $gapYthVal = old('extra_data.gap_yth', $extra['gap_yth'] ?? '240');
+    $showNipVal = old('extra_data.show_nip', $extra['show_nip'] ?? '0');
+
+    $konsep = $extra['konsep'] ?? [];
     $tglSuratVal = old('tanggal_surat', $isEdit ? $surat->tanggal_surat->format('Y-m-d') : date('Y-m-d'));
 
-    $penerimaList = ($src && $src->penerimas->count() > 0)
-        ? $src->penerimas->pluck('nama_penerima')->toArray()
+    $rawLampiran = old('lampiran', $src ? $src->lampiran : '1');
+    $lampiranNum = is_numeric($rawLampiran) ? (int) $rawLampiran : (preg_match('/^(\d+)/', (string) $rawLampiran, $mLamp) ? (int) $mLamp[1] : 0);
+
+    $sifatVal = old('sifat', $src ? $src->sifat : 'Biasa');
+    $ythModeVal = old('extra_data.yth_mode', $extra['yth_mode'] ?? 'terlampir');
+    $diTempatVal = old('extra_data.di_tempat', $extra['di_tempat'] ?? 'Tempat');
+    $tembusanVal = old('extra_data.tembusan', $extra['tembusan'] ?? '');
+
+    $penerimaList = old('penerimas', ($src && $src->penerimas->count() > 0) ? $src->penerimas->pluck('nama_penerima')->toArray() : []);
+
+    $defaultBodySections = $src
+        ? [
+            [
+                'type' => 'paragraph',
+                'indent' => true,
+                'text' => 'Sehubungan dengan pelaksanaan kegiatan pada Balai Wilayah Sungai Kalimantan I Pontianak, dengan ini kami mengharapkan kehadiran Bapak/Ibu pada rapat yang akan dilaksanakan pada:',
+                'items' => [],
+            ],
+            [
+                'type' => 'points',
+                'indent' => true,
+                'text' => '',
+                'items' => [
+                    ['label' => 'Hari / Tanggal', 'value' => $src->hari_tanggal_acara ?? ''],
+                    ['label' => 'Jam', 'value' => $src->waktu_acara ?? ''],
+                    ['label' => 'Tempat', 'value' => $src->tempat ?? ''],
+                    ['label' => 'Agenda', 'value' => $src->agenda ?? ''],
+                ],
+            ],
+            [
+                'type' => 'paragraph',
+                'indent' => false,
+                'text' => 'Demikian disampaikan, atas perhatian dan kehadirannya diucapkan terima kasih.',
+                'items' => [],
+            ],
+        ]
         : [
-            'Para Pejabat Administrator BWS Kalimantan I',
-            'Para Kepala Satuan Kerja di Lingkungan BWS Kalimantan I',
-            'Para Pejabat Pembuat Komitmen (PPK) di Lingkungan BWS Kalimantan I',
+            [
+                'type' => 'paragraph',
+                'indent' => true,
+                'text' => '',
+                'items' => [],
+            ],
+            [
+                'type' => 'points',
+                'indent' => true,
+                'text' => '',
+                'items' => [
+                    ['label' => 'Hari / Tanggal', 'value' => ''],
+                    ['label' => 'Jam', 'value' => ''],
+                    ['label' => 'Tempat', 'value' => ''],
+                    ['label' => 'Agenda', 'value' => ''],
+                ],
+            ],
+            [
+                'type' => 'paragraph',
+                'indent' => false,
+                'text' => 'Demikian disampaikan, atas perhatian dan kehadirannya diucapkan terima kasih.',
+                'items' => [],
+            ],
         ];
 
-    $defaultBodySections = [
-        [
-            'type' => 'paragraph',
-            'indent' => true,
-            'text' => 'Sehubungan dengan pelaksanaan program kegiatan pada Balai Wilayah Sungai Kalimantan I Pontianak, dengan ini kami mengharapkan kehadiran Bapak/Ibu pada rapat yang akan dilaksanakan pada:',
-            'items' => [],
-        ],
-        [
-            'type' => 'points',
-            'indent' => true,
-            'text' => '',
-            'items' => [
-                ['label' => 'Hari / Tanggal', 'value' => $src ? ($src->hari_tanggal_acara ?? 'Senin / 30 November 2026') : 'Senin / 30 November 2026'],
-                ['label' => 'Jam', 'value' => $src ? ($src->waktu_acara ?? '09.00 WIB s.d. selesai') : '09.00 WIB s.d. selesai'],
-                ['label' => 'Tempat', 'value' => $src ? ($src->tempat ?? 'Ruang Rapat BWS Kalimantan I Pontianak') : 'Ruang Rapat BWS Kalimantan I Pontianak'],
-                ['label' => 'Agenda', 'value' => $src ? ($src->agenda ?? 'Rapat Pembahasan Evaluasi Kinerja Program Pengelolaan SDA') : 'Rapat Pembahasan Evaluasi Kinerja Program Pengelolaan SDA'],
-            ],
-        ],
-        [
-            'type' => 'paragraph',
-            'indent' => false,
-            'text' => 'Mengingat pentingnya acara tersebut di atas, diharapkan hadir tepat pada waktunya. Demikian disampaikan, atas perhatian dan kehadirannya diucapkan terima kasih.',
-            'items' => [],
-        ],
-    ];
-    $bodySections = !empty($extra['body']) && is_array($extra['body']) ? $extra['body'] : $defaultBodySections;
+    $oldBodyJson = old('extra_data.body_json');
+    $decodedOldBody = is_string($oldBodyJson) ? json_decode($oldBodyJson, true) : null;
+    $bodySections = (is_array($decodedOldBody) && count($decodedOldBody) > 0)
+        ? $decodedOldBody
+        : ((!empty($extra['body']) && is_array($extra['body'])) ? $extra['body'] : $defaultBodySections);
 
-    $scheduleRows = !empty($extra['schedule_rows']) && is_array($extra['schedule_rows']) ? $extra['schedule_rows'] : [];
+    $pickerItems = [];
+    foreach ($pegawais as $p) {
+        $jab = $p->jabatan_definitif ?? $p->jabatan ?? '';
+        $pickerItems[] = [
+            'nama' => $p->nama_gelar,
+            'nip' => $p->nip ?? '',
+            'jab' => $jab,
+            'unit' => $p->unit ?? '',
+            'rangkap' => false,
+        ];
+        if (!empty($p->rangkap)) {
+            $pickerItems[] = [
+                'nama' => $p->nama_gelar,
+                'nip' => $p->nip ?? '',
+                'jab' => $p->rangkap_surat ?: $p->rangkap,
+                'unit' => $p->unit ?? '',
+                'rangkap' => true,
+            ];
+        }
+    }
 @endphp
 
 @section('title', $isEdit ? 'Edit Surat Undangan' : 'Buat Surat Undangan')
@@ -62,75 +125,441 @@
 <style>
     .editor-layout {
         display: grid;
-        grid-template-columns: minmax(420px, 510px) 1fr;
+        grid-template-columns: minmax(430px, 520px) 1fr;
         gap: 22px;
         align-items: start;
     }
-    .form-card {
-        background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
-        overflow: hidden; margin-bottom: 16px; box-shadow: var(--shadow-sm);
+
+    /* Card style sesuai V5 HTML */
+    .v5-card {
+        background: var(--bg-surface);
+        border: 1px solid #d9e0e6;
+        border-radius: 14px;
+        margin-bottom: 16px;
+        box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
     }
-    .form-card-head {
-        padding: 12px 18px; background: #f8fafc; border-bottom: 1px solid var(--border);
-        font-size: 12.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
-        color: var(--pu-navy); display: flex; align-items: center; gap: 8px;
+    .v5-card-head {
+        padding: 13px 18px;
+        border-bottom: 1px solid #edf0f3;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
     }
-    .form-card-body { padding: 16px 18px; }
+    .v5-card-title {
+        font-size: 13px;
+        font-weight: 800;
+        letter-spacing: 0.6px;
+        color: #12487e;
+        text-transform: uppercase;
+    }
+    .v5-card-badge {
+        font-size: 12px;
+        color: #64748b;
+        font-weight: 500;
+    }
+    .v5-card-body {
+        padding: 16px 18px 18px;
+    }
+
     .form-group { margin-bottom: 14px; }
     .form-group:last-child { margin-bottom: 0; }
-    .form-label { display: block; font-size: 12.5px; font-weight: 600; color: #334155; margin-bottom: 5px; }
-    .form-control {
-        width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: var(--radius-sm);
-        font-size: 13.5px; font-family: inherit; background: #ffffff; outline: none; transition: all 0.15s ease;
+    .form-label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+        font-size: 13px;
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 6px;
     }
-    .form-control:focus { border-color: var(--pu-blue); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15); }
+    .lbl-num {
+        font-weight: 800;
+        color: #12487e;
+    }
+    .lbl-pill {
+        font-size: 11px;
+        font-weight: 500;
+        color: #475569;
+        background: #f1f5f9;
+        padding: 2px 8px;
+        border-radius: 99px;
+    }
+    .form-hint {
+        font-size: 12px;
+        color: #64748b;
+        margin-top: 5px;
+        line-height: 1.45;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 8px 11px;
+        border: 1px solid #cfd8e3;
+        border-radius: 8px;
+        font-size: 13.5px;
+        font-family: inherit;
+        background: #ffffff;
+        color: #0f172a;
+        outline: none;
+        transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .form-control:focus {
+        border-color: #12487e;
+        box-shadow: 0 0 0 3px rgba(18, 72, 126, 0.12);
+    }
+    textarea.form-control { resize: vertical; }
+
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
     .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
 
-    /* Dynamic Body Builder (V5 style) */
-    .sec-box { border: 1px solid #d6dbd8; border-radius: 8px; background: #fbfcfb; margin-bottom: 10px; overflow: hidden; }
+    /* Accordion "Ubah teks kop" */
+    .v5-details {
+        border: 1px solid #d9e0e6;
+        border-radius: 10px;
+        background: #f8fafc;
+        margin: 10px 0 14px;
+    }
+    .v5-details summary {
+        list-style: none;
+        cursor: pointer;
+        padding: 9px 13px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #1e293b;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .v5-details summary::-webkit-details-marker { display: none; }
+    .v5-details summary::before {
+        content: '▶';
+        font-size: 10px;
+        color: #334155;
+        transition: transform 0.15s;
+    }
+    .v5-details[open] summary::before { transform: rotate(90deg); }
+    .v5-details-body {
+        padding: 10px 13px 13px;
+        border-top: 1px solid #e2e8f0;
+        background: #ffffff;
+        border-radius: 0 0 10px 10px;
+    }
+
+    .check-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        font-size: 13px;
+        color: #1e293b;
+        cursor: pointer;
+        line-height: 1.45;
+    }
+    .check-row input[type="checkbox"] {
+        margin-top: 3px;
+        width: 15px;
+        height: 15px;
+        accent-color: #1d4ed8;
+        flex-shrink: 0;
+        cursor: pointer;
+    }
+    .pages-check-list {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-top: 2px;
+    }
+
+    /* Grouped dashed box + Searchable Pegawai Picker */
+    .v5-group-box {
+        border: 1px dashed #cbd5e1;
+        border-radius: 11px;
+        padding: 10px;
+        background: #fbfcfe;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    .picker-wrap {
+        position: relative;
+    }
+    .picker-input-row {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+    .picker-icon {
+        position: absolute;
+        left: 11px;
+        color: #64748b;
+        pointer-events: none;
+        display: flex;
+        align-items: center;
+    }
+    .picker-input {
+        width: 100%;
+        padding: 8px 28px 8px 32px;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        font-size: 13px;
+        font-family: inherit;
+        background: #ffffff;
+        color: #0f172a;
+        outline: none;
+    }
+    .picker-input:focus {
+        border-color: #12487e;
+        box-shadow: 0 0 0 3px rgba(18, 72, 126, 0.1);
+    }
+    .picker-caret {
+        position: absolute;
+        right: 10px;
+        font-size: 10px;
+        color: #475569;
+        pointer-events: none;
+    }
+    .picker-menu {
+        display: none;
+        position: absolute;
+        top: calc(100% + 4px);
+        left: 0;
+        right: 0;
+        max-height: 240px;
+        overflow-y: auto;
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+        border-radius: 10px;
+        box-shadow: 0 12px 26px rgba(15, 23, 42, 0.16);
+        z-index: 90;
+        padding: 4px;
+    }
+    .picker-menu.open { display: block; }
+    .picker-opt {
+        padding: 7px 10px;
+        border-radius: 7px;
+        cursor: pointer;
+        font-size: 12.5px;
+        line-height: 1.35;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .picker-opt:last-child { border-bottom: none; }
+    .picker-opt:hover { background: #eff6ff; }
+    .picker-opt-name { font-weight: 700; color: #0f172a; }
+    .picker-opt-jab { font-size: 11.5px; color: #475569; margin-top: 1px; }
+    .picker-opt-badge {
+        display: inline-block;
+        font-size: 10px;
+        font-weight: 700;
+        background: #fef3c7;
+        color: #92400e;
+        padding: 1px 5px;
+        border-radius: 4px;
+        margin-right: 4px;
+    }
+    .picker-empty {
+        padding: 10px;
+        font-size: 12px;
+        color: #64748b;
+        text-align: center;
+    }
+
+    /* Info banner Paraf Konsep */
+    .paraf-info-banner {
+        background: #eef4fa;
+        border: 1px solid #d5e3f2;
+        border-radius: 8px;
+        padding: 9px 12px;
+        font-size: 12.5px;
+        color: #1e3a5f;
+        margin-bottom: 12px;
+        line-height: 1.45;
+    }
+
+    /* Recipient list (Yth.) */
+    .yth-radio-row {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        margin-bottom: 10px;
+        flex-wrap: wrap;
+    }
+    .yth-radio-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #0f172a;
+        cursor: pointer;
+    }
+    .yth-radio-label input {
+        width: 15px;
+        height: 15px;
+        accent-color: #1d4ed8;
+        cursor: pointer;
+    }
+    .penerima-list-box {
+        border: 1px solid #d9e0e6;
+        border-radius: 9px;
+        padding: 8px;
+        background: #ffffff;
+        margin-bottom: 8px;
+    }
+    .penerima-empty-msg {
+        padding: 8px 6px;
+        font-size: 12.5px;
+        color: #64748b;
+        line-height: 1.45;
+    }
+    .penerima-item {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        margin-bottom: 6px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 7px;
+        padding: 4px 6px;
+    }
+    .penerima-item:last-child { margin-bottom: 0; }
+    .penerima-item.dragging { opacity: 0.45; }
+    .drag-handle {
+        cursor: grab;
+        color: #94a3b8;
+        font-weight: 700;
+        padding: 0 4px;
+        user-select: none;
+        font-size: 13px;
+    }
+    .penerima-item input {
+        flex: 1;
+        border: none;
+        background: transparent;
+        font-size: 13px;
+        font-family: inherit;
+        color: #0f172a;
+        outline: none;
+        padding: 3px 4px;
+    }
+    .btn-v5 {
+        padding: 6px 12px;
+        font-size: 12.5px;
+        font-weight: 600;
+        border: 1px solid #cbd5e1;
+        background: #ffffff;
+        color: #1e293b;
+        border-radius: 8px;
+        cursor: pointer;
+        font-family: inherit;
+        transition: background 0.15s;
+    }
+    .btn-v5:hover { background: #f1f5f9; }
+    .btn-sq {
+        border: 1px solid #cbd5e1;
+        background: #ffffff;
+        border-radius: 6px;
+        width: 26px;
+        height: 26px;
+        cursor: pointer;
+        font-size: 11px;
+        color: #334155;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        flex-shrink: 0;
+    }
+    .btn-sq:hover:not(:disabled) { background: #e2e8f0; }
+    .btn-sq:disabled { opacity: 0.38; cursor: default; }
+    .btn-sq.del { color: #dc2626; border-color: #fecaca; background: #fff5f5; }
+    .btn-sq.del:hover { background: #fee2e2; }
+
+    /* Dynamic Body Builder */
+    .sec-box {
+        border: 1px solid #d9e0e6;
+        border-radius: 10px;
+        background: #ffffff;
+        margin-bottom: 10px;
+        overflow: hidden;
+    }
     .sec-head {
-        display: flex; align-items: center; gap: 6px; padding: 6px 10px;
-        border-bottom: 1px solid #e6e9e7; background: #f1f5f9;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 10px;
+        border-bottom: 1px solid #edf0f3;
+        background: #f8fafc;
     }
-    .sec-head select { padding: 3px 8px; font-size: 12px; border-radius: 4px; border: 1px solid #cbd5e1; }
-    .sec-head-btn {
-        border: 1px solid #cbd5e1; background: #fff; border-radius: 4px; width: 24px; height: 24px;
-        cursor: pointer; font-size: 11px; color: #334155; padding: 0;
+    .sec-head select {
+        padding: 4px 8px;
+        font-size: 12.5px;
+        font-weight: 500;
+        border-radius: 6px;
+        border: 1px solid #cbd5e1;
+        background: #ffffff;
+        color: #0f172a;
     }
-    .sec-head-btn.del { color: #dc2626; border-color: #fecaca; }
     .sec-body { padding: 10px; }
-    .rin-row { display: grid; grid-template-columns: 130px 1fr 26px; gap: 6px; margin-bottom: 6px; align-items: start; }
-
-    .btn-mini {
-        padding: 4px 10px; font-size: 11.5px; font-weight: 600; border: 1px solid #cbd5e1;
-        background: #f8fafc; color: #334155; border-radius: 5px; cursor: pointer;
+    .rin-row {
+        display: grid;
+        grid-template-columns: 125px 1fr 26px;
+        gap: 6px;
+        margin-bottom: 6px;
+        align-items: start;
     }
-    .btn-mini:hover { background: #e2e8f0; }
 
+    /* RIGHT PANE: A4 PREVIEW */
     .preview-pane { position: sticky; top: 86px; }
     .preview-header-bar {
-        display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;
-        background: #ffffff; padding: 10px 14px; border: 1px solid var(--border);
-        border-radius: var(--radius-md); box-shadow: var(--shadow-sm); flex-wrap: wrap; gap: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+        background: #ffffff;
+        padding: 10px 14px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-sm);
+        flex-wrap: wrap;
+        gap: 8px;
     }
     .btn-toolbar-sm {
-        font-weight: 600; padding: 6px 12px; font-size: 12.5px; display: inline-flex; align-items: center;
-        gap: 6px; border-radius: 6px; border: none; cursor: pointer; text-decoration: none;
+        font-weight: 600;
+        padding: 6px 12px;
+        font-size: 12.5px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        text-decoration: none;
     }
     .preview-scroll-wrapper {
-        background: #cbd5e1; border-radius: var(--radius-lg); padding: 24px;
-        max-height: calc(100vh - 170px); overflow-y: auto; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
-        display: flex; flex-direction: column; align-items: center; gap: 20px;
+        background: #cbd5e1;
+        border-radius: var(--radius-lg);
+        padding: 24px;
+        max-height: calc(100vh - 170px);
+        overflow-y: auto;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
     }
 
-    /* ===== A4 SHEET RESMI ===== */
     .sheet-a4 {
-        width: 794px; min-height: 1123px; background: #ffffff;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15); padding: 48px 56px;
-        font-family: Arial, Helvetica, sans-serif; color: #000000;
-        font-size: 14.5px; line-height: 1.45; position: relative; zoom: 0.76;
+        width: 794px;
+        min-height: 1123px;
+        background: #ffffff;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        padding: 48px 56px;
+        font-family: Arial, Helvetica, sans-serif;
+        color: #000000;
+        font-size: 14.5px;
+        line-height: 1.45;
+        position: relative;
+        zoom: 0.76;
     }
     @media (min-width: 1560px) { .sheet-a4 { zoom: 0.92; } }
 
@@ -146,22 +575,23 @@
 
     .letter-meta-table { width: 100%; margin-bottom: 14px; font-size: 14.5px; border-collapse: collapse; }
     .letter-meta-table td { vertical-align: top; padding: 1.5px 0; }
-
     .undangan-tujuan-box { margin: 14px 0; font-size: 14.5px; line-height: 1.5; }
     .undangan-list { padding-left: 22px; margin-top: 4px; }
-
     .pv-points-table { width: 100%; margin: 10px 0 10px 36px; font-size: 14.5px; border-collapse: collapse; }
     .pv-points-table td { vertical-align: top; padding: 2px 0; }
-
-    .schedule-table-preview { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13.5px; }
-    .schedule-table-preview th, .schedule-table-preview td { border: 1px solid #333; padding: 6px 10px; }
-    .schedule-table-preview th { background: #f1f5f9; font-weight: 700; text-align: center; }
 
     .ttd-paraf-grid { width: 100%; margin-top: 28px; border-collapse: collapse; font-size: 14.5px; }
     .ttd-paraf-grid td { vertical-align: top; }
     .paraf-mini-box {
-        border: 1.5px solid #000; width: 165px; min-height: 78px; padding: 4px 6px;
-        text-align: center; font-size: 10.5px; display: flex; flex-direction: column; justify-content: space-between;
+        border: 1.5px solid #000;
+        width: 165px;
+        min-height: 78px;
+        padding: 4px 6px;
+        text-align: center;
+        font-size: 10.5px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
     }
 
     .konsep-table { width: 100%; border-collapse: collapse; border: 1.5px solid #000; font-size: 11.5px; margin-top: 8px; }
@@ -201,20 +631,16 @@
 
 @section('content')
 
-<datalist id="dl-pegawai-roles">
-    @foreach($pegawais as $p)
-        <option value="{{ $p->nama_gelar }} — {{ $p->jabatan_definitif ?? $p->jabatan }}"
-                data-nama="{{ $p->nama_gelar }}"
-                data-nip="{{ $p->nip }}"
-                data-jab="{{ $p->jabatan_definitif ?? $p->jabatan }}"></option>
-        @if($p->rangkap)
-            <option value="{{ $p->nama_gelar }} — [Rangkap] {{ $p->rangkap_surat ?: $p->rangkap }}"
-                    data-nama="{{ $p->nama_gelar }}"
-                    data-nip="{{ $p->nip }}"
-                    data-jab="{{ $p->rangkap_surat ?: $p->rangkap }}"></option>
-        @endif
-    @endforeach
-</datalist>
+@if($errors->any())
+    <div style="background:#fef2f2; border:1px solid #fecaca; color:#b91c1c; padding:12px 16px; border-radius:10px; margin-bottom:16px; font-size:13px;">
+        <strong>Periksa kembali isian formulir:</strong>
+        <ul style="margin:4px 0 0 18px;">
+            @foreach($errors->all() as $err)
+                <li>{{ $err }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
 
 <div class="editor-layout">
     <!-- LEFT PANE: FORM -->
@@ -222,306 +648,374 @@
         <form method="POST" action="{{ $isEdit ? route('surat.undangan.update', $surat->id) : route('surat.undangan.store') }}" id="formSurat">
             @csrf
             @if($isEdit) @method('PUT') @endif
-            <input type="hidden" name="extra_data[schedule_json]" id="inScheduleJson" value="">
             <input type="hidden" name="extra_data[body_json]" id="inBodyJson" value="">
             <input type="hidden" name="hari_tanggal_acara" id="inHariTanggalHidden" value="{{ old('hari_tanggal_acara', $src ? $src->hari_tanggal_acara : '') }}">
             <input type="hidden" name="waktu_acara" id="inWaktuHidden" value="{{ old('waktu_acara', $src ? $src->waktu_acara : '') }}">
-            <input type="hidden" name="tempat" id="inTempatHidden" value="{{ old('tempat', $src ? $src->tempat : 'Ruang Rapat BWS Kalimantan I Pontianak') }}">
+            <input type="hidden" name="tempat" id="inTempatHidden" value="{{ old('tempat', $src ? $src->tempat : '') }}">
             <input type="hidden" name="agenda" id="inAgendaHidden" value="{{ old('agenda', $src ? $src->agenda : '') }}">
 
-            <!-- CARD 1: PENGATURAN DOKUMEN & KOP -->
-            <div class="form-card">
-                <div class="form-card-head">
-                    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                    1. Pengaturan Dokumen &amp; Kop Surat
+            <!-- CARD 1: PENGATURAN DOKUMEN -->
+            <div class="v5-card">
+                <div class="v5-card-head">
+                    <span class="v5-card-title">PENGATURAN DOKUMEN</span>
                 </div>
-                <div class="form-card-body">
+                <div class="v5-card-body">
                     <div class="form-group">
-                        <label class="form-label">Pilihan Kop Resmi (Balai / Satker)</label>
-                        <select name="extra_data[kop_type]" id="inKopType" class="form-control" style="font-weight:600;">
+                        <label class="form-label" for="inKopType">Kop surat</label>
+                        <select name="extra_data[kop_type]" id="inKopType" class="form-control">
                             @foreach($kopPresets as $key => $preset)
                                 <option value="{{ $key }}" {{ $kopTypeVal === $key ? 'selected' : '' }}>{{ $preset['label'] }}</option>
                             @endforeach
                         </select>
                     </div>
 
-                    <div class="grid-2">
-                        <div class="form-group">
-                            <label class="form-label">Urutan Halaman (.docx)</label>
+                    <details class="v5-details" id="detailsKopText">
+                        <summary>Ubah teks kop</summary>
+                        <div class="v5-details-body">
+                            <div class="form-group">
+                                <label class="form-label" for="inKopLines3">Baris nama instansi (di bawah Ditjen SDA)</label>
+                                <textarea name="extra_data[kop_lines3_text]" id="inKopLines3" rows="2" class="form-control">{{ $kopLines3Val }}</textarea>
+                                <div class="form-hint">Satu baris = satu baris pada kop surat.</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="inKopAlamat">Alamat &amp; kontak</label>
+                                <input type="text" name="extra_data[kop_alamat]" id="inKopAlamat" value="{{ $kopAlamatVal }}" class="form-control">
+                            </div>
+                            <button type="button" class="btn-v5" id="btnResetKop">Reset teks kop ke bawaan</button>
+                        </div>
+                    </details>
+
+                    <div class="grid-2 form-group">
+                        <div>
+                            <label class="form-label" for="inUrutan">Urutan halaman</label>
                             <select name="extra_data[urutan]" id="inUrutan" class="form-control">
                                 <option value="paraf-dulu" {{ $urutanVal === 'paraf-dulu' ? 'selected' : '' }}>Konsep &rarr; Paraf &rarr; Asli</option>
                                 <option value="asli-dulu" {{ $urutanVal === 'asli-dulu' ? 'selected' : '' }}>Konsep &rarr; Asli &rarr; Paraf</option>
                             </select>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">Jarak Hal &rarr; Yth.</label>
-                            <select name="extra_data[gap_yth]" id="inGapYth" class="form-control">
-                                <option value="120" {{ $gapYthVal == '120' ? 'selected' : '' }}>Rapat (1/2 baris)</option>
-                                <option value="240" {{ $gapYthVal == '240' ? 'selected' : '' }}>Normal (1 baris)</option>
-                                <option value="480" {{ $gapYthVal == '480' ? 'selected' : '' }}>Lebar (2 baris)</option>
-                            </select>
+                        <div>
+                            <div class="form-label">Halaman yang dicetak</div>
+                            <div class="pages-check-list">
+                                <label class="check-row">
+                                    <input type="hidden" name="extra_data[pages][konsep]" value="0">
+                                    <input type="checkbox" name="extra_data[pages][konsep]" value="1" id="pgKonsep" {{ !empty($pgKonsepVal) ? 'checked' : '' }}>
+                                    <span>Konsep</span>
+                                </label>
+                                <label class="check-row">
+                                    <input type="hidden" name="extra_data[pages][paraf]" value="0">
+                                    <input type="checkbox" name="extra_data[pages][paraf]" value="1" id="pgParaf" {{ !empty($pgParafVal) ? 'checked' : '' }}>
+                                    <span>Paraf konsep</span>
+                                </label>
+                                <label class="check-row">
+                                    <input type="hidden" name="extra_data[pages][asli]" value="0">
+                                    <input type="checkbox" name="extra_data[pages][asli]" value="1" id="pgAsli" {{ !empty($pgAsliVal) ? 'checked' : '' }}>
+                                    <span>Surat asli</span>
+                                </label>
+                                <label class="check-row">
+                                    <input type="hidden" name="extra_data[pages][lampiran]" value="0">
+                                    <input type="checkbox" name="extra_data[pages][lampiran]" value="1" id="pgLampiran" {{ !empty($pgLampiranVal) ? 'checked' : '' }}>
+                                    <span>Lampiran daftar undangan</span>
+                                </label>
+                            </div>
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label style="font-size:12.5px; font-weight:600; color:#334155; display:flex; align-items:center; gap:8px; cursor:pointer;">
-                            <input type="hidden" name="extra_data[show_nip]" value="0">
-                            <input type="checkbox" name="extra_data[show_nip]" value="1" id="chkShowNip" {{ $showNipVal ? 'checked' : '' }}>
-                            <span>Tampilkan NIP di bawah nama penanda tangan</span>
+                        <div class="form-label">Margin surat asli &amp; paraf (cm) &mdash; kiri/kanan juga dipakai lampiran</div>
+                        <div class="grid-4">
+                            <div>
+                                <div style="font-size:12px; color:#64748b; margin-bottom:4px;">Atas</div>
+                                <input type="number" step="0.1" min="0.5" name="extra_data[margin][top]" id="inMcTop" value="{{ old('extra_data.margin.top', $margin['top'] ?? 2.5) }}" class="form-control">
+                            </div>
+                            <div>
+                                <div style="font-size:12px; color:#64748b; margin-bottom:4px;">Bawah</div>
+                                <input type="number" step="0.1" min="0.5" name="extra_data[margin][bottom]" id="inMcBottom" value="{{ old('extra_data.margin.bottom', $margin['bottom'] ?? 2.5) }}" class="form-control">
+                            </div>
+                            <div>
+                                <div style="font-size:12px; color:#64748b; margin-bottom:4px;">Kiri</div>
+                                <input type="number" step="0.1" min="0.5" name="extra_data[margin][left]" id="inMcLeft" value="{{ old('extra_data.margin.left', $margin['left'] ?? 2.5) }}" class="form-control">
+                            </div>
+                            <div>
+                                <div style="font-size:12px; color:#64748b; margin-bottom:4px;">Kanan</div>
+                                <input type="number" step="0.1" min="0.5" name="extra_data[margin][right]" id="inMcRight" value="{{ old('extra_data.margin.right', $margin['right'] ?? 2.5) }}" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                        <span style="font-size:12.5px; font-weight:600; color:#1e293b;">Margin lampiran (cm) &mdash;</span>
+                        <label style="font-size:12.5px; color:#475569; display:inline-flex; align-items:center; gap:6px;">
+                            Atas
+                            <input type="number" step="0.1" min="0.5" name="extra_data[margin][lamp_top]" id="inMlcTop" value="{{ old('extra_data.margin.lamp_top', $margin['lamp_top'] ?? 1) }}" class="form-control" style="width:76px;">
+                        </label>
+                        <label style="font-size:12.5px; color:#475569; display:inline-flex; align-items:center; gap:6px;">
+                            Bawah
+                            <input type="number" step="0.1" min="0.5" name="extra_data[margin][lamp_bottom]" id="inMlcBottom" value="{{ old('extra_data.margin.lamp_bottom', $margin['lamp_bottom'] ?? 1) }}" class="form-control" style="width:76px;">
                         </label>
                     </div>
 
-                    <details style="border:1px solid var(--border); border-radius:8px; padding:8px 12px; background:#f8fafc;">
-                        <summary style="cursor:pointer; font-size:12px; font-weight:700; color:var(--pu-navy);">Pengaturan Margin &amp; Halaman (.docx)</summary>
-                        <div class="grid-4" style="margin-top:10px;">
-                            <div><span style="font-size:11px; color:#64748b;">Atas (cm)</span><input type="number" step="0.05" min="0.5" name="extra_data[margin][top]" id="inMcTop" value="{{ $margin['top'] ?? 2.5 }}" class="form-control"></div>
-                            <div><span style="font-size:11px; color:#64748b;">Bawah</span><input type="number" step="0.05" min="0.5" name="extra_data[margin][bottom]" id="inMcBottom" value="{{ $margin['bottom'] ?? 2.5 }}" class="form-control"></div>
-                            <div><span style="font-size:11px; color:#64748b;">Kiri</span><input type="number" step="0.05" min="0.5" name="extra_data[margin][left]" id="inMcLeft" value="{{ $margin['left'] ?? 2.5 }}" class="form-control"></div>
-                            <div><span style="font-size:11px; color:#64748b;">Kanan</span><input type="number" step="0.05" min="0.5" name="extra_data[margin][right]" id="inMcRight" value="{{ $margin['right'] ?? 2.5 }}" class="form-control"></div>
-                        </div>
-                        <div class="grid-2" style="margin-top:8px;">
-                            <div><span style="font-size:11px; color:#64748b;">Margin Lampiran Atas</span><input type="number" step="0.05" min="0.5" name="extra_data[margin][lamp_top]" id="inMlcTop" value="{{ $margin['lamp_top'] ?? 1 }}" class="form-control"></div>
-                            <div><span style="font-size:11px; color:#64748b;">Margin Lampiran Bawah</span><input type="number" step="0.05" min="0.5" name="extra_data[margin][lamp_bottom]" id="inMlcBottom" value="{{ $margin['lamp_bottom'] ?? 1 }}" class="form-control"></div>
-                        </div>
-                        <div style="display:flex; gap:14px; flex-wrap:wrap; margin-top:10px; font-size:12px;">
-                            <label><input type="checkbox" id="pgKonsep" checked> Konsep</label>
-                            <label><input type="checkbox" id="pgParaf" checked> Paraf</label>
-                            <label><input type="checkbox" id="pgAsli" checked> Surat Asli</label>
-                            <label><input type="checkbox" id="pgLampiran" checked> Lampiran</label>
-                            <label><input type="checkbox" id="chkKonsepMargin" checked> Margin sempit konsep</label>
-                        </div>
-                    </details>
+                    <div class="form-group">
+                        <label class="check-row">
+                            <input type="hidden" name="extra_data[konsep_margin]" value="0">
+                            <input type="checkbox" name="extra_data[konsep_margin]" value="1" id="chkKonsepMargin" {{ !empty($konsepMarginVal) ? 'checked' : '' }}>
+                            <span>Halaman konsep pakai margin sempit seperti contoh (1,5 cm atas, 1 cm sisi lain &mdash; disarankan; dengan margin 2,5 cm tabel konsep jadi sempit &amp; berisiko 2 halaman)</span>
+                        </label>
+                    </div>
+
+                    <div class="form-group" style="display:flex; align-items:center; gap:10px;">
+                        <label for="inGapYth" style="font-size:13px; font-weight:600; color:#1e293b; white-space:nowrap;">Jarak Hal &rarr; Yth.</label>
+                        <select name="extra_data[gap_yth]" id="inGapYth" class="form-control">
+                            <option value="120" {{ $gapYthVal == '120' ? 'selected' : '' }}>Rapat (1/2 baris)</option>
+                            <option value="240" {{ $gapYthVal == '240' ? 'selected' : '' }}>Normal (1 baris)</option>
+                            <option value="480" {{ $gapYthVal == '480' ? 'selected' : '' }}>Lebar (2 baris)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="check-row">
+                            <input type="hidden" name="extra_data[show_nip]" value="0">
+                            <input type="checkbox" name="extra_data[show_nip]" value="1" id="chkShowNip" {{ !empty($showNipVal) ? 'checked' : '' }}>
+                            <span>Tampilkan NIP di bawah nama penanda tangan</span>
+                        </label>
+                    </div>
                 </div>
             </div>
 
-            <!-- CARD 2: SURAT ASLI (META & ISI DINAMIS) -->
-            <div class="form-card">
-                <div class="form-card-head">
-                    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                    2. Kepala &amp; Isi Surat Asli
+            <!-- CARD 2: KONSEP SURAT -->
+            <div class="v5-card">
+                <div class="v5-card-head">
+                    <span class="v5-card-title">KONSEP SURAT</span>
+                    <span class="v5-card-badge">halaman 1</span>
                 </div>
-                <div class="form-card-body">
+                <div class="v5-card-body">
                     <div class="form-group">
-                        <label class="form-label">Nomor Surat Dinas</label>
-                        <input type="text" name="nomor_surat" id="inNomor" value="{{ old('nomor_surat', $autoNomor ?? 'UM.01.02/Bws1/001/2026') }}" class="form-control" required>
-                    </div>
-
-                    <div class="grid-2">
-                        <div class="form-group">
-                            <label class="form-label">Kota Surat</label>
-                            <input type="text" name="extra_data[kota]" id="inKota" value="{{ old('extra_data.kota', $extra['kota'] ?? 'Pontianak') }}" class="form-control">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Tanggal Surat</label>
-                            <input type="date" name="tanggal_surat" id="inTanggalSurat" value="{{ $tglSuratVal }}" class="form-control" required>
-                        </div>
-                    </div>
-
-                    <div class="grid-2">
-                        <div class="form-group">
-                            <label class="form-label">Sifat</label>
-                            <input type="text" name="sifat" id="inSifat" value="{{ old('sifat', $src ? $src->sifat : 'Biasa') }}" class="form-control">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Lampiran</label>
-                            <input type="text" name="lampiran" id="inLampiran" value="{{ old('lampiran', $src ? $src->lampiran : '1 Lembar') }}" class="form-control">
+                        <label class="form-label"><span class="lbl-num">1</span> Setelah dikirim, konsep dikembalikan kepada (jabatan)</label>
+                        <div class="v5-group-box">
+                            <div class="picker-wrap" data-target="kembali"></div>
+                            <textarea name="extra_data[konsep][kembali]" id="inKembali" rows="2" class="form-control" placeholder="Jabatan">{{ old('extra_data.konsep.kembali', $konsep['kembali'] ?? '') }}</textarea>
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Hal / Perihal</label>
-                        <textarea name="hal" id="inHal" rows="2" class="form-control" required>{{ old('hal', $src ? $src->hal : 'Undangan Rapat Koordinasi Teknis') }}</textarea>
+                        <label class="form-label"><span class="lbl-num">2</span> Konfirmasi (jabatan &amp; nama) <span class="lbl-pill">juga dipakai di kotak paraf hal. 2</span></label>
+                        <div class="v5-group-box">
+                            <div class="picker-wrap" data-target="konf"></div>
+                            <textarea name="extra_data[konsep][konf_jab]" id="inKonfJab" rows="2" class="form-control" placeholder="Jabatan">{{ old('extra_data.konsep.konf_jab', $konsep['konf_jab'] ?? '') }}</textarea>
+                            <input type="text" name="extra_data[konsep][konf_nama]" id="inKonfNama" value="{{ old('extra_data.konsep.konf_nama', $konsep['konf_nama'] ?? '') }}" class="form-control" placeholder="Nama">
+                        </div>
                     </div>
 
-                    <div class="form-group" style="margin-top:14px;">
-                        <label class="form-label">Susunan Isi Surat (Bagian Paragraf &amp; Poin)</label>
+                    <div class="form-group">
+                        <label class="form-label"><span class="lbl-num">3</span> Pemeriksa Akhir (jabatan &amp; nama)</label>
+                        <div class="v5-group-box">
+                            <div class="picker-wrap" data-target="pem"></div>
+                            <textarea name="extra_data[konsep][pem_jab]" id="inPemJab" rows="2" class="form-control" placeholder="Jabatan">{{ old('extra_data.konsep.pem_jab', $konsep['pem_jab'] ?? 'Plt. Kepala Balai Wilayah Sungai Kalimantan I Pontianak') }}</textarea>
+                            <input type="text" name="extra_data[konsep][pem_nama]" id="inPemNama" value="{{ old('extra_data.konsep.pem_nama', $konsep['pem_nama'] ?? 'Donni Saputra') }}" class="form-control" placeholder="Nama">
+                        </div>
+                    </div>
+
+                    <div class="grid-2 form-group">
+                        <div>
+                            <label class="form-label" for="inAjukan"><span class="lbl-num">4</span> Supaya diajukan lagi tanggal</label>
+                            <input type="date" name="extra_data[konsep][ajukan]" id="inAjukan" value="{{ old('extra_data.konsep.ajukan', $konsep['ajukan'] ?? '') }}" class="form-control">
+                            <div class="form-hint">Kosongkan &rarr; tercetak titik-titik</div>
+                        </div>
+                        <div>
+                            <label class="form-label" for="inDeadline"><span class="lbl-num">5</span> DEADLINE</label>
+                            <input type="date" name="extra_data[konsep][deadline]" id="inDeadline" value="{{ old('extra_data.konsep.deadline', $konsep['deadline'] ?? '') }}" class="form-control">
+                        </div>
+                    </div>
+
+                    <div class="grid-2 form-group">
+                        <div>
+                            <label class="form-label"><span class="lbl-num">6</span> Ditetapkan (nama)</label>
+                            <div class="v5-group-box">
+                                <div class="picker-wrap" data-target="tetap"></div>
+                                <input type="text" name="extra_data[konsep][tetap_nama]" id="inTetapNama" value="{{ old('extra_data.konsep.tetap_nama', $konsep['tetap_nama'] ?? 'Donni Saputra') }}" class="form-control" placeholder="Nama">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="form-label" for="inJmlLembar"><span class="lbl-num">7</span> Jumlah lembar</label>
+                            <input type="number" min="0" name="extra_data[konsep][jumlah_lembar]" id="inJmlLembar" value="{{ old('extra_data.konsep.jumlah_lembar', $konsep['jumlah_lembar'] ?? 1) }}" class="form-control">
+                            <div class="form-hint" id="hintJmlLembar">&rarr; "1 (Satu)"</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label"><span class="lbl-num">8</span> Konsep / Penulis Redaksi (jabatan &amp; nama)</label>
+                        <div class="v5-group-box">
+                            <div class="picker-wrap" data-target="pen"></div>
+                            <textarea name="extra_data[konsep][pen_jab]" id="inPenJab" rows="2" class="form-control" placeholder="Jabatan">{{ old('extra_data.konsep.pen_jab', $konsep['pen_jab'] ?? '') }}</textarea>
+                            <input type="text" name="extra_data[konsep][pen_nama]" id="inPenNama" value="{{ old('extra_data.konsep.pen_nama', $konsep['pen_nama'] ?? '') }}" class="form-control" placeholder="Nama">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label"><span class="lbl-num">9</span> Diketik oleh (nama)</label>
+                        <div class="v5-group-box">
+                            <div class="picker-wrap" data-target="ketik"></div>
+                            <input type="text" name="extra_data[konsep][ketik_nama]" id="inKetikNama" value="{{ old('extra_data.konsep.ketik_nama', $konsep['ketik_nama'] ?? '') }}" class="form-control" placeholder="Nama">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CARD 3: PARAF KONSEP -->
+            <div class="v5-card">
+                <div class="v5-card-head">
+                    <span class="v5-card-title">PARAF KONSEP</span>
+                    <span class="v5-card-badge">halaman 2</span>
+                </div>
+                <div class="v5-card-body">
+                    <div class="paraf-info-banner">
+                        Kotak paraf otomatis diisi dari <strong>Konfirmasi</strong> (poin 2): <span id="parafBannerStatus">(belum diisi)</span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="inKonfJabParaf">Jabatan singkat di kotak paraf <span class="lbl-pill">opsional</span></label>
+                        <input type="text" name="extra_data[konsep][konf_jab_paraf]" id="inKonfJabParaf" value="{{ old('extra_data.konsep.konf_jab_paraf', $konsep['konf_jab_paraf'] ?? '') }}" class="form-control" placeholder="mis. Kepala Seksi KPISDA — kosongkan untuk memakai jabatan Konfirmasi">
+                        <div class="form-hint">Kotak paraf kecil (&plusmn;3,5 cm), jadi jabatan panjang akan terlipat beberapa baris.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CARD 4: SURAT ASLI -->
+            <div class="v5-card">
+                <div class="v5-card-head">
+                    <span class="v5-card-title">SURAT ASLI</span>
+                </div>
+                <div class="v5-card-body">
+                    <div class="grid-2 form-group">
+                        <div>
+                            <label class="form-label" for="inNomor"><span class="lbl-num">1</span> Nomor</label>
+                            <input type="text" name="nomor_surat" id="inNomor" value="{{ old('nomor_surat', $autoNomor ?? 'UM.01.02/Bws1/001/2026') }}" class="form-control" required>
+                            <div class="form-hint">Ketik nomor urut di belakang garis miring terakhir</div>
+                        </div>
+                        <div>
+                            <label class="form-label" for="inTanggalSurat"><span class="lbl-num">2</span> Tanggal surat</label>
+                            <div style="display:flex; gap:6px;">
+                                <input type="text" name="extra_data[kota]" id="inKota" value="{{ old('extra_data.kota', $extra['kota'] ?? 'Pontianak') }}" class="form-control" style="width:98px; flex-shrink:0;" placeholder="Kota">
+                                <input type="date" name="tanggal_surat" id="inTanggalSurat" value="{{ $tglSuratVal }}" class="form-control" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid-2 form-group">
+                        <div>
+                            <label class="form-label" for="inSifat"><span class="lbl-num">3</span> Sifat</label>
+                            <select name="sifat" id="inSifat" class="form-control">
+                                @php $sifatOps = ['Biasa', 'Penting', 'Segera', 'Rahasia']; @endphp
+                                @if(!in_array($sifatVal, $sifatOps))
+                                    <option value="{{ $sifatVal }}" selected>{{ $sifatVal }}</option>
+                                @endif
+                                @foreach($sifatOps as $so)
+                                    <option value="{{ $so }}" {{ $sifatVal === $so ? 'selected' : '' }}>{{ $so }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label" for="inLampiran"><span class="lbl-num">4</span> Lampiran (lembar)</label>
+                            <input type="number" min="0" name="lampiran" id="inLampiran" value="{{ $lampiranNum }}" class="form-control">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="inHal"><span class="lbl-num">5</span> Hal</label>
+                        <textarea name="hal" id="inHal" rows="2" class="form-control" placeholder="Tulis perihal surat undangan..." required>{{ old('hal', $src ? $src->hal : '') }}</textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="form-label"><span class="lbl-num">6</span> Yth.</div>
+                        <div class="yth-radio-row">
+                            <label class="yth-radio-label">
+                                <input type="radio" name="extra_data[yth_mode]" value="terlampir" {{ $ythModeVal !== 'langsung' ? 'checked' : '' }}>
+                                <span>(Daftar Terlampir)</span>
+                            </label>
+                            <label class="yth-radio-label">
+                                <input type="radio" name="extra_data[yth_mode]" value="langsung" {{ $ythModeVal === 'langsung' ? 'checked' : '' }}>
+                                <span>Isi langsung</span>
+                            </label>
+                        </div>
+
+                        <div id="ythSubLabel" style="font-size:12.5px; font-weight:600; color:#1e293b; margin-bottom:8px;">
+                            Daftar undangan (dicetak di halaman lampiran &mdash; satu baris satu tujuan)
+                        </div>
+
+                        <div class="v5-group-box" style="margin-bottom:8px;">
+                            <div class="picker-wrap" data-target="yth"></div>
+                        </div>
+
+                        <div class="penerima-list-box" id="penerimaListBox">
+                            <div id="penerimaEmptyMsg" class="penerima-empty-msg">Belum ada tujuan. Tambah dari database atau ketik manual di bawah.</div>
+                            <div id="penerimaContainer">
+                                @foreach($penerimaList as $pNama)
+                                    @if(trim((string) $pNama) !== '')
+                                        <div class="penerima-item" draggable="true">
+                                            <span class="drag-handle" title="Seret untuk urutkan">&#8942;&#8942;</span>
+                                            <input type="text" name="penerimas[]" class="in-penerima" value="{{ $pNama }}" placeholder="Nama / jabatan tujuan...">
+                                            <button type="button" class="btn-sq" data-pmove="-1" title="Naik">&#9650;</button>
+                                            <button type="button" class="btn-sq" data-pmove="1" title="Turun">&#9660;</button>
+                                            <button type="button" class="btn-sq del" data-pdel title="Hapus">&times;</button>
+                                        </div>
+                                    @endif
+                                @endforeach
+                            </div>
+                        </div>
+
+                        <div style="display:flex; gap:8px; margin-bottom:8px;">
+                            <input type="text" id="inNewPenerima" class="form-control" placeholder="Ketik tujuan baru lalu Enter...">
+                            <button type="button" class="btn-v5" id="btnAddPenerima" style="white-space:nowrap;">+ Tambah</button>
+                        </div>
+
+                        <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:6px;">
+                            <button type="button" class="btn-v5" id="btnSortPenerima">Urutkan A&ndash;Z</button>
+                            <button type="button" class="btn-v5" id="btnRevPenerima">Balik urutan</button>
+                            <button type="button" class="btn-v5" id="btnBulkTextPenerima">Edit sebagai teks</button>
+                        </div>
+
+                        <div id="bulkTextBox" style="display:none; background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; padding:10px; margin-bottom:8px;">
+                            <div style="font-size:12px; color:#475569; margin-bottom:6px;">Satu baris = satu penerima tujuan:</div>
+                            <textarea id="bulkPenerimaTextarea" rows="4" class="form-control" placeholder="Tempel atau ketik daftar tujuan per baris..."></textarea>
+                            <div style="display:flex; gap:6px; margin-top:8px;">
+                                <button type="button" class="btn-v5" id="btnApplyBulkPenerima" style="background:var(--pu-navy); color:#fff; border-color:var(--pu-navy);">Terapkan Daftar</button>
+                                <button type="button" class="btn-v5" id="btnCancelBulkPenerima">Tutup</button>
+                            </div>
+                        </div>
+
+                        <div class="form-hint" style="margin-bottom:10px;">Seret &#8942;&#8942; atau tombol &#9650;&#9660; untuk mengubah urutan &middot; <kbd style="background:#f1f5f9; border:1px solid #cbd5e1; padding:1px 5px; border-radius:4px; font-size:11px;">Alt</kbd> + <kbd style="background:#f1f5f9; border:1px solid #cbd5e1; padding:1px 5px; border-radius:4px; font-size:11px;">&uarr;</kbd>/<kbd style="background:#f1f5f9; border:1px solid #cbd5e1; padding:1px 5px; border-radius:4px; font-size:11px;">&darr;</kbd> saat mengetik</div>
+
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <label for="inDiTempat" style="font-size:13px; color:#475569; white-space:nowrap;">di-</label>
+                            <input type="text" name="extra_data[di_tempat]" id="inDiTempat" value="{{ $diTempatVal }}" class="form-control">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="form-label"><span class="lbl-num">7</span> Isi surat</div>
+                        <div class="form-hint" style="margin-top:0; margin-bottom:10px;">
+                            Susun isi surat dari beberapa bagian. <strong>Paragraf</strong> = teks rata kiri-kanan (pisahkan paragraf dengan satu baris kosong). <strong>Poin</strong> = daftar <em>Label : Isi</em> seperti Hari/Tanggal, Jam, Tempat, Agenda.
+                        </div>
                         <div id="bodySectionsContainer"></div>
                         <div style="display:flex; gap:8px; margin-top:8px;">
-                            <button type="button" class="btn-mini" id="btnAddPara">+ Bagian Paragraf</button>
-                            <button type="button" class="btn-mini" id="btnAddPoints">+ Bagian Poin (Label : Isi)</button>
+                            <button type="button" class="btn-v5" id="btnAddPara">+ Bagian paragraf</button>
+                            <button type="button" class="btn-v5" id="btnAddPoints">+ Bagian poin</button>
                         </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- CARD 3: PENERIMA, DI TEMPAT & TEMBUSAN -->
-            <div class="form-card">
-                <div class="form-card-head" style="justify-content: space-between;">
-                    <span>3. Penerima Undangan (Yth.) &amp; Tembusan</span>
-                    <button type="button" id="btnAddPenerima" class="btn-mini">+ Tambah</button>
-                </div>
-                <div class="form-card-body">
-                    <div class="form-group">
-                        <label class="form-label">Mode Penampilan Penerima</label>
-                        <select name="extra_data[yth_mode]" id="inYthMode" class="form-control">
-                            <option value="langsung" {{ $ythModeVal === 'langsung' ? 'selected' : '' }}>Tampilkan Langsung di Badan Surat</option>
-                            <option value="terlampir" {{ $ythModeVal === 'terlampir' ? 'selected' : '' }}>Daftar Terlampir (Pindah ke Lampiran I)</option>
-                        </select>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Tambah Cepat dari Master Pegawai / Jabatan</label>
-                        <input type="search" id="pickerAddPenerima" list="dl-pegawai-roles" class="form-control" placeholder="Ketik nama atau jabatan lalu pilih...">
-                    </div>
-
-                    <div id="penerimaContainer">
-                        @foreach($penerimaList as $pNama)
-                            <div class="form-group" style="display:flex; gap:5px; margin-bottom:6px;">
-                                <input type="text" name="penerimas[]" class="form-control in-penerima" value="{{ $pNama }}">
-                                <button type="button" class="btn-mini" onclick="movePenerima(this, -1)" title="Naik">&#9650;</button>
-                                <button type="button" class="btn-mini" onclick="movePenerima(this, 1)" title="Turun">&#9660;</button>
-                                <button type="button" style="border:1px solid #fca5a5; background:#fff1f2; color:#b91c1c; border-radius:6px; padding:0 9px; cursor:pointer;" onclick="this.parentElement.remove(); syncPenerimaList();">&times;</button>
-                            </div>
-                        @endforeach
-                    </div>
-
-                    <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px;">
-                        <button type="button" class="btn-mini" id="btnSortPenerima">Urutkan A–Z</button>
-                        <button type="button" class="btn-mini" id="btnRevPenerima">Balik Urutan</button>
+                        <label class="form-label"><span class="lbl-num">8</span> Penanda tangan (jabatan &amp; nama)</label>
+                        <div class="v5-group-box">
+                            <div class="picker-wrap" data-target="ttd"></div>
+                            <textarea name="penandatangan_jabatan" id="inTtdJabatan" rows="2" class="form-control" placeholder="Jabatan" required>{{ old('penandatangan_jabatan', $src ? $src->penandatangan_jabatan : 'Plt. Kepala Balai Wilayah Sungai Kalimantan I Pontianak') }}</textarea>
+                            <input type="text" name="penandatangan_nama" id="inTtdNama" value="{{ old('penandatangan_nama', $src ? $src->penandatangan_nama : 'Donni Saputra') }}" class="form-control" placeholder="Nama lengkap" required>
+                            <input type="text" name="penandatangan_nip" id="inTtdNip" value="{{ old('penandatangan_nip', $src ? $src->penandatangan_nip : '197611012005021003') }}" class="form-control" placeholder="NIP">
+                        </div>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">di- (Tujuan Tempat)</label>
-                        <input type="text" name="extra_data[di_tempat]" id="inDiTempat" value="{{ $diTempatVal }}" class="form-control">
+                        <label class="form-label" for="inTembusan"><span class="lbl-num">9</span> Tembusan</label>
+                        <textarea name="extra_data[tembusan]" id="inTembusan" rows="2" class="form-control" placeholder="Satu baris = satu nomor">{{ $tembusanVal }}</textarea>
+                        <div class="form-hint">Dicetak sebagai daftar bernomor. Kosongkan jika tanpa tembusan.</div>
                     </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Tembusan (1 baris = 1 nomor, kosongkan jika tidak ada)</label>
-                        <textarea name="extra_data[tembusan]" id="inTembusan" rows="2" class="form-control" placeholder="Direktur Jenderal Sumber Daya Air">{{ $tembusanVal }}</textarea>
-                    </div>
-                </div>
-            </div>
-
-            <!-- CARD 4: PENANDA TANGAN, PARAF & KONSEP -->
-            <div class="form-card">
-                <div class="form-card-head">
-                    <span>4. Penanda Tangan, Paraf &amp; Lembar Konsep</span>
-                </div>
-                <div class="form-card-body">
-                    <div class="form-group">
-                        <label class="form-label">Pilih Penanda Tangan dari Master Pegawai</label>
-                        <select id="selectPegawaiDb" class="form-control" style="background:#f1f5f9; font-weight:600;">
-                            <option value="">-- Pilih Pejabat Penandatangan --</option>
-                            @foreach($pegawais as $p)
-                                <option value="{{ $p->id }}"
-                                    data-nama="{{ $p->nama_gelar }}"
-                                    data-nip="{{ $p->nip }}"
-                                    data-jabatan="{{ $p->jabatan_definitif ?? $p->jabatan }}"
-                                    {{ (!$src && str_contains($p->nama, 'Donni')) ? 'selected' : '' }}>
-                                    {{ $p->nama_gelar }} — {{ $p->jabatan_definitif ?? $p->jabatan }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Jabatan Penandatangan</label>
-                        <input type="text" name="penandatangan_jabatan" id="inTtdJabatan" value="{{ old('penandatangan_jabatan', $src ? $src->penandatangan_jabatan : 'Plt. Kepala Balai Wilayah Sungai Kalimantan I Pontianak') }}" class="form-control" required>
-                    </div>
-
-                    <div class="grid-2">
-                        <div class="form-group">
-                            <label class="form-label">Nama Lengkap &amp; Gelar</label>
-                            <input type="text" name="penandatangan_nama" id="inTtdNama" value="{{ old('penandatangan_nama', $src ? $src->penandatangan_nama : 'Donni Saputra, S.T, M.Si., M.T.') }}" class="form-control" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">NIP</label>
-                            <input type="text" name="penandatangan_nip" id="inTtdNip" value="{{ old('penandatangan_nip', $src ? $src->penandatangan_nip : '197611012005021003') }}" class="form-control">
-                        </div>
-                    </div>
-
-                    <details open style="border-top:1px dashed var(--border); padding-top:12px;">
-                        <summary style="cursor:pointer; font-size:12px; font-weight:700; color:var(--pu-navy); margin-bottom:10px; text-transform:uppercase;">Lembar Konsep (Hal. 1) &amp; Paraf (Hal. 2)</summary>
-                        <div class="grid-2">
-                            <div class="form-group">
-                                <label class="form-label">Konfirmasi / Paraf (Jabatan)</label>
-                                <input type="text" name="extra_data[konsep][konf_jab]" id="inKonfJab" value="{{ old('extra_data.konsep.konf_jab', $konsep['konf_jab'] ?? 'Kasubbag Umum & TU') }}" class="form-control">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Konfirmasi / Paraf (Nama)</label>
-                                <input type="text" name="extra_data[konsep][konf_nama]" id="inKonfNama" value="{{ old('extra_data.konsep.konf_nama', $konsep['konf_nama'] ?? 'Iswandi, S.E., S.T.') }}" class="form-control">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Jabatan Singkat di Kotak Paraf (Opsional)</label>
-                            <input type="text" name="extra_data[konsep][konf_jab_paraf]" id="inKonfJabParaf" value="{{ old('extra_data.konsep.konf_jab_paraf', $konsep['konf_jab_paraf'] ?? '') }}" class="form-control" placeholder="Kosongkan untuk memakai jabatan Konfirmasi">
-                        </div>
-                        <div class="grid-2">
-                            <div class="form-group">
-                                <label class="form-label">Pemeriksa Akhir (Jabatan)</label>
-                                <input type="text" name="extra_data[konsep][pem_jab]" id="inPemJab" value="{{ old('extra_data.konsep.pem_jab', $konsep['pem_jab'] ?? 'Kepala Subbagian TU') }}" class="form-control">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Pemeriksa Akhir (Nama)</label>
-                                <input type="text" name="extra_data[konsep][pem_nama]" id="inPemNama" value="{{ old('extra_data.konsep.pem_nama', $konsep['pem_nama'] ?? 'Iswandi, S.E., S.T.') }}" class="form-control">
-                            </div>
-                        </div>
-                        <div class="grid-2">
-                            <div class="form-group">
-                                <label class="form-label">Penulis Redaksi (Jabatan)</label>
-                                <input type="text" name="extra_data[konsep][pen_jab]" id="inPenJab" value="{{ old('extra_data.konsep.pen_jab', $konsep['pen_jab'] ?? 'Staf Pelaksana TU') }}" class="form-control">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Penulis Redaksi (Nama)</label>
-                                <input type="text" name="extra_data[konsep][pen_nama]" id="inPenNama" value="{{ old('extra_data.konsep.pen_nama', $konsep['pen_nama'] ?? 'Staf Pelaksana TU') }}" class="form-control">
-                            </div>
-                        </div>
-                        <div class="grid-2">
-                            <div class="form-group">
-                                <label class="form-label">Diketik Oleh</label>
-                                <input type="text" name="extra_data[konsep][ketik_nama]" id="inKetikNama" value="{{ old('extra_data.konsep.ketik_nama', $konsep['ketik_nama'] ?? 'Operator TU') }}" class="form-control">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Ditetapkan (Nama)</label>
-                                <input type="text" name="extra_data[konsep][tetap_nama]" id="inTetapNama" value="{{ old('extra_data.konsep.tetap_nama', $konsep['tetap_nama'] ?? '') }}" class="form-control" placeholder="Otomatis ikut Penanda Tangan jika kosong">
-                            </div>
-                        </div>
-                        <div class="grid-3">
-                            <div class="form-group">
-                                <label class="form-label">Ajukan Lagi Tgl</label>
-                                <input type="date" name="extra_data[konsep][ajukan]" id="inAjukan" value="{{ old('extra_data.konsep.ajukan', $konsep['ajukan'] ?? '') }}" class="form-control">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Deadline</label>
-                                <input type="date" name="extra_data[konsep][deadline]" id="inDeadline" value="{{ old('extra_data.konsep.deadline', $konsep['deadline'] ?? '') }}" class="form-control">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Jumlah Lembar</label>
-                                <input type="number" min="1" name="extra_data[konsep][jumlah_lembar]" id="inJmlLembar" value="{{ old('extra_data.konsep.jumlah_lembar', $konsep['jumlah_lembar'] ?? 1) }}" class="form-control">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Konsep Dikembalikan Kepada</label>
-                            <input type="text" name="extra_data[konsep][kembali]" id="inKembali" value="{{ old('extra_data.konsep.kembali', $konsep['kembali'] ?? 'Subbag Umum & TU') }}" class="form-control">
-                        </div>
-                    </details>
-                </div>
-            </div>
-
-            <!-- CARD 5: SUSUNAN ACARA TABEL (OPSIONAL) -->
-            <div class="form-card">
-                <div class="form-card-head" style="justify-content: space-between;">
-                    <span>5. Lampiran Tabel Susunan Acara (Opsional)</span>
-                    <button type="button" id="btnAddScheduleRow" class="btn-mini">+ Tambah Sesi</button>
-                </div>
-                <div class="form-card-body">
-                    <div id="scheduleRowsContainer">
-                        @foreach($scheduleRows as $sr)
-                            <div class="grid-3 schedule-row" style="margin-bottom:8px;">
-                                <input type="text" class="form-control sc-waktu" value="{{ $sr['waktu'] ?? '' }}" placeholder="Waktu">
-                                <input type="text" class="form-control sc-acara" value="{{ $sr['acara'] ?? '' }}" placeholder="Kegiatan / Acara">
-                                <div style="display:flex; gap:4px;">
-                                    <input type="text" class="form-control sc-pic" value="{{ $sr['pic'] ?? '' }}" placeholder="Narasumber / PIC">
-                                    <button type="button" style="border:1px solid #fca5a5; background:#fff1f2; color:#b91c1c; border-radius:4px; padding:0 8px; cursor:pointer;" onclick="removeScheduleRow(this)">&times;</button>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                    <label style="font-size:12px; color:#475569; display:flex; align-items:center; gap:6px; cursor:pointer;">
-                        <input type="hidden" name="extra_data[show_schedule]" value="0">
-                        <input type="checkbox" name="extra_data[show_schedule]" value="1" id="chkShowSchedule" {{ $showScheduleVal ? 'checked' : '' }}>
-                        Tampilkan tabel susunan acara pada surat
-                    </label>
                 </div>
             </div>
 
@@ -543,10 +1037,10 @@
             <div style="display:flex; align-items:center; gap:8px;">
                 <span style="font-size:12.5px; font-weight:700; color:var(--pu-navy);">Lembar:</span>
                 <select id="selPreviewPage" style="padding:6px 10px; border-radius:6px; border:1px solid #cbd5e1; font-size:12.5px; font-weight:600; background:#f8fafc; color:#1e293b; outline:none; cursor:pointer;">
-                    <option value="asli">Lembar 1: Asli Surat Undangan</option>
-                    <option value="paraf">Lembar 2: Lembar Paraf Koordinasi</option>
-                    <option value="lampiran">Lembar 3: Lampiran I (Daftar Penerima)</option>
-                    <option value="konsep">Lembar 4: Konsep Naskah Dinas</option>
+                    <option value="asli">Surat Asli</option>
+                    <option value="paraf">Paraf Konsep</option>
+                    <option value="lampiran">Lampiran Daftar Undangan</option>
+                    <option value="konsep">Konsep Surat</option>
                 </select>
             </div>
 
@@ -567,7 +1061,7 @@
                             <div class="kop-line-1" id="pvKop1">{{ $kop['kementerian'] }}</div>
                             <div class="kop-line-2" id="pvKop2">{{ $kop['ditjen'] }}</div>
                             <div id="pvKop3Wrap"><div class="kop-line-3">{{ $kop['balai'] }}</div></div>
-                            <div class="kop-line-address" id="pvKopAddr">Jl. A. Sood Nomor 06 Pontianak 78121, Telepon (0561) 734866, Surel bwsk1pontianak@pu.go.id</div>
+                            <div class="kop-line-address" id="pvKopAddr">{{ $kopAlamatVal }}</div>
                         </td>
                     </tr>
                 </table>
@@ -595,22 +1089,13 @@
                 <!-- ISI DINAMIS RENDERED HERE -->
                 <div id="pvDynamicBody"></div>
 
-                <div id="pvScheduleBox" style="margin: 12px 0; display:none;">
-                    <table class="schedule-table-preview" id="pvScheduleTable">
-                        <thead>
-                            <tr><th style="width:140px;">Waktu</th><th>Agenda / Acara</th><th style="width:180px;">Narasumber / PIC</th></tr>
-                        </thead>
-                        <tbody id="pvScheduleTbody"></tbody>
-                    </table>
-                </div>
-
                 <table class="ttd-paraf-grid">
                     <tr>
                         <td style="width: 48%; vertical-align: bottom;">
                             <div id="pvParafHierarkiBox" style="display:none; margin-bottom: 10px;">
                                 <div class="paraf-mini-box">
-                                    <div id="pvParafJab1">Kasubbag Umum &amp; TU</div>
-                                    <div id="pvParafVal1" style="font-weight:700; margin-top:26px;">Iswandi, S.E., S.T.</div>
+                                    <div id="pvParafJab1"></div>
+                                    <div id="pvParafVal1" style="font-weight:700; margin-top:26px;"></div>
                                 </div>
                             </div>
                         </td>
@@ -638,12 +1123,6 @@
                 </div>
                 <div style="text-align: center; font-weight: bold; font-size: 15px; margin: 24px 0 18px 0;">DAFTAR UNDANGAN</div>
                 <ol id="pvLpListContainer" style="line-height: 1.75; font-size: 14px; padding-left: 28px;"></ol>
-                <div style="width: 320px; margin-left: auto; text-align: center; margin-top: 50px; font-size: 14px;">
-                    <div id="pvLpTtdJabatan"></div>
-                    <div style="height: 72px;"></div>
-                    <div id="pvLpTtdNama" style="font-weight: bold;"></div>
-                    <div id="pvLpTtdNip" style="display:none;"></div>
-                </div>
             </div>
 
             <!-- 3. VIEW LEMBAR KONSEP NASKAH DINAS -->
@@ -655,9 +1134,10 @@
                                 <tr>
                                     <td class="kop-logo-cell" style="width:70px;"><img src="{{ asset('images/logo_pu.png') }}" alt="Logo PU" style="width:64px; height:64px; object-fit:contain;"></td>
                                     <td class="kop-text-cell">
-                                        <div style="font-size:14px;">{{ $kop['kementerian'] }}</div>
-                                        <div style="font-size:10.5px;">{{ $kop['ditjen'] }}</div>
-                                        <div style="font-size:8.5px; font-weight:700;">BALAI WILAYAH SUNGAI KALIMANTAN I PONTIANAK</div>
+                                        <div style="font-size:14px;" id="pvKpKop1">{{ $kop['kementerian'] }}</div>
+                                        <div style="font-size:10.5px;" id="pvKpKop2">{{ $kop['ditjen'] }}</div>
+                                        <div id="pvKpKop3Wrap"></div>
+                                        <div style="font-size:7.5px;" id="pvKpKopAddr"></div>
                                     </td>
                                 </tr>
                             </table>
@@ -672,7 +1152,7 @@
                 <table class="konsep-table">
                     <tr>
                         <td rowspan="2" style="width:27%;">Konsep ini setelah suratnya dikirim harap dikembalikan kepada:<br><br><strong id="pvKpKembali"></strong></td>
-                        <td rowspan="2" style="width:23%; text-align:center;">Konfirmasi / paraf / tanggal<br><br><span id="pvKpKonfJab"></span><br><br><strong id="pvKpKonfNama"></strong></td>
+                        <td rowspan="2" style="width:23%; text-align:center;">Konfirmasi/<br>paraf/tanggal<br><br><span id="pvKpKonfJab"></span><br><br><strong id="pvKpKonfNama"></strong></td>
                         <td rowspan="2" style="width:23%; text-align:center;">Pemeriksa Akhir<br>Paraf &amp; Tanggal<br><br><span id="pvKpPemJab"></span><br><br><strong id="pvKpPemNama"></strong></td>
                         <td style="width:27%; height:65px;">Supaya diajukan lagi tanggal<br><br><div style="text-align:center; font-weight:700;" id="pvKpAjukan">…………………………</div></td>
                     </tr>
@@ -683,15 +1163,17 @@
                         <td>Jumlah Lembar : <strong id="pvKpJmlLembar"></strong></td>
                         <td colspan="3" rowspan="4" style="font-size:11px; line-height:1.45;">
                             <div style="display:flex; justify-content:space-between;"><span>Nomor : <strong id="pvKpNomor"></strong></span><span id="pvKpTglMini"></span></div>
+                            <div>Sifat : <span id="pvKpSifat"></span></div>
+                            <div>Lampiran : <span id="pvKpLampiran"></span></div>
                             <div>Hal : <strong id="pvKpHal"></strong></div>
-                            <div style="margin-top:6px;">Yth. <span id="pvKpYthMini"></span></div>
+                            <div style="margin-top:6px;">Yth.<br><span id="pvKpYthMini"></span><br>di-<br><span style="padding-left:14px;" id="pvKpDiMini"></span></div>
                             <div id="pvKpMiniBody" style="margin-top:6px;"></div>
                             <div style="margin-top:14px; text-align:right; padding-right:20px;">
-                                <div id="pvKpTtdJab"></div><div style="height:32px;"></div><strong id="pvKpTtdNama"></strong>
+                                <div id="pvKpTtdJab"></div><div style="height:32px;"></div><strong id="pvKpTtdNama"></strong><div id="pvKpTtdNip" style="display:none;"></div>
                             </div>
                         </td>
                     </tr>
-                    <tr><td>No. Kode Klasifikasi :<br><div style="text-align:center; font-weight:700; margin-top:4px;" id="pvKpKlasifikasi"></div></td></tr>
+                    <tr><td>No.<br>Kode Klasifikasi :<br><div style="text-align:center; margin-top:4px;">NOMOR</div><div style="text-align:center; font-weight:700;" id="pvKpKlasifikasi"></div></td></tr>
                     <tr><td style="height:85px;">Konsep/Penulis Redaksi dari:<br><div style="text-align:center; margin-top:8px;" id="pvKpPenJab"></div><div style="text-align:center; font-weight:700; margin-top:16px;" id="pvKpPenNama"></div></td></tr>
                     <tr><td style="height:85px;">Diketik Oleh :<br><br><div style="text-align:center; font-weight:700;" id="pvKpKetikNama"></div></td></tr>
                 </table>
@@ -709,19 +1191,114 @@
 
 <script>
     const KOP_PRESETS = @json($kopPresets);
+    const PEGAWAI_ITEMS = @json($pickerItems);
     const KOP_SIGNERS = {
-        balai:       { jab: 'Plt. Kepala Balai Wilayah Sungai Kalimantan I Pontianak', nama: 'Donni Saputra, S.T, M.Si., M.T.', nip: '197611012005021003' },
+        balai:       { jab: 'Plt. Kepala Balai Wilayah Sungai Kalimantan I Pontianak', nama: 'Donni Saputra', nip: '197611012005021003' },
         satker_op:   { jab: 'Kepala Satuan Kerja Operasi dan Pemeliharaan SDA Kalimantan I', nama: 'Kepala Satker O&P SDA Kalimantan I', nip: '' },
         satker_pjpa: { jab: 'Kepala Satuan Kerja SNVT Pelaksanaan Jaringan Pemanfaatan Air Kalimantan I', nama: 'Kepala Satker SNVT PJPA Kalimantan I', nip: '' },
         satker_pjsa: { jab: 'Kepala Satuan Kerja SNVT Pelaksanaan Jaringan Sumber Air Kalimantan I', nama: 'Kepala Satker SNVT PJSA Kalimantan I', nip: '' },
-        satker_bws:  { jab: 'Kepala Satuan Kerja Balai Wilayah Sungai Kalimantan I Pontianak', nama: 'Donni Saputra, S.T, M.Si., M.T.', nip: '197611012005021003' }
+        satker_bws:  { jab: 'Kepala Satuan Kerja Balai Wilayah Sungai Kalimantan I Pontianak', nama: 'Donni Saputra', nip: '197611012005021003' }
     };
 
     let bodySections = @json($bodySections);
-
     const el = id => document.getElementById(id);
+
     function escHtml(s) {
         return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function getYthMode() {
+        const chk = document.querySelector('input[name="extra_data[yth_mode]"]:checked');
+        return chk ? chk.value : 'terlampir';
+    }
+
+    /* ---------- SEARCHABLE PEGAWAI PICKER ---------- */
+    const PICKER_CFG = {
+        kembali: { placeholder: 'Cari dari database... (opsional)', hasCaret: false, onPick: it => { el('inKembali').value = it.jab; } },
+        konf:    { placeholder: 'Cari nama / jabatan...', hasCaret: true, onPick: it => { el('inKonfJab').value = it.jab; el('inKonfNama').value = it.nama; } },
+        pem:     { placeholder: 'Cari nama / jabatan...', hasCaret: false, onPick: it => { el('inPemJab').value = it.jab; el('inPemNama').value = it.nama; } },
+        tetap:   { placeholder: 'Cari nama...', hasCaret: false, onPick: it => { el('inTetapNama').value = it.nama; } },
+        pen:     { placeholder: 'Cari nama / jabatan...', hasCaret: false, onPick: it => { el('inPenJab').value = it.jab; el('inPenNama').value = it.nama; } },
+        ketik:   { placeholder: 'Cari nama...', hasCaret: false, onPick: it => { el('inKetikNama').value = it.nama; } },
+        yth:     { placeholder: 'Tambah jabatan dari database...', hasCaret: false, onPick: it => { addPenerimaRow(it.jab); } },
+        ttd:     { placeholder: 'Cari nama / jabatan...', hasCaret: false, onPick: it => { el('inTtdJabatan').value = it.jab; el('inTtdNama').value = it.nama; el('inTtdNip').value = it.nip; } }
+    };
+
+    const SEARCH_SVG = '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>';
+
+    function initPickers() {
+        document.querySelectorAll('.picker-wrap').forEach(wrap => {
+            const key = wrap.dataset.target;
+            const cfg = PICKER_CFG[key];
+            if (!cfg) return;
+
+            wrap.innerHTML = `
+                <div class="picker-input-row">
+                    <span class="picker-icon">${SEARCH_SVG}</span>
+                    <input type="text" class="picker-input" placeholder="${escHtml(cfg.placeholder)}" autocomplete="off">
+                    ${cfg.hasCaret ? '<span class="picker-caret">&#9660;</span>' : ''}
+                </div>
+                <div class="picker-menu"></div>
+            `;
+
+            const input = wrap.querySelector('.picker-input');
+            const menu = wrap.querySelector('.picker-menu');
+
+            function renderMenu(q) {
+                const needle = (q || '').trim().toLowerCase();
+                const list = needle
+                    ? PEGAWAI_ITEMS.filter(it =>
+                        it.nama.toLowerCase().includes(needle) ||
+                        it.jab.toLowerCase().includes(needle) ||
+                        it.unit.toLowerCase().includes(needle) ||
+                        it.nip.includes(needle)
+                    )
+                    : PEGAWAI_ITEMS;
+
+                const slice = list.slice(0, 40);
+                if (!slice.length) {
+                    menu.innerHTML = '<div class="picker-empty">Tidak ditemukan pegawai/jabatan yang cocok.</div>';
+                    return;
+                }
+                menu.innerHTML = slice.map((it, idx) => {
+                    const origIdx = PEGAWAI_ITEMS.indexOf(it);
+                    return `
+                        <div class="picker-opt" data-idx="${origIdx}">
+                            <div class="picker-opt-name">${escHtml(it.nama)}</div>
+                            <div class="picker-opt-jab">${it.rangkap ? '<span class="picker-opt-badge">Rangkap</span>' : ''}${escHtml(it.jab)}</div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            input.addEventListener('focus', () => {
+                document.querySelectorAll('.picker-menu.open').forEach(m => { if (m !== menu) m.classList.remove('open'); });
+                renderMenu(input.value);
+                menu.classList.add('open');
+            });
+            input.addEventListener('input', () => {
+                renderMenu(input.value);
+                menu.classList.add('open');
+            });
+            menu.addEventListener('mousedown', e => {
+                const opt = e.target.closest('.picker-opt');
+                if (!opt) return;
+                e.preventDefault();
+                const item = PEGAWAI_ITEMS[+opt.dataset.idx];
+                if (item) {
+                    cfg.onPick(item);
+                    input.value = '';
+                    menu.classList.remove('open');
+                    syncAllFields();
+                }
+            });
+        });
+
+        document.addEventListener('click', e => {
+            if (!e.target.closest('.picker-wrap')) {
+                document.querySelectorAll('.picker-menu.open').forEach(m => m.classList.remove('open'));
+            }
+        });
     }
 
     /* ---------- DYNAMIC BODY BUILDER ---------- */
@@ -734,31 +1311,32 @@
                 const itemsHtml = (sec.items || []).map((it, k) => `
                     <div class="rin-row" data-r="${k}">
                         <input type="text" class="form-control" data-rf="label" value="${escHtml(it.label)}" placeholder="Label">
-                        <textarea class="form-control" data-rf="value" rows="${Math.max(1, String(it.value||'').split('\n').length)}" placeholder="Isi">${escHtml(it.value)}</textarea>
-                        <button type="button" class="sec-head-btn del" data-rdel title="Hapus">&times;</button>
+                        <textarea class="form-control" data-rf="value" rows="${Math.max(1, String(it.value || '').split('\n').length)}" placeholder="Isi (Enter = baris lanjutan)">${escHtml(it.value)}</textarea>
+                        <button type="button" class="btn-sq del" data-rdel title="Hapus baris">&times;</button>
                     </div>
                 `).join('');
-                inner = itemsHtml + `<button type="button" class="btn-mini" data-radd>+ Baris Poin</button>`;
+                inner = itemsHtml + `<button type="button" class="btn-v5" data-radd style="margin-top:2px;">+ Baris poin</button>`;
             } else {
                 inner = `
-                    <textarea class="form-control" data-sf="text" rows="3" placeholder="Tulis isi paragraf...">${escHtml(sec.text)}</textarea>
-                    <label style="font-size:12px; display:flex; align-items:center; gap:6px; margin-top:6px; cursor:pointer;">
-                        <input type="checkbox" data-sf="indent" ${sec.indent !== false ? 'checked' : ''}> Baris pertama menjorok (indent)
+                    <textarea class="form-control" data-sf="text" rows="3" placeholder="Tulis paragraf... (baris kosong = paragraf baru)">${escHtml(sec.text)}</textarea>
+                    <label class="check-row" style="margin-top:8px;">
+                        <input type="checkbox" data-sf="indent" ${sec.indent !== false ? 'checked' : ''}>
+                        <span>Baris pertama menjorok (seperti paragraf pembuka)</span>
                     </label>
                 `;
             }
             return `
                 <div class="sec-box" data-s="${i}">
                     <div class="sec-head">
-                        <span style="font-weight:700; font-size:12px; color:#334155;">Bagian ${i + 1}</span>
+                        <span style="font-weight:700; font-size:12.5px; color:#334155;">Bagian ${i + 1}</span>
                         <select data-sf="type">
                             <option value="paragraph" ${sec.type !== 'points' ? 'selected' : ''}>Paragraf</option>
                             <option value="points" ${sec.type === 'points' ? 'selected' : ''}>Poin (Label : Isi)</option>
                         </select>
                         <span style="flex:1;"></span>
-                        <button type="button" class="sec-head-btn" data-sop="up" ${i === 0 ? 'disabled' : ''}>&#9650;</button>
-                        <button type="button" class="sec-head-btn" data-sop="down" ${i === n - 1 ? 'disabled' : ''}>&#9660;</button>
-                        <button type="button" class="sec-head-btn del" data-sop="del">&times;</button>
+                        <button type="button" class="btn-sq" data-sop="up" ${i === 0 ? 'disabled' : ''} title="Naik">&#9650;</button>
+                        <button type="button" class="btn-sq" data-sop="down" ${i === n - 1 ? 'disabled' : ''} title="Turun">&#9660;</button>
+                        <button type="button" class="btn-sq del" data-sop="del" title="Hapus bagian">&times;</button>
                     </div>
                     <div class="sec-body">${inner}</div>
                 </div>
@@ -770,7 +1348,6 @@
     function syncDynamicBodyPreview() {
         el('inBodyJson').value = JSON.stringify(bodySections);
 
-        // Sinkronkan kolom tabel DB dari bagian poin pertama agar Dashboard & Arsip tetap terisi
         const ptSec = bodySections.find(s => s.type === 'points');
         if (ptSec && Array.isArray(ptSec.items)) {
             ptSec.items.forEach(it => {
@@ -791,7 +1368,7 @@
                     if ((it.label || '').trim() || (it.value || '').trim()) {
                         const valHtml = escHtml(it.value).replace(/\n/g, '<br>');
                         rows += `<tr><td style="width:140px;">${escHtml(it.label)}</td><td style="width:14px;">:</td><td>${valHtml}</td></tr>`;
-                        miniHtml += `<div>${escHtml(it.label)} : ${escHtml(it.value)}</div>`;
+                        miniHtml += `<div>${escHtml(it.label)} : ${valHtml}</div>`;
                     }
                 });
                 if (rows) html += `<table class="pv-points-table">${rows}</table>`;
@@ -847,82 +1424,171 @@
         renderBodyBuilder();
     });
 
-    /* ---------- PENERIMA LIST & QUICK PICKER ---------- */
-    function addPenerimaRow(val = '') {
-        const div = document.createElement('div');
-        div.className = 'form-group';
-        div.style.cssText = 'display:flex; gap:5px; margin-bottom:6px;';
-        div.innerHTML = `
-            <input type="text" name="penerimas[]" class="form-control in-penerima" value="${escHtml(val)}" placeholder="Nama instansi / jabatan penerima...">
-            <button type="button" class="btn-mini" onclick="movePenerima(this, -1)" title="Naik">&#9650;</button>
-            <button type="button" class="btn-mini" onclick="movePenerima(this, 1)" title="Turun">&#9660;</button>
-            <button type="button" style="border:1px solid #fca5a5; background:#fff1f2; color:#b91c1c; border-radius:6px; padding:0 9px; cursor:pointer;" onclick="this.parentElement.remove(); syncPenerimaList();">&times;</button>
+    /* ---------- PENERIMA LIST (DRAG, ALT+UP/DOWN, BULK TEXT) ---------- */
+    let draggedItem = null;
+
+    function createPenerimaElement(val = '') {
+        const row = document.createElement('div');
+        row.className = 'penerima-item';
+        row.draggable = true;
+        row.innerHTML = `
+            <span class="drag-handle" title="Seret untuk urutkan">&#8942;&#8942;</span>
+            <input type="text" name="penerimas[]" class="in-penerima" value="${escHtml(val)}" placeholder="Nama / jabatan tujuan...">
+            <button type="button" class="btn-sq" data-pmove="-1" title="Naik">&#9650;</button>
+            <button type="button" class="btn-sq" data-pmove="1" title="Turun">&#9660;</button>
+            <button type="button" class="btn-sq del" data-pdel title="Hapus">&times;</button>
         `;
-        el('penerimaContainer').appendChild(div);
-        div.querySelector('input').addEventListener('input', syncPenerimaList);
+        return row;
+    }
+
+    function addPenerimaRow(val = '') {
+        if (!String(val).trim()) return;
+        el('penerimaContainer').appendChild(createPenerimaElement(val.trim()));
         syncPenerimaList();
     }
 
-    window.movePenerima = function(btn, dir) {
-        const row = btn.parentElement;
-        const parent = row.parentElement;
-        if (dir < 0 && row.previousElementSibling) parent.insertBefore(row, row.previousElementSibling);
-        else if (dir > 0 && row.nextElementSibling) parent.insertBefore(row.nextElementSibling, row);
-        syncPenerimaList();
-    };
+    function getPenerimaValues() {
+        return Array.from(document.querySelectorAll('.in-penerima')).map(i => i.value.trim()).filter(Boolean);
+    }
 
-    el('btnAddPenerima').addEventListener('click', () => addPenerimaRow(''));
-    el('btnSortPenerima').addEventListener('click', () => {
-        const vals = Array.from(document.querySelectorAll('.in-penerima')).map(i => i.value.trim()).filter(Boolean);
-        vals.sort((a, b) => a.localeCompare(b, 'id', {sensitivity:'base', numeric:true}));
-        el('penerimaContainer').innerHTML = '';
-        vals.forEach(v => addPenerimaRow(v));
+    function setPenerimaList(vals) {
+        const c = el('penerimaContainer');
+        c.innerHTML = '';
+        vals.forEach(v => {
+            if (v.trim()) c.appendChild(createPenerimaElement(v.trim()));
+        });
+        syncPenerimaList();
+    }
+
+    const penerimaContainer = el('penerimaContainer');
+    penerimaContainer.addEventListener('input', syncPenerimaList);
+    penerimaContainer.addEventListener('click', e => {
+        const btn = e.target.closest('button'); if (!btn) return;
+        const row = btn.closest('.penerima-item'); if (!row) return;
+        if (btn.hasAttribute('data-pdel')) {
+            row.remove();
+            syncPenerimaList();
+        } else if (btn.hasAttribute('data-pmove')) {
+            const dir = +btn.dataset.pmove;
+            if (dir < 0 && row.previousElementSibling) penerimaContainer.insertBefore(row, row.previousElementSibling);
+            else if (dir > 0 && row.nextElementSibling) penerimaContainer.insertBefore(row.nextElementSibling, row);
+            syncPenerimaList();
+        }
     });
-    el('btnRevPenerima').addEventListener('click', () => {
-        const vals = Array.from(document.querySelectorAll('.in-penerima')).map(i => i.value.trim()).filter(Boolean).reverse();
-        el('penerimaContainer').innerHTML = '';
-        vals.forEach(v => addPenerimaRow(v));
+    penerimaContainer.addEventListener('keydown', e => {
+        if (!e.altKey || (e.key !== 'ArrowUp' && e.key !== 'ArrowDown')) return;
+        const inp = e.target.closest('.in-penerima'); if (!inp) return;
+        e.preventDefault();
+        const row = inp.closest('.penerima-item');
+        if (e.key === 'ArrowUp' && row.previousElementSibling) penerimaContainer.insertBefore(row, row.previousElementSibling);
+        else if (e.key === 'ArrowDown' && row.nextElementSibling) penerimaContainer.insertBefore(row.nextElementSibling, row);
+        inp.focus();
+        syncPenerimaList();
     });
-    el('pickerAddPenerima').addEventListener('change', function() {
-        const opt = Array.from(document.querySelectorAll('#dl-pegawai-roles option')).find(o => o.value === this.value);
-        if (opt) {
-            addPenerimaRow(opt.getAttribute('data-jab') || this.value);
-            this.value = '';
+    penerimaContainer.addEventListener('dragstart', e => {
+        draggedItem = e.target.closest('.penerima-item');
+        if (draggedItem) draggedItem.classList.add('dragging');
+    });
+    penerimaContainer.addEventListener('dragend', () => {
+        if (draggedItem) draggedItem.classList.remove('dragging');
+        draggedItem = null;
+        syncPenerimaList();
+    });
+    penerimaContainer.addEventListener('dragover', e => {
+        e.preventDefault();
+        if (!draggedItem) return;
+        const target = e.target.closest('.penerima-item');
+        if (target && target !== draggedItem) {
+            const rect = target.getBoundingClientRect();
+            const after = (e.clientY - rect.top) > rect.height / 2;
+            penerimaContainer.insertBefore(draggedItem, after ? target.nextElementSibling : target);
         }
     });
 
+    el('btnAddPenerima').addEventListener('click', () => {
+        const v = el('inNewPenerima').value.trim();
+        if (v) { addPenerimaRow(v); el('inNewPenerima').value = ''; }
+    });
+    el('inNewPenerima').addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            el('btnAddPenerima').click();
+        }
+    });
+    el('btnSortPenerima').addEventListener('click', () => {
+        const vals = getPenerimaValues().sort((a, b) => a.localeCompare(b, 'id', { sensitivity: 'base', numeric: true }));
+        setPenerimaList(vals);
+    });
+    el('btnRevPenerima').addEventListener('click', () => {
+        setPenerimaList(getPenerimaValues().reverse());
+    });
+    el('btnBulkTextPenerima').addEventListener('click', () => {
+        el('bulkPenerimaTextarea').value = getPenerimaValues().join('\n');
+        el('bulkTextBox').style.display = el('bulkTextBox').style.display === 'none' ? 'block' : 'none';
+    });
+    el('btnApplyBulkPenerima').addEventListener('click', () => {
+        const lines = el('bulkPenerimaTextarea').value.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+        setPenerimaList(lines);
+        el('bulkTextBox').style.display = 'none';
+    });
+    el('btnCancelBulkPenerima').addEventListener('click', () => {
+        el('bulkTextBox').style.display = 'none';
+    });
+
     function syncPenerimaList() {
-        const inputs = document.querySelectorAll('.in-penerima');
+        const rows = penerimaContainer.querySelectorAll('.penerima-item');
+        el('penerimaEmptyMsg').style.display = rows.length ? 'none' : 'block';
+
+        const isTerlampir = getYthMode() !== 'langsung';
+        el('ythSubLabel').innerText = isTerlampir
+            ? 'Daftar undangan (dicetak di halaman lampiran — satu baris satu tujuan)'
+            : 'Daftar tujuan (dicetak langsung di bawah Yth. — satu baris satu tujuan)';
+
         const pvList = el('pvListPenerima');
         const pvLpList = el('pvLpListContainer');
         const terlampirText = el('pvTerlampirText');
-        const isTerlampir = el('inYthMode').value === 'terlampir';
-
         pvList.innerHTML = '';
         pvLpList.innerHTML = '';
-        const names = [];
-        inputs.forEach(inp => {
-            if (inp.value.trim()) {
-                names.push(inp.value.trim());
-                const li = document.createElement('li'); li.innerText = inp.value.trim(); pvList.appendChild(li);
-                const li2 = document.createElement('li'); li2.innerText = inp.value.trim(); pvLpList.appendChild(li2);
-            }
+
+        const names = getPenerimaValues();
+        names.forEach(n => {
+            const li = document.createElement('li'); li.innerText = n; pvList.appendChild(li);
+            const li2 = document.createElement('li'); li2.innerText = n; pvLpList.appendChild(li2);
         });
+
         pvList.style.display = isTerlampir ? 'none' : 'block';
         terlampirText.style.display = isTerlampir ? 'block' : 'none';
-        el('pvKpYthMini').innerText = isTerlampir ? '(Daftar Terlampir)' : (names[0] || '');
+        el('pvKpYthMini').innerText = isTerlampir ? '(Daftar Terlampir)' : (names.join(', ') || '');
     }
 
     /* ---------- KOP, META, PARAF, KONSEP ---------- */
-    function updateKopPreview() {
+    function getEffectiveKop() {
         const preset = KOP_PRESETS[el('inKopType').value] || KOP_PRESETS.balai;
-        el('pvKop1').innerText = preset.kementerian;
-        el('pvKop2').innerText = preset.ditjen;
+        const lines3 = (el('inKopLines3').value || '').split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+        const addr = el('inKopAlamat').value.trim() || preset.alamat;
+        return {
+            kementerian: preset.kementerian,
+            ditjen: preset.ditjen,
+            lines3: lines3.length ? lines3 : preset.lines3,
+            alamat: addr
+        };
+    }
+
+    function updateKopPreview() {
+        const kop = getEffectiveKop();
+        el('pvKop1').innerText = kop.kementerian;
+        el('pvKop2').innerText = kop.ditjen;
+        el('pvKpKop1').innerText = kop.kementerian;
+        el('pvKpKop2').innerText = kop.ditjen;
+
         const wrap = el('pvKop3Wrap'); wrap.innerHTML = '';
-        (preset.lines3 || []).forEach(line => {
+        const kpWrap = el('pvKpKop3Wrap'); kpWrap.innerHTML = '';
+        kop.lines3.forEach(line => {
             const d = document.createElement('div'); d.className = 'kop-line-3'; d.innerText = line; wrap.appendChild(d);
+            const d2 = document.createElement('div'); d2.style.cssText = 'font-size:8px; font-weight:700;'; d2.innerText = line; kpWrap.appendChild(d2);
         });
-        el('pvKopAddr').innerText = preset.alamat;
+        el('pvKopAddr').innerText = kop.alamat;
+        el('pvKpKopAddr').innerText = kop.alamat;
     }
 
     function syncAllFields() {
@@ -931,10 +1597,18 @@
         el('pvKpNomor').innerText = el('inNomor').value;
         el('pvKpKlasifikasi').innerText = el('inNomor').value;
         el('pvSifat').innerText = el('inSifat').value;
-        el('pvLampiran').innerText = el('inLampiran').value;
+        el('pvKpSifat').innerText = el('inSifat').value;
+
+        const lampNum = parseInt(el('inLampiran').value, 10) || 0;
+        const lampText = lampNum > 0 ? (lampNum + ' Lembar') : '-';
+        el('pvLampiran').innerText = lampText;
+        el('pvKpLampiran').innerText = lampText;
+
         el('pvHal').innerText = el('inHal').value;
         el('pvKpHal').innerText = el('inHal').value;
-        el('pvDiTempat').innerText = el('inDiTempat').value || 'Tempat';
+        const diTempat = el('inDiTempat').value || 'Tempat';
+        el('pvDiTempat').innerText = diTempat;
+        el('pvKpDiMini').innerText = diTempat;
 
         const val = el('inTanggalSurat').value;
         const p = val ? val.split('-') : [];
@@ -951,22 +1625,26 @@
 
         const showNip = el('chkShowNip').checked;
         el('pvTtdJabatan').innerText = el('inTtdJabatan').value;
-        el('pvLpJabHeader').innerText = el('inTtdJabatan').value;
-        el('pvLpTtdJabatan').innerText = el('inTtdJabatan').value;
+        el('pvLpJabHeader').innerText = DocGen.noComma(el('inTtdJabatan').value);
         el('pvKpTtdJab').innerText = el('inTtdJabatan').value;
         el('pvTtdNama').innerText = el('inTtdNama').value;
-        el('pvLpTtdNama').innerText = el('inTtdNama').value;
         el('pvKpTtdNama').innerText = el('inTtdNama').value;
         const nipVal = el('inTtdNip').value ? 'NIP. ' + el('inTtdNip').value : '';
         el('pvTtdNip').innerText = nipVal;
-        el('pvLpTtdNip').innerText = nipVal;
+        el('pvKpTtdNip').innerText = nipVal;
         el('pvTtdNip').style.display = (showNip && nipVal) ? 'block' : 'none';
-        el('pvLpTtdNip').style.display = (showNip && nipVal) ? 'block' : 'none';
+        el('pvKpTtdNip').style.display = (showNip && nipVal) ? 'block' : 'none';
 
-        el('pvParafJab1').innerText = el('inKonfJabParaf').value.trim() || el('inKonfJab').value || 'Kasubbag Umum & TU';
-        el('pvParafVal1').innerText = el('inKonfNama').value || '';
-        el('pvKpKonfJab').innerText = el('inKonfJab').value || '';
-        el('pvKpKonfNama').innerText = el('inKonfNama').value || '';
+        const konfJab = el('inKonfJab').value.trim();
+        const konfNama = el('inKonfNama').value.trim();
+        el('pvParafJab1').innerText = el('inKonfJabParaf').value.trim() || konfJab;
+        el('pvParafVal1').innerText = konfNama;
+        el('parafBannerStatus').innerText = (konfNama || konfJab)
+            ? [konfNama, konfJab].filter(Boolean).join(' — ')
+            : '(belum diisi)';
+
+        el('pvKpKonfJab').innerText = konfJab;
+        el('pvKpKonfNama').innerText = konfNama;
         el('pvKpPemJab').innerText = el('inPemJab').value || '';
         el('pvKpPemNama').innerText = el('inPemNama').value || '';
         el('pvKpPenJab').innerText = el('inPenJab').value || '';
@@ -975,9 +1653,13 @@
         el('pvKpKembali').innerText = el('inKembali').value || '';
         el('pvKpDeadline').innerText = el('inDeadline').value ? DocGen.fmtTgl(el('inDeadline').value) : '-';
         el('pvKpAjukan').innerText = el('inAjukan').value ? DocGen.fmtTgl(el('inAjukan').value) : '…………………………';
-        const jml = parseInt(el('inJmlLembar').value || '1', 10);
-        el('pvKpJmlLembar').innerText = jml + ' (' + DocGen.terbilang(jml) + ')';
-        el('pvKpTetapNama').innerText = el('inTetapNama').value.trim() || el('inTtdNama').value;
+
+        const jml = parseInt(el('inJmlLembar').value || '0', 10);
+        const jmlStr = jml > 0 ? (jml + ' (' + DocGen.terbilang(jml) + ')') : '';
+        el('pvKpJmlLembar').innerText = jmlStr;
+        el('hintJmlLembar').innerText = jmlStr ? ('→ "' + jmlStr + '"') : '→ (kosong)';
+
+        el('pvKpTetapNama').innerText = el('inTetapNama').value.trim() || '';
 
         const tbLines = (el('inTembusan').value || '').split('\n').map(s => s.trim()).filter(Boolean);
         el('pvTembusanBox').style.display = tbLines.length ? 'block' : 'none';
@@ -988,6 +1670,10 @@
     }
 
     el('inKopType').addEventListener('change', function() {
+        const preset = KOP_PRESETS[this.value] || KOP_PRESETS.balai;
+        el('inKopLines3').value = (preset.lines3 || []).join('\n');
+        el('inKopAlamat').value = preset.alamat || '';
+
         const curJab = el('inTtdJabatan').value.trim();
         const isPreset = Object.values(KOP_SIGNERS).some(s => s.jab === curJab);
         if (isPreset || !curJab) {
@@ -999,35 +1685,12 @@
         syncAllFields();
     });
 
-    function syncSchedulePreview() {
-        const rows = document.querySelectorAll('.schedule-row');
-        const tbody = el('pvScheduleTbody');
-        tbody.innerHTML = '';
-        const jsonArr = [];
-        let hasData = false;
-        rows.forEach(r => {
-            const w = r.querySelector('.sc-waktu').value.trim();
-            const a = r.querySelector('.sc-acara').value.trim();
-            const p = r.querySelector('.sc-pic').value.trim();
-            if (w || a || p) {
-                hasData = true;
-                jsonArr.push({ waktu: w, acara: a, pic: p });
-                const tr = document.createElement('tr');
-                tr.innerHTML = `<td style="text-align:center;">${escHtml(w)}</td><td>${escHtml(a)}</td><td>${escHtml(p)}</td>`;
-                tbody.appendChild(tr);
-            }
-        });
-        el('inScheduleJson').value = JSON.stringify(jsonArr);
-        el('pvScheduleBox').style.display = (el('chkShowSchedule').checked && hasData) ? 'block' : 'none';
-    }
-
-    window.removeScheduleRow = function(btn) { btn.closest('.schedule-row').remove(); syncSchedulePreview(); };
-    el('btnAddScheduleRow').addEventListener('click', function() {
-        const div = document.createElement('div');
-        div.className = 'grid-3 schedule-row'; div.style.marginBottom = '8px';
-        div.innerHTML = `<input type="text" class="form-control sc-waktu" placeholder="Waktu"><input type="text" class="form-control sc-acara" placeholder="Kegiatan / Acara"><div style="display:flex; gap:4px;"><input type="text" class="form-control sc-pic" placeholder="Narasumber / PIC"><button type="button" style="border:1px solid #fca5a5; background:#fff1f2; color:#b91c1c; border-radius:4px; padding:0 8px; cursor:pointer;" onclick="removeScheduleRow(this)">&times;</button></div>`;
-        el('scheduleRowsContainer').appendChild(div);
-        div.querySelectorAll('input').forEach(inp => inp.addEventListener('input', syncSchedulePreview));
+    el('btnResetKop').addEventListener('click', () => {
+        if (!confirm('Kembalikan teks kop ke bawaan?')) return;
+        const preset = KOP_PRESETS[el('inKopType').value] || KOP_PRESETS.balai;
+        el('inKopLines3').value = (preset.lines3 || []).join('\n');
+        el('inKopAlamat').value = preset.alamat || '';
+        updateKopPreview();
     });
 
     el('selPreviewPage').addEventListener('change', function() {
@@ -1038,25 +1701,20 @@
         el('pvParafHierarkiBox').style.display = (val === 'paraf') ? 'block' : 'none';
     });
 
-    el('selectPegawaiDb').addEventListener('change', function() {
-        const opt = this.options[this.selectedIndex];
-        if (opt.value) {
-            el('inTtdNama').value = opt.getAttribute('data-nama') || '';
-            el('inTtdNip').value = opt.getAttribute('data-nip') || '';
-            el('inTtdJabatan').value = opt.getAttribute('data-jabatan') || '';
-            syncAllFields();
-        }
-    });
-
-    ['inYthMode', 'inGapYth', 'inUrutan', 'chkShowNip'].forEach(id => el(id).addEventListener('change', syncAllFields));
-    ['inNomor','inSifat','inLampiran','inHal','inKota','inTanggalSurat','inDiTempat','inTembusan',
+    document.querySelectorAll('input[name="extra_data[yth_mode]"]').forEach(r => r.addEventListener('change', syncPenerimaList));
+    ['inSifat', 'inGapYth', 'inUrutan', 'chkShowNip'].forEach(id => el(id).addEventListener('change', syncAllFields));
+    ['inKopLines3','inKopAlamat','inNomor','inLampiran','inHal','inKota','inTanggalSurat','inDiTempat','inTembusan',
      'inTtdNama','inTtdNip','inTtdJabatan','inKonfJab','inKonfNama','inKonfJabParaf','inPemJab','inPemNama',
      'inPenJab','inPenNama','inKetikNama','inTetapNama','inAjukan','inDeadline','inJmlLembar','inKembali']
         .forEach(id => el(id).addEventListener('input', syncAllFields));
-    document.querySelectorAll('.in-penerima').forEach(inp => inp.addEventListener('input', syncPenerimaList));
-    document.querySelectorAll('.schedule-row input').forEach(inp => inp.addEventListener('input', syncSchedulePreview));
-    el('chkShowSchedule').addEventListener('change', syncSchedulePreview);
-    el('formSurat').addEventListener('submit', () => { syncDynamicBodyPreview(); syncSchedulePreview(); });
+
+    el('formSurat').addEventListener('submit', () => {
+        if (el('bulkTextBox').style.display !== 'none') {
+            const lines = el('bulkPenerimaTextarea').value.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+            setPenerimaList(lines);
+        }
+        syncDynamicBodyPreview();
+    });
 
     function printActiveSheet() { document.body.classList.remove('print-all-sheets'); window.print(); }
     function printAllSheets() {
@@ -1065,16 +1723,17 @@
         setTimeout(() => document.body.classList.remove('print-all-sheets'), 500);
     }
 
+    initPickers();
     renderBodyBuilder();
     syncAllFields();
-    syncSchedulePreview();
 
     el('btnExportDocx').addEventListener('click', function() {
         const btn = this, orig = btn.innerHTML;
         btn.innerHTML = 'Membuat .docx...'; btn.disabled = true;
 
-        const penerimas = Array.from(document.querySelectorAll('.in-penerima')).map(i => i.value.trim()).filter(Boolean);
-        const preset = KOP_PRESETS[el('inKopType').value] || KOP_PRESETS.balai;
+        const penerimas = getPenerimaValues();
+        const kopType = el('inKopType').value;
+        const effKop = getEffectiveKop();
 
         const docData = {
             mode: 'undangan',
@@ -1084,7 +1743,7 @@
             hal: el('inHal').value,
             kota: el('inKota').value,
             tanggal: el('inTanggalSurat').value,
-            ythMode: el('inYthMode').value,
+            ythMode: getYthMode(),
             ythText: penerimas.join('\n'),
             daftarUndangan: penerimas.join('\n'),
             diTempat: el('inDiTempat').value || 'Tempat',
@@ -1108,13 +1767,13 @@
             ajukan: el('inAjukan').value,
             deadline: el('inDeadline').value,
             jumlahLembar: el('inJmlLembar').value,
-            tetap_nama: el('inTetapNama').value.trim() || el('inTtdNama').value,
+            tetap_nama: el('inTetapNama').value.trim(),
             body: bodySections,
             pages: {
                 konsep: el('pgKonsep').checked,
                 paraf: el('pgParaf').checked,
                 asli: el('pgAsli').checked,
-                lampiran: el('pgLampiran').checked && el('inYthMode').value === 'terlampir'
+                lampiran: el('pgLampiran').checked && getYthMode() !== 'langsung'
             },
             margin: {
                 top: +el('inMcTop').value || 2.5,
@@ -1128,7 +1787,13 @@
             }
         };
 
-        const kopSpec = { line1: preset.kementerian, line2: preset.ditjen, line3: preset.lines3, line4: preset.alamat };
+        const kopSpec = {
+            line1: effKop.kementerian,
+            line2: effKop.ditjen,
+            line3: effKop.lines3,
+            line4: effKop.alamat,
+            logoTw: Math.round((kopType === 'balai' ? 2.25 : 2.75) * 567)
+        };
         DocGen.build(docData, {
             kop: kopSpec, logo: { b64: typeof LOGO !== 'undefined' ? LOGO : '' },
             arialW: typeof ARIALW !== 'undefined' ? ARIALW : null, JSZip: JSZip, outType: 'blob'
