@@ -96,42 +96,44 @@ class AuthController extends Controller
     }
 
     /**
-     * Kirim tautan atur ulang kata sandi
+     * Kirim tautan atur ulang kata sandi (menerima email atau username)
      */
     public function sendResetLink(Request $request)
     {
         $request->validate([
-            'email' => 'required|email',
+            'login' => 'required|string',
         ], [
-            'email.required' => 'Alamat email wajib diisi.',
-            'email.email'    => 'Format alamat email tidak valid.',
+            'login.required' => 'Email atau Username wajib diisi.',
         ]);
 
-        $this->assertRecaptchaV3($request, 'forgot_password', 'email');
+        $this->assertRecaptchaV3($request, 'forgot_password', 'login');
 
         $throttleKey = 'pwreset|' . $request->ip();
         if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
             $seconds = RateLimiter::availableIn($throttleKey);
             throw ValidationException::withMessages([
-                'email' => "Terlalu banyak permintaan reset. Coba lagi dalam {$seconds} detik.",
+                'login' => "Terlalu banyak permintaan reset. Coba lagi dalam {$seconds} detik.",
             ]);
         }
         RateLimiter::hit($throttleKey, 60);
 
-        $user = null;
-        Password::sendResetLink($request->only('email'), function (User $matchedUser, string $token) use (&$user) {
-            $user = $matchedUser;
-            $matchedUser->sendPasswordResetNotification($token);
+        $loginInput = mb_strtolower(trim((string) $request->input('login')));
+        $matched    = User::whereRaw('LOWER(email) = ? OR LOWER(name) = ?', [$loginInput, $loginInput])->first();
 
-            if (app()->environment('local') && config('app.debug') && config('mail.default') === 'log') {
-                session()->flash('dev_reset_url', route('password.reset', [
-                    'token' => $token,
-                    'email' => $matchedUser->email,
-                ]));
-            }
-        });
+        if ($matched) {
+            Password::sendResetLink(['email' => $matched->email], function (User $user, string $token) {
+                $user->sendPasswordResetNotification($token);
 
-        return back()->with('status', 'Jika alamat email terdaftar di sistem, tautan atur ulang kata sandi telah dikirim ke email Anda.');
+                if (app()->environment('local') && config('app.debug') && config('mail.default') === 'log') {
+                    session()->flash('dev_reset_url', route('password.reset', [
+                        'token' => $token,
+                        'email' => $user->email,
+                    ]));
+                }
+            });
+        }
+
+        return back()->with('status', 'Jika email atau username terdaftar di sistem, tautan atur ulang kata sandi telah dikirim.');
     }
 
     /**

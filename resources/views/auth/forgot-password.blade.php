@@ -5,7 +5,7 @@
 @section('form_content')
     <div class="form-heading">
         <h3>Lupa Kata Sandi</h3>
-        <p>Masukkan alamat email akun Anda untuk menerima tautan atur ulang kata sandi.</p>
+        <p>Masukkan email atau username akun Anda untuk mengatur ulang kata sandi.</p>
     </div>
 
     @if(session('status'))
@@ -17,7 +17,7 @@
 
     @if(session('dev_reset_url'))
         <div class="dev-reset-box">
-            <div><strong>Mode Lokal (MAIL_MAILER=log):</strong> Server email belum dikonfigurasi. Gunakan tautan langsung berikut untuk mengatur ulang kata sandi:</div>
+            <div><strong>Mode Lokal (MAIL_MAILER=log):</strong> Server email belum dikonfigurasi. Klik tombol berikut untuk langsung mengatur ulang kata sandi:</div>
             <a href="{{ session('dev_reset_url') }}">Buka Halaman Reset Kata Sandi</a>
         </div>
     @endif
@@ -34,12 +34,12 @@
         <input type="hidden" name="g-recaptcha-response" id="recaptchaTokenForgot">
 
         <div class="form-group">
-            <label class="form-label" for="email">Email Akun</label>
+            <label class="form-label" for="login">Email atau Username</label>
             <div class="input-wrap">
-                <span class="input-icon">✉️</span>
-                <input type="email" name="email" id="email" class="form-control"
-                       value="{{ old('email') }}"
-                       placeholder="Masukkan email terdaftar Anda" required autofocus autocomplete="email">
+                <span class="input-icon">👤</span>
+                <input type="text" name="login" id="login" class="form-control"
+                       value="{{ old('login') }}"
+                       placeholder="Masukkan email atau username" required autofocus autocomplete="username">
             </div>
         </div>
 
