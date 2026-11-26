@@ -2,7 +2,7 @@
 
 @section('title', 'Database Pegawai')
 @section('header_title', 'Master Database Pegawai')
-@section('header_subtitle', 'Kelola Master Data 148 Pegawai & Pejabat BWS Kalimantan I Pontianak')
+@section('header_subtitle', 'Kelola Master Data ' . $totalPegawai . ' Pegawai & Pejabat BWS Kalimantan I Pontianak')
 
 @push('styles')
 <style>
@@ -10,8 +10,8 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        gap: 16px;
-        margin-bottom: 18px;
+        gap: 12px;
+        margin-bottom: 16px;
         flex-wrap: wrap;
     }
 
@@ -19,9 +19,9 @@
         background: var(--bg-surface);
         border: 1px solid var(--border);
         border-radius: var(--radius-lg);
-        padding: 14px 18px;
+        padding: 12px 16px;
         display: flex;
-        gap: 12px;
+        gap: 10px;
         align-items: center;
         flex: 1;
         flex-wrap: wrap;
@@ -30,7 +30,7 @@
 
     .search-input {
         flex: 1;
-        min-width: 240px;
+        min-width: 220px;
         padding: 9px 14px;
         border: 1.5px solid var(--border);
         border-radius: 50px;
@@ -66,14 +66,14 @@
     }
 
     .btn-add-pegawai {
-        padding: 10px 20px;
+        padding: 10px 18px;
         background: var(--pu-navy);
         color: #ffffff;
         border: none;
         border-radius: 50px;
         font-weight: 700;
         font-size: 13px;
-        display: flex;
+        display: inline-flex;
         align-items: center;
         gap: 6px;
         cursor: pointer;
@@ -94,19 +94,124 @@
         box-shadow: var(--shadow-card);
     }
 
+    .pegawai-info-strip {
+        padding: 11px 18px;
+        background: #f8fafc;
+        border-bottom: 1px solid var(--border);
+        font-size: 12px;
+        color: #475569;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .table-scroll-wrap {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    .table-pegawai {
+        width: 100%;
+        min-width: 1480px;
+        border-collapse: collapse;
+        font-size: 12.5px;
+    }
+
+    .table-pegawai thead th {
+        background: #f8fafc;
+        color: #475569;
+        font-size: 10.5px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.45px;
+        padding: 11px 12px;
+        text-align: left;
+        border-bottom: 1.5px solid var(--border);
+        white-space: nowrap;
+        position: sticky;
+        top: 0;
+        z-index: 2;
+    }
+
+    .table-pegawai tbody tr.group-row td {
+        background: #eef2f8;
+        color: var(--pu-navy);
+        font-weight: 700;
+        font-size: 12px;
+        padding: 8px 14px;
+        border-top: 1px solid #d7e0ee;
+        border-bottom: 1px solid #d7e0ee;
+    }
+
+    .group-satker-tag {
+        display: inline-block;
+        margin-left: 8px;
+        font-size: 11px;
+        font-weight: 600;
+        color: #475569;
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+        padding: 1px 8px;
+        border-radius: 20px;
+    }
+
+    .table-pegawai tbody tr.data-row td {
+        padding: 9px 12px;
+        border-bottom: 1px solid var(--border);
+        vertical-align: middle;
+        color: var(--text-main);
+    }
+
+    .table-pegawai tbody tr.data-row:hover td {
+        background: #fafbfd;
+    }
+
     .badge-unit {
         background: #f1f5f9;
         color: var(--pu-navy);
         padding: 3px 8px;
-        border-radius: 4px;
+        border-radius: 6px;
         font-size: 11px;
         font-weight: 600;
         display: inline-block;
+        line-height: 1.35;
+    }
+
+    .badge-kelas {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 28px;
+        padding: 2px 7px;
+        border-radius: 6px;
+        background: #eff6ff;
+        color: #1d4ed8;
+        font-weight: 700;
+        font-size: 11.5px;
+        font-family: 'JetBrains Mono', monospace;
+    }
+
+    .badge-ket {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 20px;
+        background: var(--pu-gold-light);
+        color: #92400e;
+        font-size: 11px;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .muted-dash {
+        color: #9ca3af;
+        font-size: 12px;
     }
 
     .action-btn {
         padding: 5px 9px;
-        border-radius: 4px;
+        border-radius: 6px;
         border: 1px solid var(--border);
         background: #ffffff;
         font-size: 11.5px;
@@ -135,13 +240,6 @@
         border-color: #f87171;
     }
 
-    .pagination-wrap {
-        padding: 14px 20px;
-        border-top: 1px solid var(--border);
-        display: flex;
-        justify-content: flex-end;
-    }
-
     /* MODAL */
     .modal-backdrop {
         position: fixed;
@@ -152,13 +250,14 @@
         justify-content: center;
         z-index: 1000;
         backdrop-filter: blur(2px);
+        padding: 16px;
     }
 
     .modal-card {
         background: #ffffff;
         border-radius: var(--radius-lg);
         width: 100%;
-        max-width: 580px;
+        max-width: 680px;
         box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
         overflow: hidden;
         animation: modalFadeIn 0.2s ease-out;
@@ -195,18 +294,8 @@
         gap: 10px;
     }
 
-    .form-group {
-        margin-bottom: 12px;
-    }
-
-    .form-label {
-        display: block;
-        font-size: 12px;
-        font-weight: 600;
-        color: #334155;
-        margin-bottom: 4px;
-    }
-
+    .form-group { margin-bottom: 12px; }
+    .form-label { display: block; font-size: 12px; font-weight: 600; color: #334155; margin-bottom: 4px; }
     .form-control {
         width: 100%;
         padding: 8px 12px;
@@ -214,17 +303,20 @@
         border-radius: var(--radius-sm);
         font-size: 13px;
         outline: none;
+        font-family: inherit;
     }
-
-    .form-control:focus {
-        border-color: var(--pu-blue);
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
-    }
-
-    .grid-2 {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 12px;
+    .form-control:focus { border-color: var(--pu-blue); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12); }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+    .modal-subhead {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        color: var(--pu-navy);
+        margin: 14px 0 8px;
+        padding-top: 10px;
+        border-top: 1px dashed var(--border);
     }
 </style>
 @endpush
@@ -234,7 +326,7 @@
     <!-- TOP ACTION BAR & FILTER -->
     <div class="top-actions-bar">
         <form method="GET" action="{{ route('pegawai.index') }}" class="filter-card">
-            <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari Nama Pegawai, NIP, atau Jabatan..." class="search-input">
+            <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari Nama Pegawai, NIP, Jabatan, Kelas, atau Ket..." class="search-input">
             <select name="unit" class="select-unit">
                 <option value="">-- Semua Unit / Satker --</option>
                 @foreach($units as $u)
@@ -263,76 +355,134 @@
 
     <!-- PEGAWAI TABLE -->
     <div class="pegawai-table-card">
-        <table class="table-modern">
-            <thead>
-                <tr>
-                    <th style="width: 45px;">No</th>
-                    <th>Nama Lengkap & Gelar</th>
-                    <th>NIP</th>
-                    <th>Pangkat / Gol</th>
-                    <th>Jabatan Struktural / Definitif</th>
-                    <th>Unit Kerja</th>
-                    <th style="width: 140px; text-align: center;">Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($pegawais as $index => $p)
-                    <tr>
-                        <td style="color: var(--text-subtle); font-variant-numeric: tabular-nums;">
-                            {{ $pegawais->firstItem() + $index }}
-                        </td>
-                        <td>
-                            <div style="font-weight: 700; color: var(--text-main);">{{ $p->nama }}</div>
-                            @if($p->rangkap)
-                                <div style="font-size: 11.5px; color: var(--pu-gold-dark); font-weight: 500;">
-                                    [Rangkap] {{ $p->rangkap }}
-                                </div>
-                            @endif
-                        </td>
-                        <td style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-muted);">
-                            {{ $p->nip ?? '-' }}
-                        </td>
-                        <td style="font-size: 12px;">{{ $p->pangkat ?? '-' }}</td>
-                        <td style="font-size: 12.5px; font-weight: 500;">{{ $p->jabatan ?? '-' }}</td>
-                        <td>
-                            <span class="badge-unit">{{ $p->unit ?? 'Balai Wilayah Sungai Kalimantan I' }}</span>
-                        </td>
-                        <td style="text-align: center;">
-                            <div style="display: inline-flex; gap: 6px;">
-                                <button type="button" class="action-btn edit" 
-                                    data-id="{{ $p->id }}"
-                                    data-nama="{{ $p->nama }}"
-                                    data-nip="{{ $p->nip }}"
-                                    data-pangkat="{{ $p->pangkat }}"
-                                    data-jabatan="{{ $p->jabatan }}"
-                                    data-unit="{{ $p->unit }}"
-                                    data-rangkap="{{ $p->rangkap }}"
-                                    onclick="openEditModal(this)">
-                                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                                    Edit
-                                </button>
-                                <form method="POST" action="{{ route('pegawai.destroy', $p->id) }}" onsubmit="return confirm('Hapus data pegawai {{ $p->nama }} dari database?')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="action-btn delete" title="Hapus">
-                                        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                                    </button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="7" style="text-align: center; padding: 36px; color: var(--text-muted);">
-                            Tidak ada data pegawai yang sesuai dengan pencarian.
-                        </td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
+        <div class="pegawai-info-strip">
+            <div>
+                Kolom <strong>Jabatan di Surat</strong>, <strong>Rangkap di Surat</strong>, dan <strong>Nama di Surat</strong> (opsional) otomatis dipakai pada generator surat bila penulisan di surat berbeda dari SK (misal tanpa gelar atau jabatan disingkat).
+            </div>
+            <div style="font-weight: 700; color: var(--pu-navy); white-space: nowrap;">
+                Menampilkan {{ $pegawais->count() }} dari {{ $totalPegawai }} pegawai
+            </div>
+        </div>
 
-        <div class="pagination-wrap">
-            {{ $pegawais->links() }}
+        <div class="table-scroll-wrap">
+            <table class="table-pegawai">
+                <thead>
+                    <tr>
+                        <th style="width: 44px; text-align:center;">No</th>
+                        <th style="min-width: 190px;">Unit</th>
+                        <th style="min-width: 210px;">Nama Lengkap</th>
+                        <th style="min-width: 155px;">NIP</th>
+                        <th style="min-width: 150px;">Pangkat / Gol.</th>
+                        <th style="width: 66px; text-align:center;">Kelas</th>
+                        <th style="min-width: 220px;">Jabatan Utama</th>
+                        <th style="min-width: 190px;">Jabatan Rangkap</th>
+                        <th style="min-width: 170px;">Jabatan di Surat</th>
+                        <th style="min-width: 160px;">Rangkap di Surat</th>
+                        <th style="min-width: 155px;">Nama di Surat</th>
+                        <th style="min-width: 110px;">Ket.</th>
+                        <th style="width: 120px; text-align: center;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @php
+                        $lastGroup = null;
+                        $unitCounts = $pegawais->groupBy(fn($x) => ($x->unit ?: 'Balai Wilayah Sungai Kalimantan I Pontianak') . '|' . ($x->satker ?? ''))->map->count();
+                    @endphp
+                    @forelse($pegawais as $index => $p)
+                        @php
+                            $unitName = $p->unit ?: 'Balai Wilayah Sungai Kalimantan I Pontianak';
+                            $groupKey = $unitName . '|' . ($p->satker ?? '');
+                        @endphp
+                        @if($groupKey !== $lastGroup)
+                            @php $lastGroup = $groupKey; @endphp
+                            <tr class="group-row">
+                                <td colspan="13">
+                                    <span>{{ $unitName }}</span>
+                                    @if($p->satker && $p->satker !== $unitName)
+                                        <span class="group-satker-tag">{{ $p->satker }}</span>
+                                    @endif
+                                    <span style="float:right; font-size:11px; font-weight:600; color:#64748b;">{{ $unitCounts[$groupKey] ?? 0 }} pegawai</span>
+                                </td>
+                            </tr>
+                        @endif
+                        <tr class="data-row">
+                            <td style="text-align:center; color: var(--text-subtle); font-variant-numeric: tabular-nums;">
+                                {{ $index + 1 }}
+                            </td>
+                            <td>
+                                <span class="badge-unit">{{ $unitName }}</span>
+                            </td>
+                            <td>
+                                <div style="font-weight: 700; color: var(--text-main);">{{ $p->nama }}</div>
+                            </td>
+                            <td style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--text-muted); white-space: nowrap;">
+                                {{ $p->nip ?: '-' }}
+                            </td>
+                            <td style="font-size: 12px;">{{ $p->pangkat ?: '-' }}</td>
+                            <td style="text-align: center;">
+                                @if($p->kelas)
+                                    <span class="badge-kelas">{{ $p->kelas }}</span>
+                                @else
+                                    <span class="muted-dash">-</span>
+                                @endif
+                            </td>
+                            <td style="font-weight: 500;">{{ $p->jabatan ?: '-' }}</td>
+                            <td>
+                                @if($p->rangkap)
+                                    <span style="color: #92400e; font-weight: 500;">{{ $p->rangkap }}</span>
+                                @else
+                                    <span class="muted-dash">-</span>
+                                @endif
+                            </td>
+                            <td>{!! $p->jabatan_surat ? e($p->jabatan_surat) : '<span class="muted-dash">-</span>' !!}</td>
+                            <td>{!! $p->rangkap_surat ? e($p->rangkap_surat) : '<span class="muted-dash">-</span>' !!}</td>
+                            <td>{!! $p->nama_surat ? e($p->nama_surat) : '<span class="muted-dash">-</span>' !!}</td>
+                            <td>
+                                @if($p->ket)
+                                    <span class="badge-ket">{{ $p->ket }}</span>
+                                @else
+                                    <span class="muted-dash">-</span>
+                                @endif
+                            </td>
+                            <td style="text-align: center;">
+                                <div style="display: inline-flex; gap: 5px;">
+                                    <button type="button" class="action-btn edit"
+                                        data-id="{{ $p->id }}"
+                                        data-unit="{{ $p->unit }}"
+                                        data-satker="{{ $p->satker }}"
+                                        data-nama="{{ $p->nama }}"
+                                        data-nip="{{ $p->nip }}"
+                                        data-pangkat="{{ $p->pangkat }}"
+                                        data-kelas="{{ $p->kelas }}"
+                                        data-jabatan="{{ $p->jabatan }}"
+                                        data-rangkap="{{ $p->rangkap }}"
+                                        data-jabatan-surat="{{ $p->jabatan_surat }}"
+                                        data-rangkap-surat="{{ $p->rangkap_surat }}"
+                                        data-nama-surat="{{ $p->nama_surat }}"
+                                        data-ket="{{ $p->ket }}"
+                                        onclick="openEditModal(this)">
+                                        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                        Edit
+                                    </button>
+                                    <form method="POST" action="{{ route('pegawai.destroy', $p->id) }}" onsubmit="return confirm('Hapus data pegawai {{ addslashes($p->nama) }} dari database?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="action-btn delete" title="Hapus">
+                                            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="13" style="text-align: center; padding: 36px; color: var(--text-muted);">
+                                Tidak ada data pegawai yang sesuai dengan pencarian.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
     </div>
 
@@ -340,42 +490,74 @@
     <div class="modal-backdrop" id="modalAdd">
         <div class="modal-card">
             <div class="modal-header">
-                <span>➕ Tambah Data Pegawai Baru</span>
-                <span style="cursor:pointer;" onclick="closeModal('modalAdd')">✕</span>
+                <span>Tambah Data Pegawai Baru</span>
+                <span style="cursor:pointer;" onclick="closeModal('modalAdd')">&times;</span>
             </div>
             <form method="POST" action="{{ route('pegawai.store') }}">
                 @csrf
                 <div class="modal-body">
-                    <div class="form-group">
-                        <label class="form-label">Nama Lengkap & Gelar *</label>
-                        <input type="text" name="nama" class="form-control" placeholder="Contoh: Donni Saputra, S.T, M.Si., M.T." required>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Unit Kerja</label>
+                            <input type="text" name="unit" class="form-control" value="Balai Wilayah Sungai Kalimantan I Pontianak">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Satuan Kerja (Satker)</label>
+                            <input type="text" name="satker" class="form-control" placeholder="Opsional">
+                        </div>
                     </div>
                     <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Nama Lengkap *</label>
+                            <input type="text" name="nama" class="form-control" placeholder="Contoh: Donni Saputra, S.T, M.Si., M.T." required>
+                        </div>
                         <div class="form-group">
                             <label class="form-label">NIP</label>
                             <input type="text" name="nip" class="form-control" placeholder="18 Digit NIP">
                         </div>
+                    </div>
+                    <div class="grid-3">
                         <div class="form-group">
-                            <label class="form-label">Pangkat / Golongan</label>
-                            <input type="text" name="pangkat" class="form-control" placeholder="Contoh: Pembina ( IV / a )">
+                            <label class="form-label">Pangkat / Gol.</label>
+                            <input type="text" name="pangkat" class="form-control" placeholder="Pembina ( IV / a )">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Kelas</label>
+                            <input type="text" name="kelas" class="form-control" placeholder="Contoh: 10">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Ket.</label>
+                            <input type="text" name="ket" class="form-control" placeholder="Contoh: Tugas Belajar">
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Jabatan Definitif / Struktural *</label>
-                        <input type="text" name="jabatan" class="form-control" placeholder="Contoh: Kepala Sub Bagian Umum dan Tata Usaha" required>
+                        <label class="form-label">Jabatan Utama *</label>
+                        <input type="text" name="jabatan" class="form-control" placeholder="Contoh: Kepala Sub Bagian Umum & Tata Usaha" required>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Jabatan Rangkap (Bila Ada)</label>
-                        <input type="text" name="rangkap" class="form-control" placeholder="Contoh: Plt. Kepala Satker BWS Kalimantan I">
+                        <label class="form-label">Jabatan Rangkap</label>
+                        <input type="text" name="rangkap" class="form-control" placeholder="Contoh: Pgs. PPK Ketatalaksanaan">
+                    </div>
+
+                    <div class="modal-subhead">Penulisan Khusus di Surat (Opsional)</div>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Jabatan di Surat</label>
+                            <input type="text" name="jabatan_surat" class="form-control" placeholder="Kosongkan jika ikut Jabatan Utama">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Rangkap di Surat</label>
+                            <input type="text" name="rangkap_surat" class="form-control" placeholder="Kosongkan jika ikut Jabatan Rangkap">
+                        </div>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Unit Kerja / Satuan Kerja</label>
-                        <input type="text" name="unit" class="form-control" value="Balai Wilayah Sungai Kalimantan I Pontianak">
+                        <label class="form-label">Nama di Surat</label>
+                        <input type="text" name="nama_surat" class="form-control" placeholder="Kosongkan jika ikut Nama Lengkap">
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn-filter" style="background:#e2e8f0; color:#334155;" onclick="closeModal('modalAdd')">Batal</button>
-                    <button type="submit" class="btn-filter" style="background:var(--pu-blue);">💾 Simpan Pegawai</button>
+                    <button type="submit" class="btn-filter" style="background:var(--pu-blue);">Simpan Pegawai</button>
                 </div>
             </form>
         </div>
@@ -385,43 +567,75 @@
     <div class="modal-backdrop" id="modalEdit">
         <div class="modal-card">
             <div class="modal-header">
-                <span>✏️ Edit Data Pegawai</span>
-                <span style="cursor:pointer;" onclick="closeModal('modalEdit')">✕</span>
+                <span>Edit Data Pegawai</span>
+                <span style="cursor:pointer;" onclick="closeModal('modalEdit')">&times;</span>
             </div>
             <form method="POST" id="formEditPegawai">
                 @csrf
                 @method('PUT')
                 <div class="modal-body">
-                    <div class="form-group">
-                        <label class="form-label">Nama Lengkap & Gelar *</label>
-                        <input type="text" name="nama" id="editNama" class="form-control" required>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Unit Kerja</label>
+                            <input type="text" name="unit" id="editUnit" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Satuan Kerja (Satker)</label>
+                            <input type="text" name="satker" id="editSatker" class="form-control">
+                        </div>
                     </div>
                     <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Nama Lengkap *</label>
+                            <input type="text" name="nama" id="editNama" class="form-control" required>
+                        </div>
                         <div class="form-group">
                             <label class="form-label">NIP</label>
                             <input type="text" name="nip" id="editNip" class="form-control">
                         </div>
+                    </div>
+                    <div class="grid-3">
                         <div class="form-group">
-                            <label class="form-label">Pangkat / Golongan</label>
+                            <label class="form-label">Pangkat / Gol.</label>
                             <input type="text" name="pangkat" id="editPangkat" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Kelas</label>
+                            <input type="text" name="kelas" id="editKelas" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Ket.</label>
+                            <input type="text" name="ket" id="editKet" class="form-control">
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Jabatan Definitif / Struktural *</label>
+                        <label class="form-label">Jabatan Utama *</label>
                         <input type="text" name="jabatan" id="editJabatan" class="form-control" required>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Jabatan Rangkap (Bila Ada)</label>
+                        <label class="form-label">Jabatan Rangkap</label>
                         <input type="text" name="rangkap" id="editRangkap" class="form-control">
                     </div>
+
+                    <div class="modal-subhead">Penulisan Khusus di Surat (Opsional)</div>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Jabatan di Surat</label>
+                            <input type="text" name="jabatan_surat" id="editJabatanSurat" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Rangkap di Surat</label>
+                            <input type="text" name="rangkap_surat" id="editRangkapSurat" class="form-control">
+                        </div>
+                    </div>
                     <div class="form-group">
-                        <label class="form-label">Unit Kerja / Satuan Kerja</label>
-                        <input type="text" name="unit" id="editUnit" class="form-control">
+                        <label class="form-label">Nama di Surat</label>
+                        <input type="text" name="nama_surat" id="editNamaSurat" class="form-control">
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn-filter" style="background:#e2e8f0; color:#334155;" onclick="closeModal('modalEdit')">Batal</button>
-                    <button type="submit" class="btn-filter" style="background:var(--pu-blue);">💾 Perbarui Data</button>
+                    <button type="submit" class="btn-filter" style="background:var(--pu-blue);">Perbarui Data</button>
                 </div>
             </form>
         </div>
@@ -443,7 +657,7 @@
                     </div>
                     <div style="font-size: 12px; color: #475569; background: #f8fafc; border: 1px solid var(--border); padding: 10px 12px; border-radius: 8px; line-height: 1.55;">
                         <strong>Format Kolom (baris pertama sebagai header):</strong><br>
-                        <code>nama, nip, pangkat, jabatan, rangkap, unit</code><br>
+                        <code>unit, satker, nama, nip, pangkat, kelas, jabatan, rangkap, jabatan_surat, rangkap_surat, nama_surat, ket</code><br>
                         Pemisah koma (<code>,</code>), titik koma (<code>;</code>), atau Tab didukung otomatis. Jika NIP sudah terdaftar, data pegawai akan diperbarui otomatis.
                     </div>
                 </div>
@@ -472,12 +686,18 @@
         const form = document.getElementById('formEditPegawai');
         form.action = '/pegawai/' + id + '/update';
 
+        document.getElementById('editUnit').value = btn.getAttribute('data-unit') || '';
+        document.getElementById('editSatker').value = btn.getAttribute('data-satker') || '';
         document.getElementById('editNama').value = btn.getAttribute('data-nama') || '';
         document.getElementById('editNip').value = btn.getAttribute('data-nip') || '';
         document.getElementById('editPangkat').value = btn.getAttribute('data-pangkat') || '';
+        document.getElementById('editKelas').value = btn.getAttribute('data-kelas') || '';
         document.getElementById('editJabatan').value = btn.getAttribute('data-jabatan') || '';
         document.getElementById('editRangkap').value = btn.getAttribute('data-rangkap') || '';
-        document.getElementById('editUnit').value = btn.getAttribute('data-unit') || '';
+        document.getElementById('editJabatanSurat').value = btn.getAttribute('data-jabatan-surat') || '';
+        document.getElementById('editRangkapSurat').value = btn.getAttribute('data-rangkap-surat') || '';
+        document.getElementById('editNamaSurat').value = btn.getAttribute('data-nama-surat') || '';
+        document.getElementById('editKet').value = btn.getAttribute('data-ket') || '';
 
         document.getElementById('modalEdit').style.display = 'flex';
     }
@@ -486,7 +706,6 @@
         document.getElementById(id).style.display = 'none';
     }
 
-    // Close on backdrop click
     window.addEventListener('click', function(e) {
         if (e.target.classList.contains('modal-backdrop')) {
             e.target.style.display = 'none';

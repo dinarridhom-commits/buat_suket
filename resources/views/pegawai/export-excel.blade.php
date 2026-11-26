@@ -34,39 +34,51 @@
 <body>
     <table>
         <tr>
-            <td colspan="7" class="title">DAFTAR MASTER PEGAWAI &amp; PEJABAT</td>
+            <td colspan="13" class="title">DAFTAR MASTER PEGAWAI &amp; PEJABAT</td>
         </tr>
         <tr>
-            <td colspan="7" class="subtitle">BALAI WILAYAH SUNGAI KALIMANTAN I PONTIANAK — KEMENTERIAN PEKERJAAN UMUM</td>
+            <td colspan="13" class="subtitle">BALAI WILAYAH SUNGAI KALIMANTAN I PONTIANAK — KEMENTERIAN PEKERJAAN UMUM</td>
         </tr>
         <tr>
-            <td colspan="7" class="meta">Diekspor pada: {{ $exportedAt }} &bull; Total: {{ $pegawais->count() }} Pegawai</td>
+            <td colspan="13" class="meta">Diekspor pada: {{ $exportedAt }} &bull; Total: {{ $pegawais->count() }} Pegawai</td>
         </tr>
-        <tr><td colspan="7"></td></tr>
+        <tr><td colspan="13"></td></tr>
     </table>
 
     <table class="data">
         <thead>
             <tr>
                 <th style="width: 45px;">No</th>
+                <th style="width: 240px;">Unit</th>
+                <th style="width: 220px;">Satker</th>
+                <th style="width: 240px;">Nama Lengkap</th>
                 <th style="width: 170px;">NIP</th>
-                <th style="width: 250px;">Nama Lengkap &amp; Gelar</th>
-                <th style="width: 180px;">Pangkat / Golongan</th>
-                <th style="width: 280px;">Jabatan Definitif / Struktural</th>
-                <th style="width: 220px;">Jabatan Rangkap</th>
-                <th style="width: 260px;">Unit Kerja / Satker</th>
+                <th style="width: 170px;">Pangkat / Gol.</th>
+                <th style="width: 65px;">Kelas</th>
+                <th style="width: 260px;">Jabatan Utama</th>
+                <th style="width: 210px;">Jabatan Rangkap</th>
+                <th style="width: 200px;">Jabatan di Surat</th>
+                <th style="width: 200px;">Rangkap di Surat</th>
+                <th style="width: 180px;">Nama di Surat</th>
+                <th style="width: 130px;">Ket.</th>
             </tr>
         </thead>
         <tbody>
             @foreach($pegawais as $idx => $p)
                 <tr class="{{ $idx % 2 === 1 ? 'zebra' : '' }}">
                     <td class="text-center">{{ $idx + 1 }}</td>
-                    <td class="text-nip">{{ $p->nip ?: '-' }}</td>
+                    <td>{{ $p->unit ?: 'Balai Wilayah Sungai Kalimantan I Pontianak' }}</td>
+                    <td>{{ $p->satker ?: '-' }}</td>
                     <td><strong>{{ $p->nama }}</strong></td>
+                    <td class="text-nip">{{ $p->nip ?: '-' }}</td>
                     <td>{{ $p->pangkat ?: '-' }}</td>
+                    <td class="text-center">{{ $p->kelas ?: '-' }}</td>
                     <td>{{ $p->jabatan ?: '-' }}</td>
                     <td>{{ $p->rangkap ?: '-' }}</td>
-                    <td>{{ $p->unit ?: 'Balai Wilayah Sungai Kalimantan I Pontianak' }}</td>
+                    <td>{{ $p->jabatan_surat ?: '-' }}</td>
+                    <td>{{ $p->rangkap_surat ?: '-' }}</td>
+                    <td>{{ $p->nama_surat ?: '-' }}</td>
+                    <td>{{ $p->ket ?: '-' }}</td>
                 </tr>
             @endforeach
         </tbody>
