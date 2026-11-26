@@ -149,7 +149,7 @@ class SuketAbsenController extends Controller
         $suket = SuketAbsen::findOrFail($id);
         $suket->delete();
 
-        return redirect()->route('surat.suket.index')->with('success', 'Arsip suket lupa absen berhasil dipindahkan ke Tempat Sampah.');
+        return redirect()->route('surat.suket.index')->with('success', 'Arsip suket lupa absen berhasil dipindahkan ke Riwayat Penghapusan.');
     }
 
     public function destroyBulk(Request $request)
@@ -166,6 +166,6 @@ class SuketAbsenController extends Controller
         $deleted = SuketAbsen::whereIn('id', $ids)->delete();
 
         return redirect()->route('surat.suket.index')
-            ->with('success', $deleted . ' arsip suket lupa absen berhasil dipindahkan ke Tempat Sampah.');
+            ->with('success', $deleted . ' arsip suket lupa absen berhasil dipindahkan ke Riwayat Penghapusan.');
     }
 }

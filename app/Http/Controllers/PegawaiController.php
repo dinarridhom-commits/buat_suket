@@ -100,7 +100,7 @@ class PegawaiController extends Controller
         $pegawai = Pegawai::findOrFail($id);
         $pegawai->delete();
 
-        return redirect()->route('pegawai.index')->with('success', 'Data pegawai berhasil dipindahkan ke Tempat Sampah.');
+        return redirect()->route('pegawai.index')->with('success', 'Data pegawai berhasil dipindahkan ke Riwayat Penghapusan.');
     }
 
     public function destroyBulk(Request $request)
@@ -117,7 +117,7 @@ class PegawaiController extends Controller
         $deleted = Pegawai::whereIn('id', $ids)->delete();
 
         return redirect()->route('pegawai.index')
-            ->with('success', $deleted . ' data pegawai berhasil dipindahkan ke Tempat Sampah.');
+            ->with('success', $deleted . ' data pegawai berhasil dipindahkan ke Riwayat Penghapusan.');
     }
 
     public function exportCsv(Request $request)

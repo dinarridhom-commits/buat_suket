@@ -136,6 +136,6 @@ class TrashController extends Controller
         }
 
         return redirect()->route('trash.index', ['tab' => $type])
-            ->with('success', "{$count} {$cfg['label']} di Tempat Sampah berhasil dikosongkan permanen.");
+            ->with('success', "{$count} {$cfg['label']} di Riwayat Penghapusan berhasil dihapus permanen.");
     }
 }

@@ -1,8 +1,8 @@
 @extends('layouts.app')
 
-@section('title', 'Tempat Sampah')
-@section('header_title', 'Tempat Sampah (Soft Delete)')
-@section('header_subtitle', 'Data yang dihapus sementara tersimpan di sini — dapat dipulihkan kembali atau dihapus permanen')
+@section('title', 'Riwayat Penghapusan')
+@section('header_title', 'Riwayat Penghapusan')
+@section('header_subtitle', 'Data yang dihapus tersimpan sementara di sini — dapat dipulihkan kembali atau dihapus permanen')
 
 @push('styles')
 <style>
@@ -142,7 +142,7 @@
             @csrf
             @method('DELETE')
             <button type="submit" class="btn-empty-trash">
-                🗑️ Kosongkan Tab Ini ({{ $items->total() }})
+                Kosongkan Daftar Ini ({{ $items->total() }})
             </button>
         </form>
     @endif

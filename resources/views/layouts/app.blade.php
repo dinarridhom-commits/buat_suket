@@ -807,8 +807,8 @@
                 }
             @endphp
             <a href="{{ route('trash.index') }}" class="nav-item {{ request()->routeIs('trash.*') ? 'active' : '' }}">
-                <span class="nav-icon">🗑️</span>
-                <span>Tempat Sampah</span>
+                <span class="nav-icon">🕒</span>
+                <span>Riwayat Penghapusan</span>
                 @if($trashTotalNav > 0)
                     <span class="nav-badge" style="background:#ef4444; color:#fff;">{{ $trashTotalNav }}</span>
                 @endif
@@ -968,7 +968,7 @@
                 const label = cfg.entityLabel || 'data';
                 const customPrompt = e.submitter && e.submitter.dataset && e.submitter.dataset.confirm
                     ? e.submitter.dataset.confirm.replace('{count}', String(checked.length))
-                    : (cfg.confirmText ? cfg.confirmText.replace('{count}', String(checked.length)) : 'Pindahkan ' + checked.length + ' ' + label + ' terpilih ke Tempat Sampah? Data masih bisa dipulihkan.');
+                    : (cfg.confirmText ? cfg.confirmText.replace('{count}', String(checked.length)) : 'Pindahkan ' + checked.length + ' ' + label + ' terpilih ke Riwayat Penghapusan? Data masih bisa dipulihkan.');
                 if (!confirm(customPrompt)) {
                     e.preventDefault();
                     return;

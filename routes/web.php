@@ -74,8 +74,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
     Route::put('/settings', [SettingController::class, 'update'])->name('settings.update');
 
-    // Tempat Sampah (Soft Delete — Pulihkan / Hapus Permanen)
-    Route::prefix('sampah')->name('trash.')->group(function () {
+    // Riwayat Penghapusan (Soft Delete — Pulihkan / Hapus Permanen)
+    Route::prefix('riwayat-penghapusan')->name('trash.')->group(function () {
         Route::get('/', [TrashController::class, 'index'])->name('index');
         Route::post('/{type}/aksi-massal', [TrashController::class, 'bulk'])->name('bulk');
         Route::delete('/{type}/kosongkan', [TrashController::class, 'empty'])->name('empty');

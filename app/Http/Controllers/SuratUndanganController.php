@@ -280,7 +280,7 @@ class SuratUndanganController extends Controller
         $surat = SuratUndangan::findOrFail($id);
         $surat->delete();
 
-        return redirect()->route('surat.undangan.index')->with('success', 'Arsip surat undangan berhasil dipindahkan ke Tempat Sampah.');
+        return redirect()->route('surat.undangan.index')->with('success', 'Arsip surat undangan berhasil dipindahkan ke Riwayat Penghapusan.');
     }
 
     public function destroyBulk(Request $request)
@@ -297,6 +297,6 @@ class SuratUndanganController extends Controller
         $deleted = SuratUndangan::whereIn('id', $ids)->delete();
 
         return redirect()->route('surat.undangan.index')
-            ->with('success', $deleted . ' arsip surat undangan berhasil dipindahkan ke Tempat Sampah.');
+            ->with('success', $deleted . ' arsip surat undangan berhasil dipindahkan ke Riwayat Penghapusan.');
     }
 }
