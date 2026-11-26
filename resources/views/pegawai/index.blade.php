@@ -508,11 +508,7 @@
                 </tbody>
             </table>
         </div>
-        @if($pegawais->hasPages())
-            <div class="pagination-wrap">
-                {{ $pegawais->links() }}
-            </div>
-        @endif
+        @include('partials.pagination-bar', ['paginator' => $pegawais, 'label' => 'pegawai'])
     </div>
 
     <!-- MODAL TAMBAH PEGAWAI -->

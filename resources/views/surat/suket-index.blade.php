@@ -27,11 +27,17 @@
         </select>
         <input type="month" name="bulan" value="{{ request('bulan') }}" title="Filter Bulan Kejadian"
                style="padding:7px 12px; border:1.5px solid var(--border); border-radius:50px; font-size:13px; background:var(--bg-subtle); outline:none;">
+        <select name="per_page" onchange="this.form.submit()" title="Jumlah data per halaman"
+                style="padding:8px 14px; border:1.5px solid var(--border); border-radius:50px; font-size:13px; background:var(--bg-subtle); outline:none;">
+            @foreach([5, 10, 15, 25, 50, 100] as $opt)
+                <option value="{{ $opt }}" {{ ($perPage ?? 10) == $opt ? 'selected' : '' }}>{{ $opt }} / hal</option>
+            @endforeach
+        </select>
         <button type="submit" style="padding:8px 18px; background:var(--pu-navy); color:#fff; border:none; border-radius:50px; font-weight:600; font-size:13px; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
             <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
             Filter
         </button>
-        @if(request()->hasAny(['q', 'jenis_absen', 'bulan']) && (request('q') || request('jenis_absen') || request('bulan')))
+        @if(request()->hasAny(['q', 'jenis_absen', 'bulan', 'per_page']) && (request('q') || request('jenis_absen') || request('bulan') || request('per_page')))
             <a href="{{ route('surat.suket.index') }}" style="font-size:12.5px; color:var(--text-muted); text-decoration:none; padding:0 4px;">Reset</a>
         @endif
     </form>
@@ -132,9 +138,7 @@
                     @endforeach
                 </tbody>
             </table>
-            <div style="padding: 16px 20px;">
-                {{ $sukets->links() }}
-            </div>
+            @include('partials.pagination-bar', ['paginator' => $sukets, 'label' => 'suket'])
         @else
             <div class="empty-state">
                 <span>📝</span>

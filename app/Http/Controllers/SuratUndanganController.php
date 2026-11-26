@@ -141,8 +141,9 @@ class SuratUndanganController extends Controller
 
     public function index(Request $request)
     {
-        $surats = $this->buildFilteredQuery($request)->paginate(10)->withQueryString();
-        return view('surat.undangan-index', compact('surats'));
+        $perPage = $this->resolvePerPage($request, [5, 10, 15, 25, 50, 100], 10);
+        $surats  = $this->buildFilteredQuery($request)->paginate($perPage)->withQueryString();
+        return view('surat.undangan-index', compact('surats', 'perPage'));
     }
 
     public function exportExcel(Request $request)

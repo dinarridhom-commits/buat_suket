@@ -565,32 +565,65 @@
         .empty-state .empty-icon { font-size: 36px; display: block; margin-bottom: 10px; }
         .empty-state p { font-size: 13.5px; }
 
-        /* ── Laravel Pagination Fix (no Tailwind) ── */
-        nav[role="navigation"] svg,
-        .pagination svg {
-            width: 16px !important;
-            height: 16px !important;
-            display: inline-block;
-            vertical-align: middle;
+        /* ── Pagination Bar (konsisten untuk 1 maupun banyak halaman) ── */
+        .pg-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
         }
-        nav[role="navigation"] > div:first-child { display: none; }
-        nav[role="navigation"] > div:last-child {
-            display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+        .pg-info {
+            font-size: 13px;
+            color: var(--text-muted);
         }
-        nav[role="navigation"] span[aria-current="page"] > span,
-        nav[role="navigation"] a {
-            display: inline-flex; align-items: center; justify-content: center;
-            min-width: 34px; height: 34px; padding: 0 10px;
-            border-radius: 8px; font-size: 12.5px; font-weight: 600;
-            text-decoration: none; border: 1px solid var(--border);
-            background: var(--bg-surface); color: var(--text-main);
+        .pg-info strong {
+            color: var(--text-main);
+            font-weight: 700;
+        }
+        .pg-links {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .pg-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 34px;
+            height: 34px;
+            padding: 0 10px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            border: 1px solid var(--border);
+            background: var(--bg-surface);
+            color: var(--text-main);
             transition: all 0.15s;
+            user-select: none;
         }
-        nav[role="navigation"] span[aria-current="page"] > span {
-            background: var(--pu-navy); color: #ffffff; border-color: var(--pu-navy);
+        a.pg-btn:hover {
+            background: var(--pu-navy-50);
+            border-color: var(--pu-navy);
+            color: var(--pu-navy);
         }
-        nav[role="navigation"] a:hover {
-            background: var(--pu-navy-50); border-color: var(--pu-navy); color: var(--pu-navy);
+        .pg-btn.is-active {
+            background: var(--pu-navy);
+            color: #ffffff;
+            border-color: var(--pu-navy);
+        }
+        .pg-btn.is-disabled {
+            opacity: 0.45;
+            cursor: default;
+            background: var(--bg-subtle);
+            color: var(--text-muted);
+        }
+        .pg-dots {
+            padding: 0 4px;
+            font-size: 13px;
+            color: var(--text-muted);
         }
 
         /* ── Bulk Selection & Pagination Utilities ── */

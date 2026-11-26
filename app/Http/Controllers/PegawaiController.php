@@ -57,7 +57,7 @@ class PegawaiController extends Controller
 
     public function index(Request $request)
     {
-        $perPage      = in_array((int) $request->input('per_page'), [15, 25, 50, 100], true) ? (int) $request->input('per_page') : 15;
+        $perPage      = $this->resolvePerPage($request, [15, 25, 50, 100], 15);
         $pegawais     = $this->buildFilteredQuery($request)->paginate($perPage)->withQueryString();
         $totalPegawai = Pegawai::count();
         $units        = Pegawai::orderBy('id', 'asc')->pluck('unit')->filter()->unique()->values();
