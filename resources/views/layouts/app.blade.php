@@ -676,6 +676,25 @@
         .btn-bulk-delete:hover {
             background: #dc2626;
         }
+        .btn-bulk-restore {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 1px solid #a7f3d0;
+            background: #059669;
+            color: #ffffff;
+            font-size: 12px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background 0.15s;
+            white-space: nowrap;
+        }
+        .btn-bulk-restore:hover {
+            background: #047857;
+        }
         .btn-bulk-cancel {
             padding: 6px 10px;
             border-radius: 8px;
@@ -777,6 +796,22 @@
             <a href="{{ route('pegawai.index') }}" class="nav-item {{ request()->routeIs('pegawai.*') ? 'active' : '' }}">
                 <span class="nav-icon">👥</span>
                 <span>Database Pegawai</span>
+            </a>
+            @php
+                try {
+                    $trashTotalNav = \App\Models\SuratUndangan::onlyTrashed()->count()
+                        + \App\Models\SuketAbsen::onlyTrashed()->count()
+                        + \App\Models\Pegawai::onlyTrashed()->count();
+                } catch (\Throwable $e) {
+                    $trashTotalNav = 0;
+                }
+            @endphp
+            <a href="{{ route('trash.index') }}" class="nav-item {{ request()->routeIs('trash.*') ? 'active' : '' }}">
+                <span class="nav-icon">🗑️</span>
+                <span>Tempat Sampah</span>
+                @if($trashTotalNav > 0)
+                    <span class="nav-badge" style="background:#ef4444; color:#fff;">{{ $trashTotalNav }}</span>
+                @endif
             </a>
 
             <div class="menu-category">Pengaturan</div>
@@ -931,7 +966,10 @@
                     return;
                 }
                 const label = cfg.entityLabel || 'data';
-                if (!confirm('Hapus ' + checked.length + ' ' + label + ' terpilih? Tindakan ini tidak dapat dibatalkan.')) {
+                const customPrompt = e.submitter && e.submitter.dataset && e.submitter.dataset.confirm
+                    ? e.submitter.dataset.confirm.replace('{count}', String(checked.length))
+                    : (cfg.confirmText ? cfg.confirmText.replace('{count}', String(checked.length)) : 'Pindahkan ' + checked.length + ' ' + label + ' terpilih ke Tempat Sampah? Data masih bisa dipulihkan.');
+                if (!confirm(customPrompt)) {
                     e.preventDefault();
                     return;
                 }

@@ -81,7 +81,7 @@ class SuketAbsenController extends Controller
 
         $tahun     = date('Y');
         $prefix    = Setting::get('prefix_suket', 'KP.07.03/Bws1');
-        $urutan    = SuketAbsen::whereYear('created_at', $tahun)->count() + 1;
+        $urutan    = SuketAbsen::withTrashed()->whereYear('created_at', $tahun)->count() + 1;
         $autoNomor = $prefix . '/' . str_pad($urutan, 3, '0', STR_PAD_LEFT) . '/' . $tahun;
 
         return view('surat.suket-create', compact('pegawais', 'kop', 'autoNomor'));
@@ -149,7 +149,7 @@ class SuketAbsenController extends Controller
         $suket = SuketAbsen::findOrFail($id);
         $suket->delete();
 
-        return redirect()->route('surat.suket.index')->with('success', 'Arsip suket lupa absen berhasil dihapus.');
+        return redirect()->route('surat.suket.index')->with('success', 'Arsip suket lupa absen berhasil dipindahkan ke Tempat Sampah.');
     }
 
     public function destroyBulk(Request $request)
@@ -166,6 +166,6 @@ class SuketAbsenController extends Controller
         $deleted = SuketAbsen::whereIn('id', $ids)->delete();
 
         return redirect()->route('surat.suket.index')
-            ->with('success', $deleted . ' arsip suket lupa absen berhasil dihapus.');
+            ->with('success', $deleted . ' arsip suket lupa absen berhasil dipindahkan ke Tempat Sampah.');
     }
 }

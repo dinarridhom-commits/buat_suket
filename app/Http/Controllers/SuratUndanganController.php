@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\SuratUndangan;
-use App\Models\SuratUndanganPenerima;
 use App\Models\Pegawai;
 use App\Models\Setting;
 use Illuminate\Http\Request;
@@ -101,7 +100,7 @@ class SuratUndanganController extends Controller
     {
         $tahun  = date('Y');
         $prefix = Setting::get('prefix_undangan', 'UM.01.02/Bws1');
-        $urutan = SuratUndangan::whereYear('created_at', $tahun)->count() + 1;
+        $urutan = SuratUndangan::withTrashed()->whereYear('created_at', $tahun)->count() + 1;
         return $prefix . '/' . str_pad($urutan, 3, '0', STR_PAD_LEFT) . '/' . $tahun;
     }
 
@@ -281,7 +280,7 @@ class SuratUndanganController extends Controller
         $surat = SuratUndangan::findOrFail($id);
         $surat->delete();
 
-        return redirect()->route('surat.undangan.index')->with('success', 'Arsip surat undangan berhasil dihapus.');
+        return redirect()->route('surat.undangan.index')->with('success', 'Arsip surat undangan berhasil dipindahkan ke Tempat Sampah.');
     }
 
     public function destroyBulk(Request $request)
@@ -295,10 +294,9 @@ class SuratUndanganController extends Controller
         ]);
 
         $ids = array_values(array_unique(array_map('intval', $validated['ids'])));
-        SuratUndanganPenerima::whereIn('surat_undangan_id', $ids)->delete();
         $deleted = SuratUndangan::whereIn('id', $ids)->delete();
 
         return redirect()->route('surat.undangan.index')
-            ->with('success', $deleted . ' arsip surat undangan berhasil dihapus.');
+            ->with('success', $deleted . ' arsip surat undangan berhasil dipindahkan ke Tempat Sampah.');
     }
 }

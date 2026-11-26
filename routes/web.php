@@ -7,6 +7,7 @@ use App\Http\Controllers\PegawaiController;
 use App\Http\Controllers\SuratUndanganController;
 use App\Http\Controllers\SuketAbsenController;
 use App\Http\Controllers\SettingController;
+use App\Http\Controllers\TrashController;
 
 // Autentikasi (Guest only)
 Route::middleware('guest')->group(function () {
@@ -72,6 +73,15 @@ Route::middleware('auth')->group(function () {
     // Pengaturan Kop & Instansi
     Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
     Route::put('/settings', [SettingController::class, 'update'])->name('settings.update');
+
+    // Tempat Sampah (Soft Delete — Pulihkan / Hapus Permanen)
+    Route::prefix('sampah')->name('trash.')->group(function () {
+        Route::get('/', [TrashController::class, 'index'])->name('index');
+        Route::post('/{type}/aksi-massal', [TrashController::class, 'bulk'])->name('bulk');
+        Route::delete('/{type}/kosongkan', [TrashController::class, 'empty'])->name('empty');
+        Route::post('/{type}/{id}/pulihkan', [TrashController::class, 'restore'])->name('restore');
+        Route::delete('/{type}/{id}/permanen', [TrashController::class, 'forceDelete'])->name('force-delete');
+    });
 
     // Profil & Ganti Kata Sandi
     Route::get('/profil', [AuthController::class, 'showProfile'])->name('profil.index');
