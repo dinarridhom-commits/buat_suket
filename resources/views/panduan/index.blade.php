@@ -62,46 +62,6 @@
         color: #1f2937;
     }
 
-    .guide-actions {
-        margin-top: 26px;
-        padding-top: 20px;
-        border-top: 1px solid var(--border);
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-    }
-
-    .guide-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 7px;
-        padding: 9px 16px;
-        border-radius: 10px;
-        font-size: 13px;
-        font-weight: 600;
-        text-decoration: none;
-        border: 1px solid var(--border);
-        background: #ffffff;
-        color: var(--text-main);
-        transition: all 0.16s ease;
-    }
-
-    .guide-btn:hover {
-        border-color: var(--border-hover);
-        background: var(--bg-subtle);
-    }
-
-    .guide-btn-primary {
-        background: var(--pu-navy);
-        border-color: var(--pu-navy);
-        color: #ffffff;
-    }
-
-    .guide-btn-primary:hover {
-        background: var(--pu-navy-light);
-        border-color: var(--pu-navy-light);
-    }
-
     @media (max-width: 640px) {
         .guide-card {
             padding: 20px 18px;
@@ -161,21 +121,6 @@
             <li>Kop pada surat asli/paraf hanya muncul di halaman pertama tiap bagian. Halaman lampiran tampil tanpa kop.</li>
             <li>Gunakan kata sandi minimal 8 karakter (kombinasi huruf dan angka) yang dapat diperbarui melalui menu <strong>Profil &amp; Kata Sandi</strong>.</li>
         </ul>
-    </div>
-
-    <div class="guide-actions">
-        <a href="{{ route('surat.undangan.create') }}" class="guide-btn guide-btn-primary">
-            <x-icon name="mail" class="ui-icon-sm" />
-            <span>Buat Surat Undangan</span>
-        </a>
-        <a href="{{ route('surat.suket.create') }}" class="guide-btn">
-            <x-icon name="file-text" class="ui-icon-sm" />
-            <span>Buat Suket Lupa Absen</span>
-        </a>
-        <a href="{{ route('pegawai.index') }}" class="guide-btn">
-            <x-icon name="users" class="ui-icon-sm" />
-            <span>Database Pegawai</span>
-        </a>
     </div>
 
 </div>
