@@ -74,19 +74,19 @@
         }
 
         /* ══════════════════════════════════════
-           SIDEBAR  —  Light / White
+           SIDEBAR  —  Varian 1 Navy PU
         ══════════════════════════════════════ */
         .sidebar {
             width: var(--sidebar-width);
-            background: var(--bg-surface);
-            border-right: 1px solid var(--border);
+            background: var(--pu-navy);
+            border-right: 1px solid var(--pu-navy-dark);
             display: flex;
             flex-direction: column;
             position: fixed;
             top: 0; bottom: 0; left: 0;
             z-index: 60;
             transition: transform 0.25s cubic-bezier(0.4,0,0.2,1);
-            box-shadow: 2px 0 12px rgba(0,0,0,0.04);
+            box-shadow: 4px 0 18px rgba(11, 22, 38, 0.14);
         }
 
         /* Brand / Logo Area */
@@ -97,7 +97,7 @@
             justify-content: space-between;
             gap: 10px;
             padding: 0 16px 0 20px;
-            border-bottom: 1px solid var(--border);
+            border-bottom: 1px solid rgba(255,255,255,0.10);
             flex-shrink: 0;
         }
         .sidebar-brand-left {
@@ -109,15 +109,15 @@
         .sidebar-toggle-btn {
             width: 30px; height: 30px;
             border-radius: 8px;
-            border: 1px solid var(--border);
-            background: var(--bg-subtle);
-            color: var(--text-muted);
+            border: 1px solid rgba(255,255,255,0.14);
+            background: rgba(255,255,255,0.08);
+            color: #cbd5e1;
             display: flex; align-items: center; justify-content: center;
             cursor: pointer; font-size: 13px; flex-shrink: 0;
             transition: all 0.15s;
         }
         .sidebar-toggle-btn:hover {
-            background: var(--pu-navy); color: #ffffff; border-color: var(--pu-navy);
+            background: rgba(255,255,255,0.18); color: #ffffff; border-color: rgba(255,255,255,0.28);
         }
 
         /* Floating reopen button when desktop sidebar is hidden */
@@ -161,11 +161,11 @@
 
         .brand-logo {
             width: 40px; height: 40px;
-            background: var(--pu-navy-50);
+            background: #ffffff;
             border-radius: var(--radius-sm);
             display: flex; align-items: center; justify-content: center;
             padding: 4px;
-            border: 1.5px solid rgba(19,36,61,0.12);
+            border: 1.5px solid var(--pu-gold);
             flex-shrink: 0;
         }
         .brand-logo img { width: 100%; height: 100%; object-fit: contain; }
@@ -173,11 +173,11 @@
         .brand-text h1 {
             font-size: 13px; font-weight: 800;
             letter-spacing: -0.1px;
-            color: var(--pu-navy);
+            color: #ffffff;
             line-height: 1.2;
         }
         .brand-text span {
-            font-size: 10.5px; color: var(--text-muted);
+            font-size: 10.5px; color: #94a3b8;
             font-weight: 500; display: block; margin-top: 1px;
         }
 
@@ -188,13 +188,13 @@
         }
         .sidebar-menu::-webkit-scrollbar { width: 4px; }
         .sidebar-menu::-webkit-scrollbar-thumb {
-            background: var(--border); border-radius: 4px;
+            background: rgba(255,255,255,0.16); border-radius: 4px;
         }
 
         .menu-category {
             font-size: 10px; font-weight: 700;
             text-transform: uppercase; letter-spacing: 1.2px;
-            color: var(--text-subtle);
+            color: #64748b;
             padding: 14px 12px 5px;
             margin-top: 4px;
         }
@@ -204,7 +204,7 @@
             display: flex; align-items: center; gap: 10px;
             padding: 9px 12px;
             border-radius: var(--radius-sm);
-            color: var(--text-muted);
+            color: #cbd5e1;
             text-decoration: none;
             font-size: 13.5px; font-weight: 500;
             transition: all 0.15s ease;
@@ -212,22 +212,22 @@
             position: relative;
         }
         .nav-item:hover {
-            background: var(--bg-subtle);
-            color: var(--text-main);
+            background: rgba(255,255,255,0.07);
+            color: #ffffff;
         }
-        /* Active pill – navy background capsule with left accent */
+        /* Active pill – lighter navy capsule with PU gold left accent */
         .nav-item.active {
-            background: var(--pu-navy);
+            background: var(--pu-navy-light);
             color: #ffffff;
             font-weight: 600;
-            box-shadow: 0 2px 8px rgba(19,36,61,0.22);
+            box-shadow: inset 3.5px 0 0 var(--pu-gold), 0 2px 8px rgba(0,0,0,0.22);
         }
         .nav-item.active::before {
             content: '';
             position: absolute; left: 0; top: 20%; bottom: 20%;
             width: 3px; border-radius: 0 3px 3px 0;
             background: var(--pu-gold);
-            display: none; /* hidden inside pill, gold is the pill border accent */
+            display: none;
         }
         .nav-icon {
             display: inline-flex; align-items: center; justify-content: center;
@@ -243,8 +243,8 @@
 
         .nav-badge {
             margin-left: auto;
-            background: var(--pu-navy-50);
-            color: var(--pu-navy);
+            background: rgba(255,255,255,0.14);
+            color: #ffffff;
             padding: 1px 7px; border-radius: 20px;
             font-size: 11px; font-weight: 700;
         }
@@ -255,21 +255,21 @@
         /* ── Sidebar Footer – User card ── */
         .sidebar-footer {
             padding: 12px 14px;
-            border-top: 1px solid var(--border);
+            border-top: 1px solid rgba(255,255,255,0.10);
             flex-shrink: 0;
         }
 
         .sidebar-user-card {
             display: flex; align-items: center; gap: 10px;
             padding: 10px 12px;
-            background: var(--bg-subtle);
+            background: rgba(255,255,255,0.07);
             border-radius: var(--radius-md);
-            border: 1px solid var(--border);
+            border: 1px solid rgba(255,255,255,0.12);
         }
 
         .user-avatar {
             width: 34px; height: 34px; border-radius: 50%;
-            background: var(--pu-navy);
+            background: var(--pu-navy-light);
             color: #ffffff; font-weight: 800; font-size: 12px;
             display: flex; align-items: center; justify-content: center;
             flex-shrink: 0;
@@ -279,11 +279,11 @@
         .user-info { flex: 1; min-width: 0; }
         .user-info .user-name {
             font-size: 12.5px; font-weight: 700;
-            color: var(--text-main);
+            color: #ffffff;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
         .user-info .user-role {
-            font-size: 11px; color: var(--text-muted);
+            font-size: 11px; color: #94a3b8;
             display: flex; align-items: center; gap: 4px;
         }
         .online-dot {
@@ -294,12 +294,12 @@
 
         .btn-logout-mini {
             background: none; border: none; cursor: pointer;
-            color: var(--text-subtle); padding: 6px; border-radius: 6px;
+            color: #94a3b8; padding: 6px; border-radius: 6px;
             transition: all 0.15s; line-height: 1;
             display: inline-flex; align-items: center; justify-content: center;
             flex-shrink: 0;
         }
-        .btn-logout-mini:hover { background: #fee2e2; color: var(--danger); }
+        .btn-logout-mini:hover { background: rgba(239,68,68,0.18); color: #fca5a5; }
 
         /* ══════════════════════════════════════
            MOBILE BACKDROP
