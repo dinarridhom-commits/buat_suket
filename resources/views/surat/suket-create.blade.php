@@ -158,7 +158,7 @@
 
             <!-- CARD 1: DATA PEGAWAI -->
             <div class="form-card">
-                <div class="form-card-head"><span>👤</span> 1. Pegawai yang Bersangkutan</div>
+                <div class="form-card-head"><x-icon name="user" class="ui-icon-sm" /> 1. Pegawai yang Bersangkutan</div>
                 <div class="form-card-body">
                     <div class="form-group">
                         <label class="form-label">Pilih dari Master Pegawai (148 Pegawai BWS Kalimantan I)</label>
@@ -212,7 +212,7 @@
 
             <!-- CARD 2: RINCIAN KENDALA ABSEN -->
             <div class="form-card">
-                <div class="form-card-head"><span>⏰</span> 2. Rincian Izin / Lupa Absen</div>
+                <div class="form-card-head"><x-icon name="clock" class="ui-icon-sm" /> 2. Rincian Izin / Lupa Absen</div>
                 <div class="form-card-body">
                     <div class="form-group">
                         <label class="form-label">Nomor Surat Keterangan</label>
@@ -324,14 +324,14 @@
     <div class="preview-pane">
         <div class="preview-header-bar">
             <span style="font-size:13px; font-weight:700; color:var(--text-main); display:flex; align-items:center; gap:6px;">
-                <span>👁️</span> Pratinjau A4 Resmi (Sesuai Format Standar BWS)
+                <x-icon name="eye" class="ui-icon-sm" /> Pratinjau A4 Resmi (Sesuai Format Standar BWS)
             </span>
             <div style="display:flex; gap:8px;">
-                <button type="button" id="btnExportSuketDocx" class="btn-action" style="background:#0284c7; color:#ffffff; font-weight:600; padding:6px 12px; font-size:12.5px; display:flex; align-items:center; gap:5px; border-radius:6px; border:none; cursor:pointer;">
-                    <span>📄</span> Unduh Word (.docx)
+                <button type="button" id="btnExportSuketDocx" class="btn-action" style="background:#0284c7; color:#ffffff; font-weight:600; padding:6px 12px; font-size:12.5px; display:flex; align-items:center; gap:6px; border-radius:6px; border:none; cursor:pointer;">
+                    <x-icon name="file-text" class="ui-icon-sm" /> Unduh Word (.docx)
                 </button>
-                <button type="button" onclick="window.print()" class="btn-action" style="background:var(--pu-navy); color:#ffffff; font-weight:600; padding:6px 14px; font-size:12.5px; display:flex; align-items:center; gap:5px; border-radius:6px; border:none; cursor:pointer;">
-                    <span>🖨️</span> Cetak / PDF
+                <button type="button" onclick="window.print()" class="btn-action" style="background:var(--pu-navy); color:#ffffff; font-weight:600; padding:6px 14px; font-size:12.5px; display:flex; align-items:center; gap:6px; border-radius:6px; border:none; cursor:pointer;">
+                    <x-icon name="printer" class="ui-icon-sm" /> Cetak / PDF
                 </button>
             </div>
         </div>
@@ -596,7 +596,7 @@
     document.getElementById('btnExportSuketDocx').addEventListener('click', function() {
         const btn = this;
         const orig = btn.innerHTML;
-        btn.innerHTML = '<span>⏳</span> Membuat .docx...';
+        btn.textContent = 'Membuat .docx...';
         btn.disabled = true;
 
         try {

@@ -129,7 +129,7 @@
             @include('partials.pagination-bar', ['paginator' => $surats, 'label' => 'surat'])
         @else
             <div class="empty-state">
-                <span>📭</span>
+                <span class="empty-icon"><x-icon name="inbox" class="ui-icon-lg" /></span>
                 <p style="font-weight: 600;">{{ request()->hasAny(['q', 'status', 'bulan']) ? 'Tidak ada arsip yang sesuai dengan filter.' : 'Belum ada arsip Surat Undangan di database.' }}</p>
                 <a href="{{ route('surat.undangan.create') }}" class="btn-quick-create" style="margin-top: 14px;">+ Buat Surat Undangan Sekarang</a>
             </div>

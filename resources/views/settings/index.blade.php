@@ -95,8 +95,9 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 18px;
         background: #eff6ff;
+        color: var(--pu-navy);
+        flex-shrink: 0;
     }
 
     .settings-card-title {
@@ -273,6 +274,9 @@
         color: #78350f;
         line-height: 1.6;
         margin-top: 16px;
+        display: flex;
+        align-items: flex-start;
+        gap: 9px;
     }
 
     @media (max-width: 1024px) {
@@ -294,10 +298,10 @@
     <div class="settings-nav">
         <div class="settings-nav-head">Pengaturan</div>
         <a href="#kop" class="settings-nav-item active" onclick="scrollToSection(this, '#kop')">
-            <span>🏛️</span> Kop Surat & Instansi
+            <x-icon name="building" class="ui-icon-sm" /> Kop Surat & Instansi
         </a>
         <a href="#nomor" class="settings-nav-item" onclick="scrollToSection(this, '#nomor')">
-            <span>🔢</span> Format Nomor Surat
+            <x-icon name="hash" class="ui-icon-sm" /> Format Nomor Surat
         </a>
     </div>
 
@@ -308,7 +312,7 @@
         <div class="settings-card" id="kop">
             <div class="settings-card-head">
                 <div class="settings-card-head-left">
-                    <div class="settings-card-icon">🏛️</div>
+                    <div class="settings-card-icon"><x-icon name="building" class="ui-icon-md" /></div>
                     <div>
                         <div class="settings-card-title">Kop Surat & Profil Instansi</div>
                         <div class="settings-card-desc">Data ini digunakan pada semua surat dinas yang dihasilkan sistem</div>
@@ -373,7 +377,7 @@
         <div class="settings-card" id="nomor">
             <div class="settings-card-head">
                 <div class="settings-card-head-left">
-                    <div class="settings-card-icon">🔢</div>
+                    <div class="settings-card-icon"><x-icon name="hash" class="ui-icon-md" /></div>
                     <div>
                         <div class="settings-card-title">Format & Prefix Nomor Surat</div>
                         <div class="settings-card-desc">Konfigurasi kode klasifikasi surat dinas otomatis</div>
@@ -399,24 +403,28 @@
                 </div>
 
                 <div class="nomor-preview-chip">
-                    <span>📋</span>
+                    <x-icon name="file-text" class="ui-icon-sm" />
                     <span id="pvNomorUndangan">{{ $settings['prefix_undangan'] ?? 'UM.01.02/Bws1' }}/001/{{ date('Y') }}</span>
                     <span style="color:#94a3b8; font-size:11px; font-weight:400; font-family:sans-serif;">← Contoh format surat undangan</span>
                 </div>
 
                 <div class="info-box">
-                    💡 <strong>Nomor Otomatis:</strong> Sistem akan menghitung urutan nomor surat secara otomatis berdasarkan jumlah surat yang telah dibuat dalam tahun berjalan. Format: <code style="background:#fef3c7; padding:1px 5px; border-radius:3px;">PREFIX/XXX/TAHUN</code>
+                    <x-icon name="info" class="ui-icon-sm" style="margin-top:3px; color:#b45309;" />
+                    <div>
+                        <strong>Nomor Otomatis:</strong> Sistem akan menghitung urutan nomor surat secara otomatis berdasarkan jumlah surat yang telah dibuat dalam tahun berjalan. Format: <code style="background:#fef3c7; padding:1px 5px; border-radius:3px;">PREFIX/XXX/TAHUN</code>
+                    </div>
                 </div>
             </div>
         </div>
 
         {{-- SUBMIT BAR --}}
         <div class="settings-submit-bar">
-            <div style="font-size:12.5px; color:var(--text-muted);">
-                💾 Perubahan akan langsung diterapkan ke seluruh dokumen baru yang dibuat.
+            <div style="font-size:12.5px; color:var(--text-muted); display:inline-flex; align-items:center; gap:7px;">
+                <x-icon name="info" class="ui-icon-sm" />
+                <span>Perubahan akan langsung diterapkan ke seluruh dokumen baru yang dibuat.</span>
             </div>
             <button type="submit" class="btn-save-settings">
-                💾 Simpan Semua Pengaturan
+                <x-icon name="save" class="ui-icon-sm" /> Simpan Semua Pengaturan
             </button>
         </div>
 

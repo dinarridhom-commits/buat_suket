@@ -23,7 +23,7 @@
     .btn-docx   { background: #0284c7; color: #fff; }
     .btn-print  { background: var(--pu-navy); color: #fff; }
     .btn-delete { background: #fff5f5; color: #dc2626; border: 1px solid #fecaca; }
-    .meta-chip  { background: #f1f5f9; color: #475569; padding: 4px 10px; border-radius: 20px; font-size: 12.5px; font-weight: 500; }
+    .meta-chip  { background: #f1f5f9; color: #475569; padding: 4px 10px; border-radius: 20px; font-size: 12.5px; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; }
 
     .preview-scroll-wrapper {
         background: #cbd5e1; border-radius: var(--radius-lg); padding: 32px 24px;
@@ -104,8 +104,8 @@
 <div class="action-toolbar">
     <div class="toolbar-left">
         <a href="{{ route('surat.suket.index') }}" class="btn-toolbar btn-back">← Kembali ke Arsip</a>
-        <span class="meta-chip">📋 {{ $suket->nomor_surat }}</span>
-        <span class="meta-chip">📅 {{ $suket->tanggal_kejadian->format('d/m/Y') }}</span>
+        <span class="meta-chip"><x-icon name="file-text" class="ui-icon-sm" /> {{ $suket->nomor_surat }}</span>
+        <span class="meta-chip"><x-icon name="calendar" class="ui-icon-sm" /> {{ $suket->tanggal_kejadian->format('d/m/Y') }}</span>
         <span class="meta-chip" style="background:#eff6ff; color:#1d4ed8;">
             {{ $jenisLabel[$suket->jenis_absen] ?? 'Lupa Absen ' . ucfirst($suket->jenis_absen) }}
         </span>
@@ -249,7 +249,7 @@
         document.getElementById('btnExportDocx').addEventListener('click', function() {
             const btn = this;
             const orig = btn.innerHTML;
-            btn.innerHTML = '<span>⏳</span> Membuat .docx...';
+            btn.textContent = 'Membuat .docx...';
             btn.disabled = true;
 
             const docData = {

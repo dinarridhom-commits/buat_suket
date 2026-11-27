@@ -112,7 +112,7 @@
         <!-- Informasi Profil -->
         <div class="panel-card">
             <div class="panel-head">
-                <h3>👤 Informasi Akun</h3>
+                <h3><x-icon name="user" /> Informasi Akun</h3>
             </div>
             <div class="panel-body">
                 <form method="POST" action="{{ route('profil.update') }}">
@@ -135,7 +135,7 @@
                         @enderror
                     </div>
 
-                    <button type="submit" class="btn-save">💾 Simpan Profil</button>
+                    <button type="submit" class="btn-save"><x-icon name="save" class="ui-icon-sm" /> Simpan Profil</button>
                 </form>
             </div>
         </div>
@@ -143,7 +143,7 @@
         <!-- Ubah Kata Sandi -->
         <div class="panel-card">
             <div class="panel-head">
-                <h3>🔒 Ubah Kata Sandi</h3>
+                <h3><x-icon name="lock" /> Ubah Kata Sandi</h3>
             </div>
             <div class="panel-body">
                 <form method="POST" action="{{ route('profil.password') }}">
@@ -171,7 +171,7 @@
                         <input type="password" id="password_confirmation" name="password_confirmation" class="form-control" required>
                     </div>
 
-                    <button type="submit" class="btn-save">🔑 Perbarui Kata Sandi</button>
+                    <button type="submit" class="btn-save"><x-icon name="key" class="ui-icon-sm" /> Perbarui Kata Sandi</button>
                 </form>
             </div>
         </div>

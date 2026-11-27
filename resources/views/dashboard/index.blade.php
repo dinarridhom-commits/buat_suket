@@ -309,7 +309,12 @@
         margin-bottom: 18px;
         display: flex;
         flex-direction: column;
-        gap: 4px;
+        gap: 6px;
+    }
+    .reminder-meta span {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
     }
     .btn-cta-reminder {
         display: flex;
@@ -560,13 +565,13 @@
         </div>
         <div class="dash-header-actions">
             <a href="{{ route('surat.undangan.create') }}" class="btn-pill-primary">
-                <span>+</span> Buat Surat Undangan
+                <x-icon name="plus" class="ui-icon-sm" /> Buat Surat Undangan
             </a>
             <a href="{{ route('surat.suket.create') }}" class="btn-pill-outline">
-                <span>📝</span> Buat Suket Absen
+                <x-icon name="file-text" class="ui-icon-sm" /> Buat Suket Absen
             </a>
             <a href="{{ route('pegawai.export.excel') }}" class="btn-pill-outline">
-                <span>📊</span> Ekspor Excel
+                <x-icon name="download" class="ui-icon-sm" /> Ekspor Excel
             </a>
         </div>
     </div>
@@ -657,20 +662,22 @@
         <div class="bento-card">
             <div class="bento-card-head">
                 <h3>Agenda / Surat Terbaru</h3>
-                <span style="font-size:18px;">📌</span>
+                <span style="width:32px; height:32px; border-radius:50%; background:var(--pu-navy-50); color:var(--pu-navy); display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;">
+                    <x-icon name="bookmark" class="ui-icon-sm" />
+                </span>
             </div>
             <div class="reminder-box">
                 @if($suratMendatang)
                     <div>
                         <div class="reminder-title">{{ Str::limit($suratMendatang->hal, 48) }}</div>
                         <div class="reminder-meta">
-                            <span>📄 No: <b style="color:var(--text-main);">{{ $suratMendatang->nomor_surat }}</b></span>
-                            <span>📅 Tanggal: {{ $suratMendatang->tanggal_surat->format('d M Y') }}</span>
-                            <span>✍️ TTD: {{ $suratMendatang->penandatangan_nama }}</span>
+                            <span><x-icon name="file-text" class="ui-icon-sm" /> No: <b style="color:var(--text-main);">{{ $suratMendatang->nomor_surat }}</b></span>
+                            <span><x-icon name="calendar" class="ui-icon-sm" /> Tanggal: {{ $suratMendatang->tanggal_surat->format('d M Y') }}</span>
+                            <span><x-icon name="pen-tool" class="ui-icon-sm" /> TTD: {{ $suratMendatang->penandatangan_nama }}</span>
                         </div>
                     </div>
                     <a href="{{ route('surat.undangan.show', $suratMendatang->id) }}" class="btn-cta-reminder">
-                        <span>📋</span> Buka & Cetak Surat
+                        <x-icon name="printer" class="ui-icon-sm" /> Buka & Cetak Surat
                     </a>
                 @else
                     <div>
@@ -680,7 +687,7 @@
                         </div>
                     </div>
                     <a href="{{ route('surat.undangan.create') }}" class="btn-cta-reminder">
-                        <span>+</span> Buat Surat Undangan
+                        <x-icon name="plus" class="ui-icon-sm" /> Buat Surat Undangan
                     </a>
                 @endif
             </div>
@@ -756,7 +763,7 @@
         <!-- Recent Surat Undangan -->
         <div class="panel-card">
             <div class="panel-head">
-                <h3>✉️ Arsip Surat Undangan Terbaru</h3>
+                <h3><x-icon name="mail" /> Arsip Surat Undangan Terbaru</h3>
                 <a href="{{ route('surat.undangan.index') }}" style="font-size:12px; font-weight:600; color:var(--pu-navy); text-decoration:none;">Semua →</a>
             </div>
             <div class="panel-body" style="padding:0;">
@@ -783,7 +790,7 @@
                                         </span>
                                     </td>
                                     <td style="text-align:center;">
-                                        <a href="{{ route('surat.undangan.show', $s->id) }}" class="btn-view-sm">👁️ Lihat</a>
+                                        <a href="{{ route('surat.undangan.show', $s->id) }}" class="btn-view-sm"><x-icon name="eye" class="ui-icon-sm" /> Lihat</a>
                                     </td>
                                 </tr>
                             @endforeach
@@ -791,7 +798,7 @@
                     </table>
                 @else
                     <div class="empty-state">
-                        <span class="empty-icon">📭</span>
+                        <span class="empty-icon"><x-icon name="inbox" class="ui-icon-lg" /></span>
                         <p>Belum ada Surat Undangan yang dibuat.</p>
                     </div>
                 @endif
@@ -801,7 +808,7 @@
         <!-- Recent Suket Absen -->
         <div class="panel-card">
             <div class="panel-head">
-                <h3>📝 Arsip Suket Lupa Absen Terbaru</h3>
+                <h3><x-icon name="file-text" /> Arsip Suket Lupa Absen Terbaru</h3>
                 <a href="{{ route('surat.suket.index') }}" style="font-size:12px; font-weight:600; color:var(--pu-navy); text-decoration:none;">Semua →</a>
             </div>
             <div class="panel-body" style="padding:0;">
@@ -828,7 +835,7 @@
                                         </span>
                                     </td>
                                     <td style="text-align:center;">
-                                        <a href="{{ route('surat.suket.show', $sk->id) }}" class="btn-view-sm">👁️ Lihat</a>
+                                        <a href="{{ route('surat.suket.show', $sk->id) }}" class="btn-view-sm"><x-icon name="eye" class="ui-icon-sm" /> Lihat</a>
                                     </td>
                                 </tr>
                             @endforeach
@@ -836,7 +843,7 @@
                     </table>
                 @else
                     <div class="empty-state">
-                        <span class="empty-icon">📝</span>
+                        <span class="empty-icon"><x-icon name="file-text" class="ui-icon-lg" /></span>
                         <p>Belum ada Suket Lupa Absen yang dibuat.</p>
                     </div>
                 @endif

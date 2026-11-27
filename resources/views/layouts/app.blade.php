@@ -229,7 +229,17 @@
             background: var(--pu-gold);
             display: none; /* hidden inside pill, gold is the pill border accent */
         }
-        .nav-icon { font-size: 15px; width: 20px; text-align: center; flex-shrink: 0; }
+        .nav-icon {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 20px; height: 20px; flex-shrink: 0;
+        }
+        .ui-icon {
+            width: 16px; height: 16px;
+            display: inline-block; vertical-align: -0.15em; flex-shrink: 0;
+        }
+        .ui-icon-sm { width: 14px; height: 14px; }
+        .ui-icon-md { width: 17px; height: 17px; }
+        .ui-icon-lg { width: 22px; height: 22px; }
 
         .nav-badge {
             margin-left: auto;
@@ -284,8 +294,9 @@
 
         .btn-logout-mini {
             background: none; border: none; cursor: pointer;
-            color: var(--text-subtle); padding: 4px; border-radius: 6px;
-            transition: all 0.15s; font-size: 15px; line-height: 1;
+            color: var(--text-subtle); padding: 6px; border-radius: 6px;
+            transition: all 0.15s; line-height: 1;
+            display: inline-flex; align-items: center; justify-content: center;
             flex-shrink: 0;
         }
         .btn-logout-mini:hover { background: #fee2e2; color: var(--danger); }
@@ -526,7 +537,10 @@
             display: flex; align-items: center; justify-content: space-between;
             background: var(--bg-surface);
         }
-        .panel-head h3 { font-size: 14px; font-weight: 700; color: var(--text-main); }
+        .panel-head h3 {
+            font-size: 14px; font-weight: 700; color: var(--text-main);
+            display: inline-flex; align-items: center; gap: 8px;
+        }
         .panel-body { padding: 18px 20px; }
 
         .table-modern {
@@ -562,7 +576,13 @@
         }
 
         .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); }
-        .empty-state .empty-icon { font-size: 36px; display: block; margin-bottom: 10px; }
+        .empty-state .empty-icon {
+            width: 52px; height: 52px; border-radius: 50%;
+            background: var(--bg-subtle); border: 1px solid var(--border);
+            color: var(--text-subtle);
+            display: inline-flex; align-items: center; justify-content: center;
+            margin: 0 auto 12px;
+        }
         .empty-state p { font-size: 13.5px; }
 
         /* ── Pagination Bar (konsisten untuk 1 maupun banyak halaman) ── */
@@ -746,7 +766,7 @@
 
     <!-- FLOATING REOPEN SIDEBAR BUTTON (desktop when hidden) -->
     <button type="button" class="sidebar-reopen-btn" onclick="toggleDesktopSidebar()" title="Tampilkan Menu Sidebar">
-        <span>☰</span>
+        <x-icon name="menu" class="ui-icon-sm" />
         <span>Menu</span>
     </button>
 
@@ -763,8 +783,8 @@
                     <span>Kementerian Pekerjaan Umum</span>
                 </div>
             </div>
-            <button type="button" class="sidebar-toggle-btn" onclick="toggleDesktopSidebar()" title="Sembunyikan Sidebar">
-                ◀
+            <button type="button" class="sidebar-toggle-btn" onclick="toggleDesktopSidebar()" title="Sembunyikan Sidebar" aria-label="Sembunyikan Sidebar">
+                <x-icon name="chevron-left" class="ui-icon-sm" />
             </button>
         </div>
 
@@ -772,29 +792,29 @@
         <nav class="sidebar-menu">
             <div class="menu-category">Menu</div>
             <a href="{{ route('dashboard') }}" class="nav-item {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-                <span class="nav-icon">📊</span>
+                <span class="nav-icon"><x-icon name="dashboard" class="ui-icon-md" /></span>
                 <span>Dashboard</span>
             </a>
 
             <div class="menu-category">Administrasi Surat</div>
             <a href="{{ route('surat.undangan.create') }}" class="nav-item {{ request()->routeIs('surat.undangan.create') ? 'active' : '' }}">
-                <span class="nav-icon">✉️</span>
+                <span class="nav-icon"><x-icon name="mail" class="ui-icon-md" /></span>
                 <span>Buat Surat Undangan</span>
             </a>
             <a href="{{ route('surat.suket.create') }}" class="nav-item {{ request()->routeIs('surat.suket.create') ? 'active' : '' }}">
-                <span class="nav-icon">📝</span>
+                <span class="nav-icon"><x-icon name="file-text" class="ui-icon-md" /></span>
                 <span>Suket Lupa Absen</span>
             </a>
             <a href="{{ route('surat.undangan.index') }}" class="nav-item {{ request()->routeIs('surat.undangan.index') || request()->routeIs('surat.undangan.show') ? 'active' : '' }}">
-                <span class="nav-icon">📁</span>
+                <span class="nav-icon"><x-icon name="folder" class="ui-icon-md" /></span>
                 <span>Arsip Surat Undangan</span>
             </a>
             <a href="{{ route('surat.suket.index') }}" class="nav-item {{ request()->routeIs('surat.suket.index') || request()->routeIs('surat.suket.show') ? 'active' : '' }}">
-                <span class="nav-icon">🗂️</span>
+                <span class="nav-icon"><x-icon name="archive" class="ui-icon-md" /></span>
                 <span>Arsip Suket Absen</span>
             </a>
             <a href="{{ route('pegawai.index') }}" class="nav-item {{ request()->routeIs('pegawai.*') ? 'active' : '' }}">
-                <span class="nav-icon">👥</span>
+                <span class="nav-icon"><x-icon name="users" class="ui-icon-md" /></span>
                 <span>Database Pegawai</span>
             </a>
             @php
@@ -807,7 +827,7 @@
                 }
             @endphp
             <a href="{{ route('trash.index') }}" class="nav-item {{ request()->routeIs('trash.*') ? 'active' : '' }}">
-                <span class="nav-icon">🕒</span>
+                <span class="nav-icon"><x-icon name="history" class="ui-icon-md" /></span>
                 <span>Riwayat Penghapusan</span>
                 @if($trashTotalNav > 0)
                     <span class="nav-badge" style="background:#ef4444; color:#fff;">{{ $trashTotalNav }}</span>
@@ -816,11 +836,11 @@
 
             <div class="menu-category">Pengaturan</div>
             <a href="{{ route('settings.index') }}" class="nav-item {{ request()->routeIs('settings.*') ? 'active' : '' }}">
-                <span class="nav-icon">⚙️</span>
+                <span class="nav-icon"><x-icon name="settings" class="ui-icon-md" /></span>
                 <span>Pengaturan Instansi</span>
             </a>
             <a href="{{ route('profil.index') }}" class="nav-item {{ request()->routeIs('profil.*') ? 'active' : '' }}">
-                <span class="nav-icon">👤</span>
+                <span class="nav-icon"><x-icon name="user" class="ui-icon-md" /></span>
                 <span>Profil & Kata Sandi</span>
             </a>
         </nav>
@@ -837,7 +857,9 @@
                 </div>
                 <form method="POST" action="{{ route('logout') }}" onsubmit="return confirm('Yakin ingin keluar dari sistem?')">
                     @csrf
-                    <button type="submit" class="btn-logout-mini" title="Keluar dari sistem">🚪</button>
+                    <button type="submit" class="btn-logout-mini" title="Keluar dari sistem" aria-label="Keluar dari sistem">
+                        <x-icon name="log-out" class="ui-icon-md" />
+                    </button>
                 </form>
             </div>
         </div>
@@ -849,7 +871,9 @@
         <!-- TOPBAR (Mobile Only) -->
         <header class="topbar">
             <div class="topbar-left">
-                <button type="button" class="mobile-hamburger" onclick="toggleSidebar()" aria-label="Buka Menu">☰</button>
+                <button type="button" class="mobile-hamburger" onclick="toggleSidebar()" aria-label="Buka Menu">
+                    <x-icon name="menu" class="ui-icon-md" />
+                </button>
                 <span class="mobile-brand-label">BWS Kalimantan I</span>
             </div>
         </header>
@@ -866,28 +890,34 @@
             @if(session('success'))
                 <div class="alert-toast alert-success" id="alertToastSuccess">
                     <div class="alert-toast-content">
-                        <span>✅</span>
+                        <x-icon name="check-circle" class="ui-icon-md" />
                         <span>{{ session('success') }}</span>
                     </div>
-                    <button type="button" class="alert-close-btn" onclick="document.getElementById('alertToastSuccess').remove()">✕</button>
+                    <button type="button" class="alert-close-btn" onclick="document.getElementById('alertToastSuccess').remove()" aria-label="Tutup">
+                        <x-icon name="x" class="ui-icon-sm" />
+                    </button>
                 </div>
             @endif
             @if(session('error'))
                 <div class="alert-toast alert-danger" id="alertToastError">
                     <div class="alert-toast-content">
-                        <span>⚠️</span>
+                        <x-icon name="alert-triangle" class="ui-icon-md" />
                         <span>{{ session('error') }}</span>
                     </div>
-                    <button type="button" class="alert-close-btn" onclick="document.getElementById('alertToastError').remove()">✕</button>
+                    <button type="button" class="alert-close-btn" onclick="document.getElementById('alertToastError').remove()" aria-label="Tutup">
+                        <x-icon name="x" class="ui-icon-sm" />
+                    </button>
                 </div>
             @endif
             @if(session('warning'))
                 <div class="alert-toast alert-warning" id="alertToastWarning">
                     <div class="alert-toast-content">
-                        <span>⚠️</span>
+                        <x-icon name="alert-triangle" class="ui-icon-md" />
                         <span>{{ session('warning') }}</span>
                     </div>
-                    <button type="button" class="alert-close-btn" onclick="document.getElementById('alertToastWarning').remove()">✕</button>
+                    <button type="button" class="alert-close-btn" onclick="document.getElementById('alertToastWarning').remove()" aria-label="Tutup">
+                        <x-icon name="x" class="ui-icon-sm" />
+                    </button>
                 </div>
             @endif
 

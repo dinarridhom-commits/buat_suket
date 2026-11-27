@@ -141,7 +141,7 @@
             @include('partials.pagination-bar', ['paginator' => $sukets, 'label' => 'suket'])
         @else
             <div class="empty-state">
-                <span>📝</span>
+                <span class="empty-icon"><x-icon name="file-text" class="ui-icon-lg" /></span>
                 <p style="font-weight: 600;">{{ request()->hasAny(['q', 'jenis_absen', 'bulan']) ? 'Tidak ada arsip yang sesuai dengan filter.' : 'Belum ada arsip Suket Lupa Absen di database.' }}</p>
                 <a href="{{ route('surat.suket.create') }}" class="btn-quick-create" style="margin-top: 14px;">+ Buat Suket Lupa Absen</a>
             </div>

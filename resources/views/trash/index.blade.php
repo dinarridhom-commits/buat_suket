@@ -123,15 +123,15 @@
 <div class="trash-tabs">
     <div class="trash-tab-group">
         <a href="{{ route('trash.index', ['tab' => 'undangan']) }}" class="trash-tab-btn {{ $tab === 'undangan' ? 'active' : '' }}">
-            <span>📁 Surat Undangan</span>
+            <x-icon name="folder" class="ui-icon-sm" /> <span>Surat Undangan</span>
             <span class="trash-tab-count">{{ $counts['undangan'] }}</span>
         </a>
         <a href="{{ route('trash.index', ['tab' => 'suket']) }}" class="trash-tab-btn {{ $tab === 'suket' ? 'active' : '' }}">
-            <span>🗂️ Suket Absen</span>
+            <x-icon name="archive" class="ui-icon-sm" /> <span>Suket Absen</span>
             <span class="trash-tab-count">{{ $counts['suket'] }}</span>
         </a>
         <a href="{{ route('trash.index', ['tab' => 'pegawai']) }}" class="trash-tab-btn {{ $tab === 'pegawai' ? 'active' : '' }}">
-            <span>👥 Database Pegawai</span>
+            <x-icon name="users" class="ui-icon-sm" /> <span>Database Pegawai</span>
             <span class="trash-tab-count">{{ $counts['pegawai'] }}</span>
         </a>
     </div>
@@ -241,7 +241,7 @@
             @include('partials.pagination-bar', ['paginator' => $items, 'label' => 'data terhapus'])
         @else
             <div class="empty-state">
-                <span class="empty-icon">✨</span>
+                <span class="empty-icon"><x-icon name="check-circle" class="ui-icon-lg" /></span>
                 <p style="font-weight:600;">Tidak ada data terhapus di kategori ini.</p>
             </div>
         @endif
