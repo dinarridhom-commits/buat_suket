@@ -79,7 +79,7 @@
         .sidebar {
             width: var(--sidebar-width);
             background: var(--pu-navy);
-            border-right: 1px solid var(--pu-navy-dark);
+            border-right: 3px solid var(--pu-gold);
             display: flex;
             flex-direction: column;
             position: fixed;
@@ -97,7 +97,7 @@
             justify-content: space-between;
             gap: 10px;
             padding: 0 16px 0 20px;
-            border-bottom: 1px solid rgba(255,255,255,0.10);
+            border-bottom: 1.5px solid rgba(245, 158, 11, 0.45);
             flex-shrink: 0;
         }
         .sidebar-brand-left {
@@ -255,7 +255,7 @@
         /* ── Sidebar Footer – User card ── */
         .sidebar-footer {
             padding: 12px 14px;
-            border-top: 1px solid rgba(255,255,255,0.10);
+            border-top: 1px solid rgba(245, 158, 11, 0.35);
             flex-shrink: 0;
         }
 
@@ -264,7 +264,7 @@
             padding: 10px 12px;
             background: rgba(255,255,255,0.07);
             border-radius: var(--radius-md);
-            border: 1px solid rgba(255,255,255,0.12);
+            border: 1px solid rgba(245, 158, 11, 0.35);
         }
 
         .user-avatar {
