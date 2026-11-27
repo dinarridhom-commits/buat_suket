@@ -131,14 +131,15 @@ class AuthController extends Controller
     }
 
     /**
-     * Kirim tautan atur ulang kata sandi (menerima email atau username)
+     * Kirim kode OTP atur ulang kata sandi ke email terdaftar
      */
     public function sendResetLink(Request $request)
     {
         $request->validate([
-            'login' => 'required|string',
+            'login' => 'required|email',
         ], [
-            'login.required' => 'Email atau Username wajib diisi.',
+            'login.required' => 'Alamat email wajib diisi.',
+            'login.email'    => 'Format alamat email tidak valid.',
         ]);
 
         $this->assertRecaptchaV3($request, 'forgot_password', 'login');
@@ -159,7 +160,7 @@ class AuthController extends Controller
             'warning',
             $request
         );
-        $matched    = User::whereRaw('LOWER(email) = ? OR LOWER(name) = ?', [$loginInput, $loginInput])->first();
+        $matched    = User::whereRaw('LOWER(email) = ?', [$loginInput])->first();
 
         if ($matched) {
             $otp = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
@@ -206,7 +207,7 @@ class AuthController extends Controller
                 ->with('status', 'Kode OTP 6 digit telah dikirim ke email ' . $matched->email . '. Berlaku selama 10 menit.');
         }
 
-        return back()->with('status', 'Jika email atau username terdaftar di sistem, kode OTP 6 digit telah dikirim ke email terdaftar.');
+        return back()->with('status', 'Jika alamat email terdaftar di sistem, kode OTP 6 digit telah dikirim ke email tersebut.');
     }
 
     /**

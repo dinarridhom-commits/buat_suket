@@ -4,7 +4,7 @@
 @section('brand_subtitle', 'LUPA KATA SANDI')
 
 @section('form_content')
-    <p class="auth-desc">Masukkan email aktif atau username akun Anda untuk menerima kode OTP 6 digit melalui email.</p>
+    <p class="auth-desc">Masukkan alamat email aktif yang terdaftar pada akun Anda untuk menerima kode OTP 6 digit melalui email.</p>
 
     @if(session('status'))
         <div class="alert-box alert-success">
@@ -26,15 +26,15 @@
 
         <div class="form-group">
             <div class="form-label-row">
-                <label class="form-label" for="login">Email atau Username</label>
+                <label class="form-label" for="login">Alamat Email</label>
             </div>
             <div class="input-wrap">
                 <span class="input-icon">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><polyline points="3 7 12 13 21 7"/></svg>
                 </span>
-                <input type="text" name="login" id="login" class="form-control"
+                <input type="email" name="login" id="login" class="form-control"
                        value="{{ old('login') }}"
-                       placeholder="Masukkan email atau username" required autofocus autocomplete="username">
+                       placeholder="Masukkan alamat email terdaftar" required autofocus autocomplete="email">
             </div>
         </div>
 
