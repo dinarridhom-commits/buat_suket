@@ -7,7 +7,6 @@ use App\Http\Controllers\PegawaiController;
 use App\Http\Controllers\SuratUndanganController;
 use App\Http\Controllers\SuketAbsenController;
 use App\Http\Controllers\SettingController;
-use App\Http\Controllers\SecurityController;
 use App\Http\Controllers\TrashController;
 
 // Autentikasi (Guest only)
@@ -87,12 +86,5 @@ Route::middleware('auth')->group(function () {
     Route::get('/profil', [AuthController::class, 'showProfile'])->name('profil.index');
     Route::put('/profil', [AuthController::class, 'updateProfile'])->name('profil.update');
     Route::put('/profil/sandi', [AuthController::class, 'changePassword'])->name('profil.password');
-
-    // Keamanan, Log Aktivitas & Backup Database
-    Route::prefix('keamanan')->name('security.')->group(function () {
-        Route::get('/', [SecurityController::class, 'index'])->name('index');
-        Route::get('/backup-sql', [SecurityController::class, 'downloadBackup'])->name('backup');
-        Route::delete('/bersihkan-log', [SecurityController::class, 'prune'])->name('prune');
-    });
 
 });
