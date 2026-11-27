@@ -159,7 +159,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="password">Kata Sandi Baru (Minimal 6 karakter)</label>
+                        <label for="password">Kata Sandi Baru (Min. 8 karakter, huruf &amp; angka)</label>
                         <input type="password" id="password" name="password" class="form-control" required>
                         @error('password')
                             <span class="error-text">{{ $message }}</span>

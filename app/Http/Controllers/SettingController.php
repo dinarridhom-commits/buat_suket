@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\SecurityLog;
 use App\Models\Setting;
 use Illuminate\Http\Request;
 
@@ -44,6 +45,8 @@ class SettingController extends Controller
         if ($request->filled('prefix_suket')) {
             Setting::set('prefix_suket', $request->prefix_suket);
         }
+
+        SecurityLog::record('settings_updated', 'Memperbarui konfigurasi Kop Instansi & format nomor surat.', 'info', $request);
 
         return redirect()->route('settings.index')->with('success', 'Pengaturan Kop Balai & Profil Instansi berhasil diperbarui.');
     }

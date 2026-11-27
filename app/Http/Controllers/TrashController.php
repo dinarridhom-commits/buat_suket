@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Pegawai;
+use App\Models\SecurityLog;
 use App\Models\SuketAbsen;
 use App\Models\SuratUndangan;
 use App\Models\SuratUndanganPenerima;
@@ -92,6 +93,8 @@ class TrashController extends Controller
         $this->wipeRelated($type, [$item->id]);
         $item->forceDelete();
 
+        SecurityLog::record('trash_force_delete', "Menghapus permanen 1 {$cfg['label']} (ID #{$id}).", 'warning');
+
         return redirect()->route('trash.index', ['tab' => $type])
             ->with('success', ucfirst($cfg['label']) . ' berhasil dihapus permanen.');
     }
@@ -120,6 +123,8 @@ class TrashController extends Controller
         $this->wipeRelated($type, $ids);
         $count = $cfg['model']::onlyTrashed()->whereIn('id', $ids)->forceDelete();
 
+        SecurityLog::record('trash_force_delete', "Menghapus permanen massal {$count} {$cfg['label']}.", 'warning', $request);
+
         return redirect()->route('trash.index', ['tab' => $type])
             ->with('success', "{$count} {$cfg['label']} berhasil dihapus permanen.");
     }
@@ -133,6 +138,7 @@ class TrashController extends Controller
         if ($count > 0) {
             $this->wipeRelated($type, $ids);
             $cfg['model']::onlyTrashed()->whereIn('id', $ids)->forceDelete();
+            SecurityLog::record('trash_emptied', "Mengosongkan {$count} {$cfg['label']} secara permanen dari Riwayat Penghapusan.", 'warning');
         }
 
         return redirect()->route('trash.index', ['tab' => $type])

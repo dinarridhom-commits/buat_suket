@@ -843,6 +843,10 @@
                 <span class="nav-icon"><x-icon name="user" class="ui-icon-md" /></span>
                 <span>Profil & Kata Sandi</span>
             </a>
+            <a href="{{ route('security.index') }}" class="nav-item {{ request()->routeIs('security.*') ? 'active' : '' }}">
+                <span class="nav-icon"><x-icon name="shield-check" class="ui-icon-md" /></span>
+                <span>Keamanan & Backup</span>
+            </a>
         </nav>
 
         <!-- User Card (footer) -->

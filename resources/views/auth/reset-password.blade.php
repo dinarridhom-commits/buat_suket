@@ -4,7 +4,7 @@
 @section('brand_subtitle', 'ATUR ULANG KATA SANDI')
 
 @section('form_content')
-    <p class="auth-desc">Buat kata sandi baru minimal 6 karakter untuk akun Anda.</p>
+    <p class="auth-desc">Buat kata sandi baru minimal 8 karakter dengan kombinasi huruf dan angka untuk akun Anda.</p>
 
     @if($errors->any())
         <div class="alert-box alert-danger">
@@ -41,7 +41,7 @@
                     <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 1 1 8 0v4"/></svg>
                 </span>
                 <input type="password" name="password" id="password" class="form-control has-toggle"
-                       placeholder="Minimal 6 karakter" required autofocus autocomplete="new-password">
+                       placeholder="Minimal 8 karakter (huruf & angka)" required autofocus autocomplete="new-password">
                 <button type="button" class="toggle-password-btn" data-target="password" title="Lihat kata sandi">
                     <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z"/><circle cx="12" cy="12" r="2.5"/></svg>
                 </button>

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\SecurityLog;
 use App\Models\User;
 use App\Services\RecaptchaV3Service;
 use Illuminate\Auth\Events\PasswordReset;
@@ -15,6 +16,25 @@ use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
+    /**
+     * Aturan kata sandi kuat yang konsisten pada reset & ubah kata sandi.
+     */
+    private function passwordValidationRules(): array
+    {
+        return [
+            'required',
+            'string',
+            'min:8',
+            'confirmed',
+            function (string $attribute, mixed $value, \Closure $fail) {
+                $str = (string) $value;
+                if (!preg_match('/[A-Za-z]/', $str) || !preg_match('/[0-9]/', $str)) {
+                    $fail('Kata sandi baru wajib mengombinasikan huruf dan angka.');
+                }
+            },
+        ];
+    }
+
     /**
      * Validasi Google reCAPTCHA v3 bila Site Key & Secret Key sudah dikonfigurasi.
      */
@@ -64,6 +84,12 @@ class AuthController extends Controller
         $throttleKey = Str::lower($request->input('login')) . '|' . $request->ip();
         if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
             $seconds = RateLimiter::availableIn($throttleKey);
+            SecurityLog::record(
+                'login_throttled',
+                'Percobaan login diblokir sementara (melebihi 5x/menit) untuk akun: ' . Str::limit((string) $request->input('login'), 60),
+                'danger',
+                $request
+            );
             throw ValidationException::withMessages([
                 'login' => "Terlalu banyak percobaan login gagal. Silakan coba lagi dalam {$seconds} detik.",
             ]);
@@ -75,12 +101,19 @@ class AuthController extends Controller
         if (Auth::attempt([$loginField => $request->input('login'), 'password' => $request->input('password')], $remember)) {
             RateLimiter::clear($throttleKey);
             $request->session()->regenerate();
+            SecurityLog::record('login_success', 'Login berhasil ke Portal Tata Usaha.', 'info', $request, Auth::user());
 
             return redirect()->intended(route('dashboard'))
                 ->with('success', 'Selamat datang kembali, ' . Auth::user()->name . '!');
         }
 
         RateLimiter::hit($throttleKey, 60);
+        SecurityLog::record(
+            'login_failed',
+            'Percobaan login gagal untuk identitas: ' . Str::limit((string) $request->input('login'), 60),
+            'warning',
+            $request
+        );
 
         throw ValidationException::withMessages([
             'login' => 'Email/Username atau kata sandi yang Anda masukkan tidak sesuai.',
@@ -118,6 +151,12 @@ class AuthController extends Controller
         RateLimiter::hit($throttleKey, 60);
 
         $loginInput = mb_strtolower(trim((string) $request->input('login')));
+        SecurityLog::record(
+            'password_reset_requested',
+            'Permintaan tautan atur ulang kata sandi diajukan untuk: ' . Str::limit($loginInput, 80),
+            'warning',
+            $request
+        );
         $matched    = User::whereRaw('LOWER(email) = ? OR LOWER(name) = ?', [$loginInput, $loginInput])->first();
 
         if ($matched) {
@@ -155,33 +194,57 @@ class AuthController extends Controller
         $request->validate([
             'token'    => 'required|string',
             'email'    => 'required|email',
-            'password' => 'required|string|min:6|confirmed',
+            'password' => $this->passwordValidationRules(),
         ], [
             'email.required'     => 'Alamat email wajib diisi.',
             'email.email'        => 'Format alamat email tidak valid.',
             'password.required'  => 'Kata sandi baru wajib diisi.',
-            'password.min'       => 'Kata sandi baru minimal 6 karakter.',
+            'password.min'       => 'Kata sandi baru minimal 8 karakter.',
             'password.confirmed' => 'Konfirmasi kata sandi baru tidak cocok.',
         ]);
 
         $this->assertRecaptchaV3($request, 'reset_password', 'email');
 
+        $throttleKey = 'pwreset-submit|' . Str::lower((string) $request->input('email')) . '|' . $request->ip();
+        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
+            SecurityLog::record(
+                'password_reset_throttled',
+                'Percobaan reset kata sandi melebihi batas (5x/menit) untuk email: ' . Str::limit((string) $request->input('email'), 80),
+                'danger',
+                $request
+            );
+            throw ValidationException::withMessages([
+                'email' => "Terlalu banyak percobaan atur ulang sandi. Coba lagi dalam {$seconds} detik.",
+            ]);
+        }
+
         $status = Password::reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),
-            function (User $user, string $password) {
+            function (User $user, string $password) use ($request) {
                 $user->forceFill([
                     'password'       => Hash::make($password),
                     'remember_token' => Str::random(60),
                 ])->save();
 
+                SecurityLog::record(
+                    'password_reset_completed',
+                    'Kata sandi berhasil diatur ulang melalui token reset untuk akun ' . $user->email . '.',
+                    'info',
+                    $request,
+                    $user
+                );
                 event(new PasswordReset($user));
             }
         );
 
         if ($status === Password::PASSWORD_RESET) {
+            RateLimiter::clear($throttleKey);
             return redirect()->route('login')
                 ->with('success', 'Kata sandi berhasil diperbarui. Silakan masuk dengan kata sandi baru Anda.');
         }
+
+        RateLimiter::hit($throttleKey, 60);
 
         $message = match ($status) {
             Password::INVALID_USER  => 'Akun dengan alamat email tersebut tidak ditemukan.',
@@ -199,6 +262,9 @@ class AuthController extends Controller
      */
     public function logout(Request $request)
     {
+        $user = Auth::user();
+        SecurityLog::record('logout', 'Pengguna keluar dari sistem.', 'info', $request, $user);
+
         Auth::logout();
 
         $request->session()->invalidate();
@@ -234,6 +300,7 @@ class AuthController extends Controller
         ]);
 
         $user->update($validated);
+        SecurityLog::record('profile_updated', 'Memperbarui profil akun (' . $user->name . ' / ' . $user->email . ').', 'info', $request, $user);
 
         return redirect()->route('profil.index')
             ->with('success', 'Profil akun berhasil diperbarui.');
@@ -246,27 +313,32 @@ class AuthController extends Controller
     {
         $request->validate([
             'current_password' => 'required|string',
-            'password'         => 'required|string|min:6|confirmed',
+            'password'         => $this->passwordValidationRules(),
         ], [
             'current_password.required' => 'Kata sandi saat ini wajib diisi.',
             'password.required'         => 'Kata sandi baru wajib diisi.',
-            'password.min'              => 'Kata sandi baru minimal 6 karakter.',
+            'password.min'              => 'Kata sandi baru minimal 8 karakter.',
             'password.confirmed'        => 'Konfirmasi kata sandi baru tidak cocok.',
         ]);
 
         $user = Auth::user();
 
         if (!Hash::check($request->current_password, $user->password)) {
+            SecurityLog::record('password_change_failed', 'Gagal ubah kata sandi: kata sandi saat ini tidak cocok.', 'warning', $request, $user);
             throw ValidationException::withMessages([
                 'current_password' => 'Kata sandi saat ini tidak sesuai.',
             ]);
         }
 
-        $user->update([
-            'password' => Hash::make($request->password),
-        ]);
+        $user->forceFill([
+            'password'       => Hash::make($request->password),
+            'remember_token' => Str::random(60),
+        ])->save();
+
+        $request->session()->regenerate();
+        SecurityLog::record('password_changed', 'Kata sandi akun berhasil diubah dari halaman Profil dan sesi diperbarui.', 'info', $request, $user);
 
         return redirect()->route('profil.index')
-            ->with('success', 'Kata sandi berhasil diubah.');
+            ->with('success', 'Kata sandi berhasil diubah dan sesi login diperbarui.');
     }
 }
