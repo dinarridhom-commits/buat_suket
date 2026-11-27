@@ -4,7 +4,20 @@
 @section('brand_subtitle', 'ATUR ULANG KATA SANDI')
 
 @section('form_content')
-    <p class="auth-desc">Buat kata sandi baru minimal 8 karakter dengan kombinasi huruf dan angka untuk akun Anda.</p>
+    <p class="auth-desc">Masukkan kode OTP 6 digit yang dikirim ke email Anda beserta kata sandi baru (minimal 8 karakter, huruf dan angka).</p>
+
+    @if(session('status'))
+        <div class="alert-box alert-success">
+            <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0; margin-top:1px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            <span>{{ session('status') }}</span>
+        </div>
+    @endif
+
+    @if(session('dev_reset_otp'))
+        <div class="dev-reset-box">
+            <div><strong>Mode Lokal (MAIL_MAILER=log):</strong> Kode OTP Anda adalah <strong style="font-family:monospace;letter-spacing:3px;">{{ session('dev_reset_otp') }}</strong></div>
+        </div>
+    @endif
 
     @if($errors->any())
         <div class="alert-box alert-danger">
@@ -15,7 +28,6 @@
 
     <form method="POST" action="{{ route('password.update') }}" id="resetForm">
         @csrf
-        <input type="hidden" name="token" value="{{ $token }}">
         <input type="hidden" name="g-recaptcha-response" id="recaptchaTokenReset">
 
         <div class="form-group">
@@ -29,6 +41,22 @@
                 <input type="email" name="email" id="email" class="form-control"
                        value="{{ old('email', $email) }}"
                        placeholder="Masukkan email terdaftar" required autocomplete="email">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="form-label-row">
+                <label class="form-label" for="otp">Kode OTP (6 Digit)</label>
+            </div>
+            <div class="input-wrap">
+                <span class="input-icon">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                </span>
+                <input type="text" name="otp" id="otp" class="form-control"
+                       value="{{ old('otp') }}"
+                       inputmode="numeric" maxlength="6" pattern="[0-9]{6}"
+                       style="font-family:monospace; letter-spacing:4px; font-weight:700;"
+                       placeholder="Contoh: 123456" required autofocus autocomplete="one-time-code">
             </div>
         </div>
 
@@ -68,7 +96,8 @@
             <span>Simpan Kata Sandi Baru</span>
         </button>
 
-        <div style="margin-top: 18px; text-align: center;">
+        <div style="margin-top: 18px; text-align: center; display: flex; flex-direction: column; gap: 8px;">
+            <a href="{{ route('password.request') }}" class="back-link">Belum menerima kode? Kirim ulang OTP</a>
             <a href="{{ route('login') }}" class="back-link">&larr; Kembali ke halaman LOGIN</a>
         </div>
 

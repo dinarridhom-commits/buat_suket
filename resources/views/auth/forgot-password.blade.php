@@ -4,19 +4,12 @@
 @section('brand_subtitle', 'LUPA KATA SANDI')
 
 @section('form_content')
-    <p class="auth-desc">Masukkan email atau username akun Anda untuk mengatur ulang kata sandi.</p>
+    <p class="auth-desc">Masukkan email aktif atau username akun Anda untuk menerima kode OTP 6 digit melalui email.</p>
 
     @if(session('status'))
         <div class="alert-box alert-success">
             <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0; margin-top:1px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
             <span>{{ session('status') }}</span>
-        </div>
-    @endif
-
-    @if(session('dev_reset_url'))
-        <div class="dev-reset-box">
-            <div><strong>Mode Lokal (MAIL_MAILER=log):</strong> Server email belum dikonfigurasi. Klik tombol berikut untuk langsung mengatur ulang kata sandi:</div>
-            <a href="{{ session('dev_reset_url') }}">Buka Halaman Reset Kata Sandi</a>
         </div>
     @endif
 
@@ -46,7 +39,7 @@
         </div>
 
         <button type="submit" class="btn-submit-login">
-            <span>Kirim Tautan Atur Ulang</span>
+            <span>Kirim Kode OTP ke Email</span>
         </button>
 
         <div style="margin-top: 18px; text-align: center;">

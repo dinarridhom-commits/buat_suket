@@ -5,11 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\SecurityLog;
 use App\Models\User;
 use App\Services\RecaptchaV3Service;
+use Carbon\Carbon;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -160,101 +162,143 @@ class AuthController extends Controller
         $matched    = User::whereRaw('LOWER(email) = ? OR LOWER(name) = ?', [$loginInput, $loginInput])->first();
 
         if ($matched) {
-            Password::sendResetLink(['email' => $matched->email], function (User $user, string $token) {
-                $user->sendPasswordResetNotification($token);
+            $otp = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
-                if (app()->environment('local') && config('app.debug') && config('mail.default') === 'log') {
-                    session()->flash('dev_reset_url', route('password.reset', [
-                        'token' => $token,
-                        'email' => $user->email,
-                    ]));
-                }
-            });
+            DB::table('password_reset_tokens')->updateOrInsert(
+                ['email' => $matched->email],
+                [
+                    'token'      => Hash::make($otp),
+                    'created_at' => now(),
+                ]
+            );
+
+            try {
+                $htmlBody = '<div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:24px;border:1px solid #e5e7eb;border-radius:12px;">'
+                    . '<h2 style="color:#13243d;margin-top:0;">Kode OTP Reset Kata Sandi</h2>'
+                    . '<p style="color:#374151;font-size:14px;line-height:1.6;">Halo <strong>' . e($matched->name) . '</strong>,</p>'
+                    . '<p style="color:#374151;font-size:14px;line-height:1.6;">Berikut adalah kode OTP 6 digit untuk mengatur ulang kata sandi akun Portal Tata Usaha BWS Kalimantan I:</p>'
+                    . '<div style="margin:20px 0;padding:16px;background:#eef2f8;border-radius:10px;text-align:center;font-size:28px;font-weight:800;letter-spacing:8px;color:#13243d;font-family:monospace;">' . $otp . '</div>'
+                    . '<p style="color:#6b7280;font-size:13px;line-height:1.5;">Kode ini berlaku selama <strong>10 menit</strong>. Jangan bagikan kode OTP ini kepada siapa pun.</p>'
+                    . '</div>';
+
+                Mail::html($htmlBody, function ($message) use ($matched) {
+                    $message->to($matched->email, $matched->name)
+                        ->subject('Kode OTP Reset Kata Sandi — BWS Kalimantan I');
+                });
+            } catch (\Throwable $e) {
+                SecurityLog::record(
+                    'password_reset_mail_failed',
+                    'Gagal mengirim email OTP reset sandi: ' . Str::limit($e->getMessage(), 150),
+                    'danger',
+                    $request,
+                    $matched
+                );
+                return back()->withErrors([
+                    'login' => 'Gagal mengirim email OTP. Pastikan konfigurasi SMTP email di server sudah benar.',
+                ])->withInput();
+            }
+
+            if (app()->environment('local') && config('app.debug') && config('mail.default') === 'log') {
+                session()->flash('dev_reset_otp', $otp);
+            }
+
+            return redirect()->route('password.reset', ['email' => $matched->email])
+                ->with('status', 'Kode OTP 6 digit telah dikirim ke email ' . $matched->email . '. Berlaku selama 10 menit.');
         }
 
-        return back()->with('status', 'Jika email atau username terdaftar di sistem, tautan atur ulang kata sandi telah dikirim.');
+        return back()->with('status', 'Jika email atau username terdaftar di sistem, kode OTP 6 digit telah dikirim ke email terdaftar.');
     }
 
     /**
-     * Tampilkan halaman Atur Ulang Kata Sandi
+     * Tampilkan halaman Atur Ulang Kata Sandi dengan OTP
      */
-    public function showResetPassword(Request $request, string $token)
+    public function showResetPassword(Request $request, ?string $token = null)
     {
         return view('auth.reset-password', [
-            'token' => $token,
-            'email' => (string) $request->query('email', ''),
+            'email' => (string) $request->query('email', session('otp_reset_email', '')),
         ]);
     }
 
     /**
-     * Proses penyimpanan kata sandi baru
+     * Proses verifikasi OTP & penyimpanan kata sandi baru
      */
     public function resetPassword(Request $request)
     {
         $request->validate([
-            'token'    => 'required|string',
             'email'    => 'required|email',
+            'otp'      => 'required|digits:6',
             'password' => $this->passwordValidationRules(),
         ], [
             'email.required'     => 'Alamat email wajib diisi.',
             'email.email'        => 'Format alamat email tidak valid.',
+            'otp.required'       => 'Kode OTP 6 digit wajib diisi.',
+            'otp.digits'         => 'Kode OTP harus berupa 6 digit angka.',
             'password.required'  => 'Kata sandi baru wajib diisi.',
             'password.min'       => 'Kata sandi baru minimal 8 karakter.',
             'password.confirmed' => 'Konfirmasi kata sandi baru tidak cocok.',
         ]);
 
-        $this->assertRecaptchaV3($request, 'reset_password', 'email');
+        $this->assertRecaptchaV3($request, 'reset_password', 'otp');
 
-        $throttleKey = 'pwreset-submit|' . Str::lower((string) $request->input('email')) . '|' . $request->ip();
+        $emailInput  = Str::lower(trim((string) $request->input('email')));
+        $throttleKey = 'pwreset-submit|' . $emailInput . '|' . $request->ip();
         if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
             $seconds = RateLimiter::availableIn($throttleKey);
             SecurityLog::record(
                 'password_reset_throttled',
-                'Percobaan reset kata sandi melebihi batas (5x/menit) untuk email: ' . Str::limit((string) $request->input('email'), 80),
+                'Percobaan reset kata sandi melebihi batas (5x/menit) untuk email: ' . Str::limit($emailInput, 80),
                 'danger',
                 $request
             );
             throw ValidationException::withMessages([
-                'email' => "Terlalu banyak percobaan atur ulang sandi. Coba lagi dalam {$seconds} detik.",
+                'otp' => "Terlalu banyak percobaan atur ulang sandi. Coba lagi dalam {$seconds} detik.",
             ]);
         }
 
-        $status = Password::reset(
-            $request->only('email', 'password', 'password_confirmation', 'token'),
-            function (User $user, string $password) use ($request) {
-                $user->forceFill([
-                    'password'       => Hash::make($password),
-                    'remember_token' => Str::random(60),
-                ])->save();
+        $record = DB::table('password_reset_tokens')
+            ->whereRaw('LOWER(email) = ?', [$emailInput])
+            ->first();
 
-                SecurityLog::record(
-                    'password_reset_completed',
-                    'Kata sandi berhasil diatur ulang melalui token reset untuk akun ' . $user->email . '.',
-                    'info',
-                    $request,
-                    $user
-                );
-                event(new PasswordReset($user));
-            }
-        );
+        $user = User::whereRaw('LOWER(email) = ?', [$emailInput])->first();
 
-        if ($status === Password::PASSWORD_RESET) {
-            RateLimiter::clear($throttleKey);
-            return redirect()->route('login')
-                ->with('success', 'Kata sandi berhasil diperbarui. Silakan masuk dengan kata sandi baru Anda.');
+        $isValidOtp = $record
+            && $user
+            && $record->created_at
+            && Carbon::parse($record->created_at)->addMinutes(10)->isFuture()
+            && Hash::check((string) $request->input('otp'), $record->token);
+
+        if (!$isValidOtp) {
+            RateLimiter::hit($throttleKey, 60);
+            SecurityLog::record(
+                'password_reset_failed',
+                'Kode OTP reset kata sandi tidak valid atau kedaluwarsa untuk email: ' . Str::limit($emailInput, 80),
+                'warning',
+                $request
+            );
+            throw ValidationException::withMessages([
+                'otp' => 'Kode OTP tidak valid atau sudah kedaluwarsa.',
+            ]);
         }
 
-        RateLimiter::hit($throttleKey, 60);
+        $user->forceFill([
+            'password'       => Hash::make((string) $request->input('password')),
+            'remember_token' => Str::random(60),
+        ])->save();
 
-        $message = match ($status) {
-            Password::INVALID_USER  => 'Akun dengan alamat email tersebut tidak ditemukan.',
-            Password::INVALID_TOKEN => 'Tautan atur ulang kata sandi tidak valid atau sudah kedaluwarsa.',
-            default                 => 'Gagal mengatur ulang kata sandi. Silakan ajukan permintaan baru.',
-        };
+        DB::table('password_reset_tokens')->whereRaw('LOWER(email) = ?', [$emailInput])->delete();
+        RateLimiter::clear($throttleKey);
 
-        throw ValidationException::withMessages([
-            'email' => $message,
-        ]);
+        SecurityLog::record(
+            'password_reset_completed',
+            'Kata sandi berhasil diatur ulang melalui OTP email untuk akun ' . $user->email . '.',
+            'info',
+            $request,
+            $user
+        );
+        event(new PasswordReset($user));
+
+        return redirect()->route('login')
+            ->with('success', 'Kata sandi berhasil diperbarui. Silakan masuk dengan kata sandi baru Anda.');
     }
 
     /**
