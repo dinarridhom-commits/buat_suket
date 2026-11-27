@@ -40,6 +40,16 @@
     @media (max-width: 900px) {
         .toolbar-divider { display: none; }
     }
+    @media (max-width: 1024px) {
+        .preview-scroll-wrapper { padding: 18px 12px; overflow-x: auto; justify-content: flex-start; }
+        .sheet-a4 { zoom: 0.78; margin: 0 auto; }
+    }
+    @media (max-width: 640px) {
+        .action-toolbar { padding: 12px; gap: 8px; }
+        .btn-tool { padding: 7px 11px; font-size: 12px; }
+        .preview-scroll-wrapper { padding: 12px 6px; }
+        .sheet-a4 { zoom: 0.44; margin: 0 auto; }
+    }
 
     .preview-scroll-wrapper {
         background: #cbd5e1; border-radius: var(--radius-lg); padding: 32px 24px;

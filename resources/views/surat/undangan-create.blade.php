@@ -626,6 +626,15 @@
         .editor-layout { grid-template-columns: 1fr; }
         .preview-pane { position: static; }
     }
+    @media (max-width: 1024px) {
+        .preview-scroll-wrapper { padding: 18px 12px; overflow-x: auto; align-items: flex-start; }
+        .sheet-a4 { zoom: 0.78; margin: 0 auto; }
+    }
+    @media (max-width: 640px) {
+        .preview-scroll-wrapper { padding: 10px 6px; }
+        .sheet-a4 { zoom: 0.44; margin: 0 auto; }
+        .form-grid-2, .form-grid-4 { grid-template-columns: 1fr; }
+    }
 </style>
 @endpush
 

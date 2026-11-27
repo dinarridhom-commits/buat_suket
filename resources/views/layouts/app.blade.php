@@ -738,20 +738,28 @@
         }
 
         /* ══════════════════════════════════════
-           RESPONSIVE
+           RESPONSIVE (3 Breakpoints: Laptop >=1025px, iPad 641-1024px, HP <=640px)
         ══════════════════════════════════════ */
         @media (max-width: 1024px) {
+            /* iPad / Tablet */
             .sidebar { transform: translateX(-100%); }
             .sidebar.show { transform: translateX(0); }
             .sidebar-backdrop.show { display: block; }
-            .wrapper { margin-left: 0; }
+            .wrapper { margin-left: 0; max-width: 100vw; overflow-x: hidden; }
             .topbar { display: flex; }
             .sidebar-toggle-btn, .sidebar-reopen-btn { display: none !important; }
-            body.sidebar-hidden .dash-header,
+            body.sidebar-hidden .dash-header-title,
             body.sidebar-hidden .subpage-header { padding-left: 0; }
-            .content { padding: 18px 16px 40px; }
+            .content { padding: 20px 20px 40px; }
+            .panel-body { overflow-x: auto; }
         }
         @media (max-width: 640px) {
+            /* HP / Smartphone */
+            .content { padding: 14px 12px 32px; }
+            .subpage-header { margin-bottom: 16px; }
+            .subpage-header h1 { font-size: 20px; }
+            .subpage-header p { font-size: 12.5px; }
+            .panel-head { padding: 14px 16px; }
             .page-breadcrumb p { display: none; }
             .topbar-user-info { display: none; }
             .btn-quick-create .btn-cta-text { display: none; }
