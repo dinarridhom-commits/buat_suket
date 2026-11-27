@@ -54,24 +54,41 @@
     .action-toolbar {
         display: flex; align-items: center; justify-content: space-between;
         background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
-        padding: 12px 20px; margin-bottom: 20px; box-shadow: var(--shadow-sm); flex-wrap: wrap; gap: 10px;
+        padding: 12px 18px; margin-bottom: 20px; box-shadow: var(--shadow-sm); flex-wrap: wrap; gap: 12px;
     }
     .toolbar-left  { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-    .toolbar-right { display: flex; gap: 8px; flex-wrap: wrap; }
-    .btn-toolbar {
-        padding: 7px 13px; border-radius: var(--radius-sm); font-size: 12.5px; font-weight: 600;
-        display: inline-flex; align-items: center; gap: 6px; cursor: pointer; border: none;
-        text-decoration: none; transition: all 0.15s ease;
+    .toolbar-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .toolbar-right form { display: inline-flex; margin: 0; }
+    .toolbar-divider {
+        width: 1px; height: 22px; background: var(--border); margin: 0 2px; flex-shrink: 0;
     }
-    .btn-back   { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; }
-    .btn-edit   { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
-    .btn-dup    { background: #f8fafc; color: #334155; border: 1px solid #cbd5e1; }
-    .btn-docx   { background: #0284c7; color: #fff; }
-    .btn-print  { background: var(--pu-navy); color: #fff; }
-    .btn-final  { background: #047857; color: #fff; }
-    .btn-draft  { background: #b45309; color: #fff; }
-    .btn-delete { background: #fff5f5; color: #dc2626; border: 1px solid #fecaca; }
-    .meta-chip  { background: #f1f5f9; color: #475569; padding: 4px 10px; border-radius: 20px; font-size: 12.5px; font-weight: 500; }
+    .btn-toolbar {
+        height: 36px; padding: 0 13px; border-radius: var(--radius-sm); font-size: 12.5px; font-weight: 600;
+        font-family: inherit; line-height: 1; white-space: nowrap;
+        display: inline-flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer;
+        border: 1px solid transparent; text-decoration: none; transition: all 0.15s ease;
+    }
+    .btn-back   { background: #f8fafc; color: #334155; border-color: #cbd5e1; }
+    .btn-back:hover { background: #f1f5f9; border-color: #94a3b8; }
+    .btn-edit   { background: #f8fafc; color: #1e293b; border-color: #cbd5e1; }
+    .btn-edit:hover { background: #f1f5f9; border-color: #94a3b8; }
+    .btn-docx   { background: #0284c7; color: #ffffff; }
+    .btn-docx:hover { background: #0369a1; }
+    .btn-print  { background: var(--pu-navy); color: #ffffff; }
+    .btn-print:hover { background: var(--pu-navy-light); }
+    .btn-final  { background: #ecfdf5; color: #047857; border-color: #a7f3d0; }
+    .btn-final:hover { background: #d1fae5; }
+    .btn-draft  { background: #fffbeb; color: #92400e; border-color: #fde68a; }
+    .btn-draft:hover { background: #fef3c7; }
+    .btn-delete { background: #fff5f5; color: #dc2626; border-color: #fecaca; }
+    .btn-delete:hover { background: #fee2e2; }
+    .meta-chip  {
+        background: #f1f5f9; color: #475569; padding: 5px 11px; border-radius: 20px;
+        font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;
+    }
+    @media (max-width: 900px) {
+        .toolbar-divider { display: none; }
+    }
 
     .preview-scroll-wrapper {
         background: #cbd5e1; border-radius: var(--radius-lg); padding: 32px 24px;
@@ -138,37 +155,48 @@
 
 <div class="action-toolbar">
     <div class="toolbar-left">
-        <a href="{{ route('surat.undangan.index') }}" class="btn-toolbar btn-back">&larr; Kembali</a>
+        <a href="{{ route('surat.undangan.index') }}" class="btn-toolbar btn-back">&larr; Kembali ke Arsip</a>
         <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-            <span class="meta-chip">{{ $surat->nomor_surat }}</span>
-            <span class="meta-chip">{{ $surat->tanggal_surat->format('d/m/Y') }}</span>
+            <span class="meta-chip"><x-icon name="file-text" class="ui-icon-sm" /> {{ $surat->nomor_surat }}</span>
+            <span class="meta-chip"><x-icon name="calendar" class="ui-icon-sm" /> {{ $surat->tanggal_surat->format('d/m/Y') }}</span>
             <span class="meta-chip" style="background:{{ $surat->status == 'final' ? '#dcfce7' : '#fef3c7' }}; color:{{ $surat->status == 'final' ? '#166534' : '#92400e' }};">
                 {{ ucfirst($surat->status) }}
             </span>
         </div>
     </div>
     <div class="toolbar-right">
-        <a href="{{ route('surat.undangan.edit', $surat->id) }}" class="btn-toolbar btn-edit">Edit</a>
-        <a href="{{ route('surat.undangan.duplicate', $surat->id) }}" class="btn-toolbar btn-dup">Duplikat</a>
+        <a href="{{ route('surat.undangan.edit', $surat->id) }}" class="btn-toolbar btn-edit">
+            <x-icon name="pen-tool" class="ui-icon-sm" /> Edit
+        </a>
         @if($surat->status != 'final')
-            <form method="POST" action="{{ route('surat.undangan.status', $surat->id) }}" style="display:inline;">
+            <form method="POST" action="{{ route('surat.undangan.status', $surat->id) }}">
                 @csrf @method('PATCH')
                 <input type="hidden" name="status" value="final">
-                <button type="submit" class="btn-toolbar btn-final">Jadikan Final</button>
+                <button type="submit" class="btn-toolbar btn-final">
+                    <x-icon name="check-circle" class="ui-icon-sm" /> Jadikan Final
+                </button>
             </form>
         @else
-            <form method="POST" action="{{ route('surat.undangan.status', $surat->id) }}" style="display:inline;">
+            <form method="POST" action="{{ route('surat.undangan.status', $surat->id) }}">
                 @csrf @method('PATCH')
                 <input type="hidden" name="status" value="draft">
                 <button type="submit" class="btn-toolbar btn-draft">Kembalikan Draft</button>
             </form>
         @endif
-        <button type="button" id="btnExportDocx" class="btn-toolbar btn-docx">Unduh Word (.docx)</button>
-        <button type="button" onclick="window.print()" class="btn-toolbar btn-print">Cetak / PDF</button>
+        <span class="toolbar-divider" aria-hidden="true"></span>
+        <button type="button" id="btnExportDocx" class="btn-toolbar btn-docx">
+            <x-icon name="file-text" class="ui-icon-sm" /> Unduh Word (.docx)
+        </button>
+        <button type="button" onclick="window.print()" class="btn-toolbar btn-print">
+            <x-icon name="printer" class="ui-icon-sm" /> Cetak / PDF
+        </button>
+        <span class="toolbar-divider" aria-hidden="true"></span>
         <form method="POST" action="{{ route('surat.undangan.destroy', $surat->id) }}"
-              onsubmit="return confirm('Hapus arsip surat ini secara permanen?')">
+              onsubmit="return confirm('Pindahkan arsip surat undangan ini ke Riwayat Penghapusan?')">
             @csrf @method('DELETE')
-            <button type="submit" class="btn-toolbar btn-delete">Hapus</button>
+            <button type="submit" class="btn-toolbar btn-delete">
+                <x-icon name="trash" class="ui-icon-sm" /> Hapus
+            </button>
         </form>
     </div>
 </div>

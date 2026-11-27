@@ -172,17 +172,6 @@ class SuratUndanganController extends Controller
         return view('surat.undangan-create', compact('pegawais', 'kop', 'kopPresets', 'autoNomor'));
     }
 
-    public function duplicate($id)
-    {
-        $duplicateFrom = SuratUndangan::with('penerimas')->findOrFail($id);
-        $pegawais      = Pegawai::all();
-        $kop           = $this->defaultKop();
-        $kopPresets    = self::kopPresets();
-        $autoNomor     = $this->generateAutoNomor();
-
-        return view('surat.undangan-create', compact('pegawais', 'kop', 'kopPresets', 'autoNomor', 'duplicateFrom'));
-    }
-
     public function store(Request $request)
     {
         Validator::make($request->all(), [

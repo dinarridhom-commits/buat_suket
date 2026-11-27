@@ -54,7 +54,6 @@ Route::middleware('auth')->group(function () {
         Route::delete('/undangan/hapus-massal', [SuratUndanganController::class, 'destroyBulk'])->name('undangan.destroy.bulk');
         Route::get('/undangan/{id}', [SuratUndanganController::class, 'show'])->name('undangan.show');
         Route::get('/undangan/{id}/edit', [SuratUndanganController::class, 'edit'])->name('undangan.edit');
-        Route::get('/undangan/{id}/duplikat', [SuratUndanganController::class, 'duplicate'])->name('undangan.duplicate');
         Route::put('/undangan/{id}', [SuratUndanganController::class, 'update'])->name('undangan.update');
         Route::patch('/undangan/{id}/status', [SuratUndanganController::class, 'updateStatus'])->name('undangan.status');
         Route::delete('/undangan/{id}/hapus', [SuratUndanganController::class, 'destroy'])->name('undangan.destroy');

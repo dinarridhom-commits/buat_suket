@@ -2,7 +2,7 @@
 
 @php
     $isEdit = isset($surat);
-    $src = $surat ?? ($duplicateFrom ?? null);
+    $src = $surat ?? null;
     $extra = $src ? ($src->extra_data ?? []) : [];
 
     $kopTypeVal = old('extra_data.kop_type', $extra['kop_type'] ?? 'balai');
