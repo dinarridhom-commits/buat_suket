@@ -154,9 +154,9 @@
         body.sidebar-hidden .content {
             padding-top: 28px;
         }
-        body.sidebar-hidden .dash-header,
+        body.sidebar-hidden .dash-header-title,
         body.sidebar-hidden .subpage-header {
-            padding-left: 110px;
+            padding-left: 108px;
         }
 
         .brand-logo {
