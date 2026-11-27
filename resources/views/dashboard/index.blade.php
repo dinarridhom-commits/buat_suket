@@ -563,17 +563,6 @@
             <h1>Dashboard</h1>
             <p>Kelola Surat Undangan Kedinasan, Suket Lupa Absen, dan Database Pegawai BWS Kalimantan I.</p>
         </div>
-        <div class="dash-header-actions">
-            <a href="{{ route('surat.undangan.create') }}" class="btn-pill-primary">
-                <x-icon name="plus" class="ui-icon-sm" /> Buat Surat Undangan
-            </a>
-            <a href="{{ route('surat.suket.create') }}" class="btn-pill-outline">
-                <x-icon name="file-text" class="ui-icon-sm" /> Buat Suket Absen
-            </a>
-            <a href="{{ route('pegawai.export.excel') }}" class="btn-pill-outline">
-                <x-icon name="download" class="ui-icon-sm" /> Ekspor Excel
-            </a>
-        </div>
     </div>
 
     <!-- 4 KPI CARDS -->
@@ -751,9 +740,9 @@
                 <div class="clock-time" id="liveClockWib">--:--:--</div>
                 <div class="clock-date">{{ now()->locale('id')->translatedFormat('l, d F Y') }}</div>
             </div>
-            <div class="clock-actions">
-                <a href="{{ route('surat.undangan.create') }}" class="clock-quick-btn clock-btn-gold">Buat Undangan</a>
-                <a href="{{ route('surat.suket.create') }}" class="clock-quick-btn clock-btn-ghost">Buat Suket</a>
+            <div style="margin-top:16px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.12); font-size:11.5px; color:rgba(255,255,255,0.68); display:flex; align-items:center; justify-content:space-between;">
+                <span>BWS Kalimantan I</span>
+                <span>Kementerian PU</span>
             </div>
         </div>
     </div>
