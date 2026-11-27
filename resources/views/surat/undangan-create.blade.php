@@ -624,6 +624,7 @@
 
     @media (max-width: 1200px) {
         .editor-layout { grid-template-columns: 1fr; }
+        .editor-form-col, .preview-pane { min-width: 0; max-width: 100%; }
         .preview-pane { position: static; }
     }
     @media (max-width: 1024px) {
@@ -633,7 +634,12 @@
     @media (max-width: 640px) {
         .preview-scroll-wrapper { padding: 10px 6px; }
         .sheet-a4 { zoom: 0.44; margin: 0 auto; }
-        .form-grid-2, .form-grid-4 { grid-template-columns: 1fr; }
+        .grid-2 { grid-template-columns: 1fr; }
+        .grid-4 { grid-template-columns: repeat(2, 1fr); }
+        .grid-2 > *, .grid-4 > *, .form-group { min-width: 0; }
+        .form-control, input[type="date"], input[type="time"], select.form-control {
+            width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box;
+        }
     }
 </style>
 @endpush
