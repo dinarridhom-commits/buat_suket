@@ -87,4 +87,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/profil', [AuthController::class, 'updateProfile'])->name('profil.update');
     Route::put('/profil/sandi', [AuthController::class, 'changePassword'])->name('profil.password');
 
+    // Panduan Penggunaan
+    Route::get('/panduan', fn () => view('panduan.index'))->name('panduan.index');
+
 });

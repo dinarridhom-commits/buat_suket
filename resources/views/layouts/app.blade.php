@@ -843,6 +843,10 @@
                 <span class="nav-icon"><x-icon name="user" class="ui-icon-md" /></span>
                 <span>Profil & Kata Sandi</span>
             </a>
+            <a href="{{ route('panduan.index') }}" class="nav-item {{ request()->routeIs('panduan.*') ? 'active' : '' }}">
+                <span class="nav-icon"><x-icon name="book-open" class="ui-icon-md" /></span>
+                <span>Panduan</span>
+            </a>
         </nav>
 
         <!-- User Card (footer) -->
