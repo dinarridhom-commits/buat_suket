@@ -39,7 +39,6 @@
         <div class="form-group">
             <div class="form-label-row">
                 <label class="form-label" for="password">Kata Sandi</label>
-                <a href="{{ route('password.request') }}" class="forgot-link">Lupa kata sandi?</a>
             </div>
             <div class="input-wrap">
                 <span class="input-icon">
@@ -55,9 +54,10 @@
 
         <div class="form-options">
             <label class="remember-checkbox">
-                <input type="checkbox" name="remember" id="remember">
+                <input type="checkbox" name="remember" id="remember" {{ old('remember') ? 'checked' : '' }}>
                 <span>Ingat saya</span>
             </label>
+            <a href="{{ route('password.request') }}" class="forgot-link">Lupa kata sandi?</a>
         </div>
 
         <button type="submit" class="btn-submit-login">
